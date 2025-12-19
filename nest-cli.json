@@ -4,7 +4,7 @@
   "sourceRoot": "apps/api/src",
   "compilerOptions": {
     "webpack": true,
-    "tsConfigPath": "apps/main/tsconfig.app.json"
+    "tsConfigPath": "apps/api/tsconfig.app.json"
   },
   "projects": {
     "api": {
@@ -14,6 +14,15 @@
       "sourceRoot": "apps/api/src",
       "compilerOptions": {
         "tsConfigPath": "apps/api/tsconfig.app.json"
+      }
+    },
+    "config": {
+      "type": "library",
+      "root": "libs/config",
+      "entryFile": "index",
+      "sourceRoot": "libs/config/src",
+      "compilerOptions": {
+        "tsConfigPath": "libs/config/tsconfig.lib.json"
       }
     }
   }
