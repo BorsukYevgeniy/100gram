@@ -14,6 +14,10 @@
     "@shared/shared/(.*)": "<rootDir>/../libs/shared/src/$1",
     "@shared/shared": "<rootDir>/../libs/shared/src",
     "@config/config/(.*)": "<rootDir>/../libs/config/src/$1",
-    "@config/config": "<rootDir>/../libs/config/src"
+    "@config/config": "<rootDir>/../libs/config/src",
+    "@/user/(.*)": "<rootDir>/../libs/user/src/$1",
+    "@/user": "<rootDir>/../libs/user/src",
+    "@/prisma/(.*)": "<rootDir>/../libs/prisma/src/$1",
+    "@/prisma": "<rootDir>/../libs/prisma/src"
   }
 }
