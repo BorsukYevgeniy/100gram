@@ -4,6 +4,7 @@ import { UserService } from '../user/user.service';
 
 import { JwtService, JwtSignOptions } from '@nestjs/jwt';
 import { compare, hash } from 'bcryptjs';
+import { JwtPayload } from '../../common/interfaces';
 import { ConfigService } from '../config/config.service';
 import { LoginDto } from './dto/login.dto';
 
@@ -21,8 +22,8 @@ export class AuthService {
     this.ACCESS_TOKEN_SECRET = this.configService.ACCESS_TOKEN_SECRET;
   }
 
-  private async generateAccessToken(userId: number) {
-    return await this.jwtService.signAsync({ userId }, {
+  private async generateAccessToken(id: number) {
+    return await this.jwtService.signAsync<JwtPayload>({ id }, {
       secret: this.ACCESS_TOKEN_SECRET,
       expiresIn: this.ACCESS_TOKEN_EXP,
     } as JwtSignOptions);
