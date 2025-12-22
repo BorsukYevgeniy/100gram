@@ -9,7 +9,11 @@ export class MessageRepository {
 
   async create(userId: number, dto: CreateMessageDto) {
     return await this.prisma.message.create({
-      data: { ...dto, user: { connect: { id: userId } } },
+      data: {
+        ...dto,
+        userId: userId,
+        chatId: dto.chatId,
+      },
     });
   }
 

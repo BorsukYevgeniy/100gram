@@ -8,17 +8,49 @@ datasource db {
 }
 
 model User {
-  id       Int       @id @default(autoincrement())
-  email    String    @unique
-  nickname String    @unique
-  password String
-  messages Message[]
+  id          Int          @id @default(autoincrement())
+  email       String       @unique
+  nickname    String       @unique
+  password    String
+  messages    Message[]
+  chatToUsers ChatToUser[]
 }
 
 model Message {
   id   Int    @id @default(autoincrement())
   text String
 
+  createdAt DateTime @default(now())
+
   userId Int
   user   User @relation(fields: [userId], references: [id])
+
+  chatId Int
+  chat   Chat @relation(fields: [chatId], references: [id])
+}
+
+model ChatToUser {
+  chatId      Int
+  userId      Int
+  connectedAt DateTime @default(now())
+
+  chat Chat @relation(fields: [chatId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([chatId, userId])
+}
+
+model Chat {
+  id          Int     @id @default(autoincrement())
+  title       String?
+  description String?
+
+  messages    Message[]
+  chatToUsers ChatToUser[]
+  chatType    ChatType
+}
+
+enum ChatType {
+  PRIVATE
+  GROUP
 }

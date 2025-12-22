@@ -11,7 +11,11 @@ export class UserRepository {
     return await this.prisma.user.create({ data: dto });
   }
 
-  async fingByEmail(email: string): Promise<User | null> {
+  async findByEmail(email: string): Promise<User | null> {
     return await this.prisma.user.findUnique({ where: { email } });
+  }
+
+  async findById(id: number): Promise<User | null> {
+    return await this.prisma.user.findUnique({ where: { id } });
   }
 }
