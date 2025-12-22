@@ -1,10 +1,12 @@
 import {
   BadRequestException,
+  ForbiddenException,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
 import { PrismaClientKnownRequestError } from '@prisma/client/runtime/client';
-import { Chat } from '../../../generated/prisma/client';
+import { Chat, Role } from '../../../generated/prisma/client';
+import { JwtPayload } from '../../common/interfaces';
 import { UserService } from '../user/user.service';
 import { ChatRepository } from './chat.repository';
 import { CreateGroupChatDto } from './dto/create-group-chat.dto';
@@ -22,6 +24,17 @@ export class ChatService {
     return await Promise.all(
       userIds.map((id) => this.userService.findById(id)),
     );
+  }
+
+  private async validateChatParticipation(user: JwtPayload, chatId: number) {
+    if (user.role === Role.ADMIN) return;
+
+    const usersInChat = await this.chatRepository.getUserIdsInChat(chatId);
+
+    const isParticipant = usersInChat.some((u) => u.userId === user.id);
+
+    if (!isParticipant)
+      throw new ForbiddenException('User is not a participant of the chat');
   }
 
   async createPrivateChat(userId: number, createChatDto: CreatePrivateChatDto) {
@@ -42,8 +55,10 @@ export class ChatService {
     return await this.chatRepository.createGroupChat(dto);
   }
 
-  async findById(id: number) {
-    const chat: Chat | null = await this.chatRepository.getById(id);
+  async findById(user: JwtPayload, chatId: number) {
+    await this.validateChatParticipation(user, chatId);
+
+    const chat: Chat | null = await this.chatRepository.getById(chatId);
 
     if (!chat) throw new NotFoundException('Chat not found');
 

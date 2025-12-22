@@ -30,8 +30,11 @@ export class ChatController {
   }
 
   @Get(':id')
-  async findOne(@Param('id', ParseIntPipe) id: number) {
-    return this.chatService.findById(id);
+  async findOne(
+    @User() user: JwtPayload,
+    @Param('id', ParseIntPipe) id: number,
+  ) {
+    return this.chatService.findById(user, id);
   }
 
   @Patch(':id')

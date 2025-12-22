@@ -57,4 +57,11 @@ export class ChatRepository {
       where: { id },
     });
   }
+
+  async getUserIdsInChat(chatId: number): Promise<{ userId: number }[]> {
+    return await this.prisma.chatToUser.findMany({
+      where: { chatId },
+      select: { userId: true },
+    });
+  }
 }
