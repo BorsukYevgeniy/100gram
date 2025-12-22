@@ -12,6 +12,7 @@ model User {
   email       String       @unique
   nickname    String       @unique
   password    String
+  role        Role         @default(USER)
   messages    Message[]
   chatToUsers ChatToUser[]
 }
@@ -53,4 +54,9 @@ model Chat {
 enum ChatType {
   PRIVATE
   GROUP
+}
+
+enum Role {
+  ADMIN
+  USER
 }

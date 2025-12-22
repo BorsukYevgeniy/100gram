@@ -1,4 +1,5 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
+import { PrismaClientKnownRequestError } from '@prisma/client/runtime/client';
 import { User } from '../../../generated/prisma/client';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UserRepository } from './user.repository';
@@ -21,5 +22,15 @@ export class UserService {
     if (!user) throw new NotFoundException('User not found');
 
     return user;
+  }
+
+  async assignAdmin(id: number) {
+    try {
+      return await this.userRepository.assingAdmin(id);
+    } catch (e) {
+      if (e instanceof PrismaClientKnownRequestError && e.code === 'P2025')
+        throw new NotFoundException('User not found');
+      throw e;
+    }
   }
 }

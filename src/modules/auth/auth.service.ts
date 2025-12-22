@@ -4,6 +4,7 @@ import { UserService } from '../user/user.service';
 
 import { JwtService, JwtSignOptions } from '@nestjs/jwt';
 import { compare, hash } from 'bcryptjs';
+import { Role } from '../../common/enum/role.enum';
 import { JwtPayload } from '../../common/interfaces';
 import { ConfigService } from '../config/config.service';
 import { LoginDto } from './dto/login.dto';
@@ -22,8 +23,8 @@ export class AuthService {
     this.ACCESS_TOKEN_SECRET = this.configService.ACCESS_TOKEN_SECRET;
   }
 
-  private async generateAccessToken(id: number) {
-    return await this.jwtService.signAsync<JwtPayload>({ id }, {
+  private async generateAccessToken(id: number, role: Role) {
+    return await this.jwtService.signAsync<JwtPayload>({ id, role }, {
       secret: this.ACCESS_TOKEN_SECRET,
       expiresIn: this.ACCESS_TOKEN_EXP,
     } as JwtSignOptions);
@@ -47,7 +48,7 @@ export class AuthService {
       password: hashedPassword,
     });
 
-    return await this.generateAccessToken(newUser.id);
+    return await this.generateAccessToken(newUser.id, newUser.role as Role);
   }
 
   async login(dto: LoginDto) {
@@ -59,6 +60,6 @@ export class AuthService {
 
     if (!isPasswordValid) throw new BadRequestException('Invalid credentials');
 
-    return await this.generateAccessToken(user.id);
+    return await this.generateAccessToken(user.id, user.role as Role);
   }
 }

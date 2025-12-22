@@ -35,7 +35,7 @@ export class MessageController {
     @User() user: JwtPayload,
     @Param('id', ParseIntPipe) messageId: number,
   ): Promise<Message> {
-    return await this.messageService.findById(user.id, messageId);
+    return await this.messageService.findById(user, messageId);
   }
 
   @Patch(':id')
@@ -44,11 +44,7 @@ export class MessageController {
     @Param('id', ParseIntPipe) messageId: number,
     @Body() updateMessageDto: UpdateMessageDto,
   ): Promise<Message> {
-    return await this.messageService.update(
-      user.id,
-      messageId,
-      updateMessageDto,
-    );
+    return await this.messageService.update(user, messageId, updateMessageDto);
   }
 
   @Delete(':id')
@@ -56,6 +52,6 @@ export class MessageController {
     @User() user: JwtPayload,
     @Param('id', ParseIntPipe) messageId: number,
   ): Promise<Message> {
-    return await this.messageService.delete(user.id, messageId);
+    return await this.messageService.delete(user, messageId);
   }
 }
