@@ -3,8 +3,7 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { Message } from '../../../generated/prisma/client';
-import { Role } from '../../common/enum/role.enum';
+import { Message, Role } from '../../../generated/prisma/client';
 import { JwtPayload } from '../../common/interfaces';
 import { CreateMessageDto } from './dto/create-message.dto';
 import { UpdateMessageDto } from './dto/update-message.dto';

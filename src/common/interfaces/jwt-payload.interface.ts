@@ -1,4 +1,4 @@
-import { Role } from '../enum/role.enum';
+import { Role } from '../../../generated/prisma/enums';
 
 export interface JwtPayload {
   id: number;

@@ -4,7 +4,7 @@ import { UserService } from '../user/user.service';
 
 import { JwtService, JwtSignOptions } from '@nestjs/jwt';
 import { compare, hash } from 'bcryptjs';
-import { Role } from '../../common/enum/role.enum';
+import { Role } from '../../../generated/prisma/enums';
 import { JwtPayload } from '../../common/interfaces';
 import { ConfigService } from '../config/config.service';
 import { LoginDto } from './dto/login.dto';

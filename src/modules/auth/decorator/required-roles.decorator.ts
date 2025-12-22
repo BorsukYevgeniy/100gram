@@ -1,4 +1,4 @@
 import { Reflector } from '@nestjs/core';
-import { Role } from '../../../common/enum/role.enum';
+import { Role } from '../../../../generated/prisma/enums';
 
 export const RequiredRoles = Reflector.createDecorator<Role[]>();

@@ -5,8 +5,7 @@ import {
   Patch,
   UseGuards,
 } from '@nestjs/common';
-import { User } from '../../../generated/prisma/client';
-import { Role } from '../../common/enum/role.enum';
+import { Role, User } from '../../../generated/prisma/client';
 import { RequiredRoles } from '../auth/decorator/required-roles.decorator';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { UserService } from './user.service';

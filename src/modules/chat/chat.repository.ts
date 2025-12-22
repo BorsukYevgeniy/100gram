@@ -1,8 +1,8 @@
 import { Injectable } from '@nestjs/common';
+import { ChatType } from '../../../generated/prisma/enums';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateGroupChatDto } from './dto/create-group-chat.dto';
 import { UpdateGroupChatDto } from './dto/update-group-chat.dto';
-import { ChatType } from './enum/chat-type.enum';
 
 @Injectable()
 export class ChatRepository {
