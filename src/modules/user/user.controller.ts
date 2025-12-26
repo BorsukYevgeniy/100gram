@@ -15,7 +15,7 @@ import { UserService } from './user.service';
 
 import { User as UserFromReq } from '../../common/decorators/user.decorator';
 
-@Controller('user')
+@Controller('users')
 export class UserController {
   constructor(private readonly userService: UserService) {}
 
@@ -26,16 +26,16 @@ export class UserController {
     return await this.userService.assignAdmin(id);
   }
 
+  @UseGuards(AuthGuard)
+  @Delete('me')
+  async deleteMe(@UserFromReq() user: JwtPayload): Promise<User> {
+    return await this.userService.delete(user.id);
+  }
+
   @RequiredRoles([Role.ADMIN])
   @UseGuards(RolesGuard)
   @Delete(':id')
   async deleteUserById(@Param('id', ParseIntPipe) id: number): Promise<User> {
     return await this.userService.delete(id);
-  }
-
-  @UseGuards(AuthGuard)
-  @Delete('me')
-  async deleteMe(@UserFromReq() user: JwtPayload): Promise<User> {
-    return await this.userService.delete(user.id);
   }
 }

@@ -13,20 +13,29 @@ import { User } from '../../common/decorators/user.decorator';
 import { JwtPayload } from '../../common/interfaces';
 import { AuthGuard } from '../auth/guards/auth.guard';
 import { ChatService } from './chat.service';
+import { CreateGroupChatDto } from './dto/create-group-chat.dto';
 import { CreatePrivateChatDto } from './dto/create-private-chat.dto';
 import { UpdateGroupChatDto } from './dto/update-group-chat.dto';
 
-@Controller('chat')
+@Controller('chats')
 @UseGuards(AuthGuard)
 export class ChatController {
   constructor(private readonly chatService: ChatService) {}
 
-  @Post()
+  @Post('private')
   async createPrivateChat(
     @User() user: JwtPayload,
     @Body() dto: CreatePrivateChatDto,
   ) {
     return await this.chatService.createPrivateChat(user.id, dto);
+  }
+
+  @Post('group')
+  async createGroupChat(
+    @User() user: JwtPayload,
+    @Body() dto: CreateGroupChatDto,
+  ) {
+    return await this.chatService.createGroupChat(user.id, dto);
   }
 
   @Get(':id')
@@ -45,11 +54,6 @@ export class ChatController {
     return await this.chatService.updateGroupChat(id, updateChatDto);
   }
 
-  @Delete(':id')
-  async delete(@Param('id', ParseIntPipe) id: number) {
-    return await this.chatService.delete(id);
-  }
-
   @Post(':chatId/users/:userId')
   async addUserToChat(
     @Param('chatId', ParseIntPipe) chatId: number,
@@ -64,5 +68,10 @@ export class ChatController {
     @Param('userId', ParseIntPipe) userId: number,
   ) {
     return await this.chatService.deleteUserFromChat(chatId, userId);
+  }
+
+  @Delete(':id')
+  async delete(@Param('id', ParseIntPipe) id: number) {
+    return await this.chatService.delete(id);
   }
 }

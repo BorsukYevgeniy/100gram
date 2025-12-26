@@ -39,6 +39,15 @@ export class ChatService {
       throw new ForbiddenException('User is not a participant of the chat');
   }
 
+  private async checkChatParticipation(
+    userId: number,
+    chatId: number,
+  ): Promise<boolean> {
+    const usersInChat = await this.chatRepository.getUserIdsInChat(chatId);
+
+    return usersInChat.some((u) => u.userId === userId);
+  }
+
   async createPrivateChat(
     userId: number,
     createChatDto: CreatePrivateChatDto,
@@ -74,6 +83,8 @@ export class ChatService {
 
     const chat: Chat | null = await this.chatRepository.getById(chatId);
 
+    if (!chat) throw new NotFoundException('Chat not found');
+
     return chat;
   }
 
@@ -100,11 +111,25 @@ export class ChatService {
   async addUserToChat(chatId: number, userId: number) {
     await this.validateChatType(chatId, ChatType.GROUP);
 
+    const isParticipant = await this.checkChatParticipation(userId, chatId);
+
+    if (isParticipant)
+      throw new BadRequestException(
+        'User already is a participant of the chat',
+      );
+
     return await this.chatRepository.addUserToChat(chatId, userId);
   }
 
   async deleteUserFromChat(chatId: number, userId: number) {
     const chat = await this.chatRepository.getById(chatId);
+
+    if (!chat) throw new NotFoundException('Chat not found');
+
+    const isParticipant = await this.checkChatParticipation(userId, chatId);
+
+    if (!isParticipant)
+      throw new NotFoundException('User is not a participant of the chat');
 
     if (chat.chatType === ChatType.PRIVATE)
       return await this.chatRepository.delete(chatId);
