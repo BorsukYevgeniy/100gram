@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { Chat, ChatToUser } from '../../../generated/prisma/client';
+import { Chat, ChatToUser, Message } from '../../../generated/prisma/client';
 import { ChatType } from '../../../generated/prisma/enums';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateGroupChatDto } from './dto/create-group-chat.dto';
@@ -92,6 +92,15 @@ export class ChatRepository {
     return await this.prisma.chat.update({
       where: { id: chatId },
       data: { ownerId: newOnwerId },
+    });
+  }
+
+  async findAllMessagesInChat(
+    chatId: number,
+  ): Promise<{ messages: Message[] }> {
+    return await this.prisma.chat.findUnique({
+      where: { id: chatId },
+      select: { messages: true },
     });
   }
 }

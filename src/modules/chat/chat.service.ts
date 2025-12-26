@@ -7,6 +7,7 @@ import {
 import { PrismaClientKnownRequestError } from '@prisma/client/runtime/client';
 import { Chat, ChatType, Role } from '../../../generated/prisma/client';
 import { JwtPayload } from '../../common/interfaces';
+import { MessageService } from '../message/message.service';
 import { ChatRepository } from './chat.repository';
 import { CreateGroupChatDto } from './dto/create-group-chat.dto';
 import { CreatePrivateChatDto } from './dto/create-private-chat.dto';
@@ -14,7 +15,10 @@ import { UpdateGroupChatDto } from './dto/update-group-chat.dto';
 
 @Injectable()
 export class ChatService {
-  constructor(private readonly chatRepository: ChatRepository) {}
+  constructor(
+    private readonly chatRepository: ChatRepository,
+    private readonly messageService: MessageService,
+  ) {}
 
   private async validateChatType(chatId: number, expectedType: ChatType) {
     const chat = await this.chatRepository.getById(chatId);
@@ -154,5 +158,15 @@ export class ChatService {
 
   async updateOwner(chatId: number, newOwnerId: number): Promise<Chat> {
     return await this.chatRepository.updateOwner(chatId, newOwnerId);
+  }
+
+  async getAllMessagesInChat(user: JwtPayload, chatId: number) {
+    await this.validateChatParticipation(user, chatId);
+
+    const messages = await this.chatRepository.findAllMessagesInChat(chatId);
+
+    if (!messages) throw new NotFoundException('Messages not found');
+
+    return messages;
   }
 }

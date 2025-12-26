@@ -29,12 +29,29 @@ export class MessageService {
     return message;
   }
 
-  async create(userId: number, dto: CreateMessageDto): Promise<Message> {
-    return await this.messageRepository.create(userId, dto);
+  async create(
+    userId: number,
+    chatId: number,
+    dto: CreateMessageDto,
+  ): Promise<Message> {
+    return await this.messageRepository.create(userId, chatId, dto);
   }
 
   async findById(user: JwtPayload, messageId: number): Promise<Message> {
-    return await this.validateMessageOwnership(user, messageId);
+    const message = await this.validateMessageOwnership(user, messageId);
+
+    if (!message) throw new NotFoundException('Message not found');
+
+    return message;
+  }
+
+  async findAllMessageInChat(chatId: number): Promise<Message[]> {
+    const messages = await this.messageRepository.findAllMessageInChat(chatId);
+
+    if (!messages)
+      throw new NotFoundException('No messages found in this chat');
+
+    return messages;
   }
 
   async update(

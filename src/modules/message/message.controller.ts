@@ -6,14 +6,12 @@ import {
   Param,
   ParseIntPipe,
   Patch,
-  Post,
   UseGuards,
 } from '@nestjs/common';
 import { Message } from '../../../generated/prisma/client';
 import { User } from '../../common/decorators/user.decorator';
 import { JwtPayload } from '../../common/interfaces';
 import { AuthGuard } from '../auth/guards/auth.guard';
-import { CreateMessageDto } from './dto/create-message.dto';
 import { UpdateMessageDto } from './dto/update-message.dto';
 import { MessageService } from './message.service';
 
@@ -21,14 +19,6 @@ import { MessageService } from './message.service';
 @UseGuards(AuthGuard)
 export class MessageController {
   constructor(private readonly messageService: MessageService) {}
-
-  @Post()
-  async create(
-    @User() user: JwtPayload,
-    @Body() createMessageDto: CreateMessageDto,
-  ): Promise<Message> {
-    return await this.messageService.create(user.id, createMessageDto);
-  }
 
   @Get(':id')
   async findOne(

@@ -10,5 +10,6 @@ import { MessageService } from './message.service';
   imports: [PrismaModule, JwtModule, ConfigModule],
   controllers: [MessageController],
   providers: [MessageService, MessageRepository],
+  exports: [MessageService],
 })
 export class MessageModule {}

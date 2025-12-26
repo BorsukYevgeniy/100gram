@@ -7,18 +7,22 @@ import { UpdateMessageDto } from './dto/update-message.dto';
 export class MessageRepository {
   constructor(private readonly prisma: PrismaService) {}
 
-  async create(userId: number, dto: CreateMessageDto) {
+  async create(userId: number, chatId: number, dto: CreateMessageDto) {
     return await this.prisma.message.create({
       data: {
         ...dto,
         userId: userId,
-        chatId: dto.chatId,
+        chatId: chatId,
       },
     });
   }
 
   async findById(id: number) {
     return await this.prisma.message.findUnique({ where: { id } });
+  }
+
+  async findAllMessageInChat(chatId: number) {
+    return await this.prisma.message.findMany({ where: { chatId } });
   }
 
   async update(id: number, dto: UpdateMessageDto) {
