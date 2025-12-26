@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { Chat, ChatToUser } from '../../../generated/prisma/client';
 import { ChatType } from '../../../generated/prisma/enums';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateGroupChatDto } from './dto/create-group-chat.dto';
@@ -8,7 +9,10 @@ import { UpdateGroupChatDto } from './dto/update-group-chat.dto';
 export class ChatRepository {
   constructor(private readonly prisma: PrismaService) {}
 
-  async createPrivateChat(userId: number, participantId: number) {
+  async createPrivateChat(
+    userId: number,
+    participantId: number,
+  ): Promise<Chat> {
     return await this.prisma.chat.create({
       data: {
         chatType: ChatType.PRIVATE,
@@ -26,7 +30,7 @@ export class ChatRepository {
     });
   }
 
-  async createGroupChat(dto: CreateGroupChatDto) {
+  async createGroupChat(dto: CreateGroupChatDto): Promise<Chat> {
     return await this.prisma.chat.create({
       data: {
         chatType: ChatType.GROUP,
@@ -39,22 +43,37 @@ export class ChatRepository {
     });
   }
 
-  async updateGroupChat(id: number, dto: UpdateGroupChatDto) {
+  async updateGroupChat(id: number, dto: UpdateGroupChatDto): Promise<Chat> {
     return await this.prisma.chat.update({
       where: { id },
       data: dto,
     });
   }
 
-  async getById(id: number) {
+  async getById(id: number): Promise<Chat> {
     return await this.prisma.chat.findUnique({
       where: { id },
     });
   }
 
-  async delete(id: number) {
+  async delete(id: number): Promise<Chat> {
     return await this.prisma.chat.delete({
       where: { id },
+    });
+  }
+
+  async deleteUserFromChat(
+    chatId: number,
+    userId: number,
+  ): Promise<ChatToUser> {
+    return await this.prisma.chatToUser.delete({
+      where: { chatId_userId: { chatId, userId } },
+    });
+  }
+
+  async addUserToChat(chatId: number, userId: number): Promise<ChatToUser> {
+    return await this.prisma.chatToUser.create({
+      data: { chatId, userId },
     });
   }
 

@@ -5,7 +5,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { PrismaClientKnownRequestError } from '@prisma/client/runtime/client';
-import { Chat, Role } from '../../../generated/prisma/client';
+import { Chat, ChatType, Role, User } from '../../../generated/prisma/client';
 import { JwtPayload } from '../../common/interfaces';
 import { UserService } from '../user/user.service';
 import { ChatRepository } from './chat.repository';
@@ -20,13 +20,27 @@ export class ChatService {
     private readonly userService: UserService,
   ) {}
 
-  private async validateUsers(userIds: number[]) {
+  private async validateChatType(chatId: number, expectedType: ChatType) {
+    const chat = await this.chatRepository.getById(chatId);
+
+    if (chat.chatType !== expectedType)
+      throw new BadRequestException(`Chat is not of type ${expectedType}`);
+  }
+
+  private async validateUsers(userIds: number[]): Promise<User[]> {
     return await Promise.all(
       userIds.map((id) => this.userService.findById(id)),
     );
+
+    // If any user is not found, userService.findById will throw NotFoundException
   }
 
-  private async validateChatParticipation(user: JwtPayload, chatId: number) {
+  private async validateChatParticipation(
+    user: JwtPayload,
+    chatId: number,
+  ): Promise<void> {
+    await this.chatRepository.getById(chatId);
+
     if (user.role === Role.ADMIN) return;
 
     const usersInChat = await this.chatRepository.getUserIdsInChat(chatId);
@@ -37,11 +51,14 @@ export class ChatService {
       throw new ForbiddenException('User is not a participant of the chat');
   }
 
-  async createPrivateChat(userId: number, createChatDto: CreatePrivateChatDto) {
+  async createPrivateChat(
+    userId: number,
+    createChatDto: CreatePrivateChatDto,
+  ): Promise<Chat> {
+    await this.validateUsers([userId, createChatDto.userId]);
+
     if (userId === createChatDto.userId)
       throw new BadRequestException('Cannot create private chat with yourself');
-
-    await this.validateUsers([userId, createChatDto.userId]);
 
     return await this.chatRepository.createPrivateChat(
       userId,
@@ -49,23 +66,21 @@ export class ChatService {
     );
   }
 
-  async createGroupChat(dto: CreateGroupChatDto) {
+  async createGroupChat(dto: CreateGroupChatDto): Promise<Chat> {
     await this.validateUsers(dto.userIds);
 
     return await this.chatRepository.createGroupChat(dto);
   }
 
-  async findById(user: JwtPayload, chatId: number) {
+  async findById(user: JwtPayload, chatId: number): Promise<Chat> {
     await this.validateChatParticipation(user, chatId);
 
     const chat: Chat | null = await this.chatRepository.getById(chatId);
 
-    if (!chat) throw new NotFoundException('Chat not found');
-
     return chat;
   }
 
-  async updateGroupChat(id: number, dto: UpdateGroupChatDto) {
+  async updateGroupChat(id: number, dto: UpdateGroupChatDto): Promise<Chat> {
     try {
       return await this.chatRepository.updateGroupChat(id, dto);
     } catch (e) {
@@ -75,7 +90,7 @@ export class ChatService {
     }
   }
 
-  async delete(id: number) {
+  async delete(id: number): Promise<Chat> {
     try {
       return await this.chatRepository.delete(id);
     } catch (e) {
@@ -83,5 +98,17 @@ export class ChatService {
         throw new NotFoundException('Chat not found');
       throw e;
     }
+  }
+
+  async addUserToChat(chatId: number, userId: number) {
+    await this.validateChatType(chatId, ChatType.GROUP);
+
+    return await this.chatRepository.addUserToChat(chatId, userId);
+  }
+
+  async deleteUserFromChat(chatId: number, userId: number) {
+    await this.validateChatType(chatId, ChatType.GROUP);
+
+    return await this.chatRepository.deleteUserFromChat(chatId, userId);
   }
 }

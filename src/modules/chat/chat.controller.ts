@@ -34,7 +34,7 @@ export class ChatController {
     @User() user: JwtPayload,
     @Param('id', ParseIntPipe) id: number,
   ) {
-    return this.chatService.findById(user, id);
+    return await this.chatService.findById(user, id);
   }
 
   @Patch(':id')
@@ -42,11 +42,27 @@ export class ChatController {
     @Param('id', ParseIntPipe) id: number,
     @Body() updateChatDto: UpdateGroupChatDto,
   ) {
-    return this.chatService.updateGroupChat(id, updateChatDto);
+    return await this.chatService.updateGroupChat(id, updateChatDto);
   }
 
   @Delete(':id')
   async delete(@Param('id', ParseIntPipe) id: number) {
-    return this.chatService.delete(id);
+    return await this.chatService.delete(id);
+  }
+
+  @Post(':chatId/users/:userId')
+  async addUserToChat(
+    @Param('chatId', ParseIntPipe) chatId: number,
+    @Param('userId', ParseIntPipe) userId: number,
+  ) {
+    return await this.chatService.addUserToChat(chatId, userId);
+  }
+
+  @Delete(':chatId/users/:userId')
+  async deleteUserFromChat(
+    @Param('chatId', ParseIntPipe) chatId: number,
+    @Param('userId', ParseIntPipe) userId: number,
+  ) {
+    return await this.chatService.deleteUserFromChat(chatId, userId);
   }
 }
