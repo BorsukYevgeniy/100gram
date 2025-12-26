@@ -1,23 +1,9 @@
 {
-  "moduleFileExtensions": [
-    "js",
-    "json",
-    "ts"
-  ],
+  "moduleFileExtensions": ["js", "json", "ts"],
   "rootDir": ".",
   "testEnvironment": "node",
   "testRegex": ".e2e-spec.ts$",
   "transform": {
     "^.+\\.(t|j)s$": "ts-jest"
-  },
-  "moduleNameMapper": {
-    "@shared/shared/(.*)": "<rootDir>/../libs/shared/src/$1",
-    "@shared/shared": "<rootDir>/../libs/shared/src",
-    "@config/config/(.*)": "<rootDir>/../libs/config/src/$1",
-    "@config/config": "<rootDir>/../libs/config/src",
-    "@/user/(.*)": "<rootDir>/../libs/user/src/$1",
-    "@/user": "<rootDir>/../libs/user/src",
-    "@/prisma/(.*)": "<rootDir>/../libs/prisma/src/$1",
-    "@/prisma": "<rootDir>/../libs/prisma/src"
   }
 }
