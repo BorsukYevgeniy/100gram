@@ -30,10 +30,14 @@ export class ChatRepository {
     });
   }
 
-  async createGroupChat(dto: CreateGroupChatDto): Promise<Chat> {
+  async createGroupChat(
+    ownerId: number,
+    dto: CreateGroupChatDto,
+  ): Promise<Chat> {
     return await this.prisma.chat.create({
       data: {
         chatType: ChatType.GROUP,
+        ownerId,
         title: dto.title,
         description: dto.desctiption,
         chatToUsers: {
@@ -81,6 +85,13 @@ export class ChatRepository {
     return await this.prisma.chatToUser.findMany({
       where: { chatId },
       select: { userId: true },
+    });
+  }
+
+  async updateOwner(chatId: number, newOnwerId: number) {
+    return await this.prisma.chat.update({
+      where: { id: chatId },
+      data: { ownerId: newOnwerId },
     });
   }
 }

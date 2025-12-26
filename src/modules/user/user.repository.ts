@@ -7,6 +7,12 @@ import { CreateUserDto } from './dto/create-user.dto';
 export class UserRepository {
   constructor(private readonly prisma: PrismaService) {}
 
+  async delete(userId: number): Promise<User> {
+    return await this.prisma.user.delete({
+      where: { id: userId },
+    });
+  }
+
   async create(dto: CreateUserDto): Promise<User> {
     return await this.prisma.user.create({ data: dto });
   }
@@ -23,6 +29,15 @@ export class UserRepository {
     return await this.prisma.user.update({
       where: { id },
       data: { role: Role.ADMIN },
+    });
+  }
+
+  async getChatsWhereUserIsOwner(userId: number) {
+    return await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: {
+        chatsOwned: { select: { id: true, ownerId: true, chatType: true } },
+      },
     });
   }
 }
