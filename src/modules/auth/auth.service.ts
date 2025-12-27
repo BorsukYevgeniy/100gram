@@ -1,12 +1,15 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { CreateUserDto } from '../user/dto/create-user.dto';
 import { UserService } from '../user/user.service';
 
-import { JwtService, JwtSignOptions } from '@nestjs/jwt';
 import { compare, hash } from 'bcryptjs';
 import { Role } from '../../../generated/prisma/enums';
-import { JwtPayload } from '../../common/interfaces';
 import { ConfigService } from '../config/config.service';
+import { TokenService } from '../token/token.service';
 import { LoginDto } from './dto/login.dto';
 
 @Injectable()
@@ -17,18 +20,8 @@ export class AuthService {
   constructor(
     private readonly configService: ConfigService,
     private readonly userService: UserService,
-    private readonly jwtService: JwtService,
-  ) {
-    this.ACCESS_TOKEN_EXP = this.configService.ACCESS_TOKEN_EXP;
-    this.ACCESS_TOKEN_SECRET = this.configService.ACCESS_TOKEN_SECRET;
-  }
-
-  private async generateAccessToken(id: number, role: Role) {
-    return await this.jwtService.signAsync<JwtPayload>({ id, role }, {
-      secret: this.ACCESS_TOKEN_SECRET,
-      expiresIn: this.ACCESS_TOKEN_EXP,
-    } as JwtSignOptions);
-  }
+    private readonly tokenService: TokenService,
+  ) {}
 
   async register(dto: CreateUserDto) {
     const user = await this.userService.findByEmail(dto.email);
@@ -48,7 +41,7 @@ export class AuthService {
       password: hashedPassword,
     });
 
-    return await this.generateAccessToken(newUser.id, newUser.role as Role);
+    return await this.tokenService.generateTokens(newUser.id, newUser.role);
   }
 
   async login(dto: LoginDto) {
@@ -60,6 +53,28 @@ export class AuthService {
 
     if (!isPasswordValid) throw new BadRequestException('Invalid credentials');
 
-    return await this.generateAccessToken(user.id, user.role as Role);
+    return await this.tokenService.generateTokens(user.id, user.role as Role);
+  }
+
+  async logout(token: string) {
+    return await this.tokenService.deleteToken(token);
+  }
+
+  async logoutAll(userId: number) {
+    return await this.tokenService.deleteAllUserTokens(userId);
+  }
+
+  async refresh(token: string) {
+    const { id } = await this.tokenService.verifyRefreshToken(token);
+
+    const userTokens = await this.tokenService.getUserTokens(id);
+
+    const isTokenValid = userTokens.some((u) => u.token === token);
+
+    if (!isTokenValid) throw new UnauthorizedException('Invalid refresh token');
+
+    const { role } = await this.userService.findById(id);
+
+    return await this.tokenService.update(id, role, token);
   }
 }

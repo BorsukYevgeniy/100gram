@@ -1,14 +1,13 @@
 import { Module } from '@nestjs/common';
-import { JwtModule } from '@nestjs/jwt';
 import { ChatModule } from '../chat/chat.module';
-import { ConfigModule } from '../config/config.module';
 import { PrismaModule } from '../prisma/prisma.module';
+import { TokenModule } from '../token/token.module';
 import { UserController } from './user.controller';
 import { UserRepository } from './user.repository';
 import { UserService } from './user.service';
 
 @Module({
-  imports: [PrismaModule, JwtModule, ConfigModule, ChatModule],
+  imports: [PrismaModule, TokenModule, ChatModule],
   providers: [UserService, UserRepository],
   controllers: [UserController],
   exports: [UserService],

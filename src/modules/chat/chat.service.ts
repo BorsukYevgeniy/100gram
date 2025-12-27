@@ -6,7 +6,7 @@ import {
 } from '@nestjs/common';
 import { PrismaClientKnownRequestError } from '@prisma/client/runtime/client';
 import { Chat, ChatType, Role } from '../../../generated/prisma/client';
-import { JwtPayload } from '../../common/interfaces';
+import { AccessTokenPayload } from '../../common/interfaces';
 import { MessageService } from '../message/message.service';
 import { ChatRepository } from './chat.repository';
 import { CreateGroupChatDto } from './dto/create-group-chat.dto';
@@ -28,7 +28,7 @@ export class ChatService {
   }
 
   private async validateChatParticipation(
-    user: JwtPayload,
+    user: AccessTokenPayload,
     chatId: number,
   ): Promise<void> {
     await this.chatRepository.getById(chatId);
@@ -82,7 +82,7 @@ export class ChatService {
     }
   }
 
-  async findById(user: JwtPayload, chatId: number): Promise<Chat> {
+  async findById(user: AccessTokenPayload, chatId: number): Promise<Chat> {
     await this.validateChatParticipation(user, chatId);
 
     const chat: Chat | null = await this.chatRepository.getById(chatId);
@@ -160,7 +160,7 @@ export class ChatService {
     return await this.chatRepository.updateOwner(chatId, newOwnerId);
   }
 
-  async getAllMessagesInChat(user: JwtPayload, chatId: number) {
+  async getAllMessagesInChat(user: AccessTokenPayload, chatId: number) {
     await this.validateChatParticipation(user, chatId);
 
     const messages = await this.chatRepository.findAllMessagesInChat(chatId);

@@ -10,7 +10,7 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { User } from '../../common/decorators/user.decorator';
-import { JwtPayload } from '../../common/interfaces';
+import { AccessTokenPayload } from '../../common/interfaces';
 import { AuthGuard } from '../auth/guards/auth.guard';
 import { ChatService } from './chat.service';
 import { CreateGroupChatDto } from './dto/create-group-chat.dto';
@@ -24,7 +24,7 @@ export class ChatController {
 
   @Post('private')
   async createPrivateChat(
-    @User() user: JwtPayload,
+    @User() user: AccessTokenPayload,
     @Body() dto: CreatePrivateChatDto,
   ) {
     return await this.chatService.createPrivateChat(user.id, dto);
@@ -32,7 +32,7 @@ export class ChatController {
 
   @Post('group')
   async createGroupChat(
-    @User() user: JwtPayload,
+    @User() user: AccessTokenPayload,
     @Body() dto: CreateGroupChatDto,
   ) {
     return await this.chatService.createGroupChat(user.id, dto);
@@ -40,7 +40,7 @@ export class ChatController {
 
   @Get(':id')
   async findOne(
-    @User() user: JwtPayload,
+    @User() user: AccessTokenPayload,
     @Param('id', ParseIntPipe) id: number,
   ) {
     return await this.chatService.findById(user, id);

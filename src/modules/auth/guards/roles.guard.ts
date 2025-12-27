@@ -6,17 +6,15 @@ import {
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 
-import { JwtService } from '@nestjs/jwt';
-import { AuthRequest, JwtPayload } from '../../../common/interfaces';
-import { ConfigService } from '../../config/config.service';
+import { AuthRequest } from '../../../common/interfaces';
+import { TokenService } from '../../token/token.service';
 import { RequiredRoles } from '../decorator/required-roles.decorator';
 
 @Injectable()
 export class RolesGuard implements CanActivate {
   constructor(
     private readonly reflector: Reflector,
-    private readonly jwtService: JwtService,
-    private readonly configService: ConfigService,
+    private readonly tokenService: TokenService,
   ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
@@ -24,9 +22,6 @@ export class RolesGuard implements CanActivate {
       RequiredRoles,
       context.getHandler(),
     );
-    if (!requieredRoles) {
-      return true;
-    }
 
     const req = context.switchToHttp().getRequest<AuthRequest>();
 
@@ -37,14 +32,14 @@ export class RolesGuard implements CanActivate {
     }
 
     try {
-      const payload = await this.jwtService.verifyAsync<JwtPayload>(
-        accessToken,
-        {
-          secret: this.configService.ACCESS_TOKEN_SECRET,
-        },
-      );
+      const payload = await this.tokenService.verifyAccessToken(accessToken);
 
       req.user = payload;
+
+      if (!requieredRoles) {
+        return true;
+      }
+
       return requieredRoles.includes(payload.role);
     } catch {
       throw new UnauthorizedException();

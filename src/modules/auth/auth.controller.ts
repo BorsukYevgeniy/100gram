@@ -1,5 +1,16 @@
-import { Body, Controller, Post, Res, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Post,
+  Req,
+  Res,
+  UnauthorizedException,
+  UseGuards,
+} from '@nestjs/common';
 import { Response } from 'express';
+import { User } from '../../common/decorators/user.decorator';
+import { AccessTokenPayload } from '../../common/interfaces';
+import { AuthRequest } from '../../common/interfaces/auth-request.interface';
 import { CreateUserDto } from '../user/dto/create-user.dto';
 import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
@@ -11,12 +22,17 @@ export class AuthController {
 
   @Post('register')
   async register(@Body() dto: CreateUserDto, @Res() res: Response) {
-    const accessToken = await this.authService.register(dto);
+    const { accessToken, refreshToken } = await this.authService.register(dto);
+
+    res.cookie('access_token', accessToken, {
+      httpOnly: true,
+      maxAge: 2 * 24 * 60 * 60 * 1000, // 2 days
+    });
 
     res
-      .cookie('access_token', accessToken, {
+      .cookie('refresh_token', refreshToken, {
         httpOnly: true,
-        maxAge: 2 * 24 * 60 * 60 * 1000, // 2 days
+        maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
       })
       .status(201)
       .end();
@@ -24,12 +40,42 @@ export class AuthController {
 
   @Post('login')
   async login(@Body() dto: LoginDto, @Res() res: Response) {
-    const accessToken = await this.authService.login(dto);
+    const { accessToken, refreshToken } = await this.authService.login(dto);
+
+    res.cookie('access_token', accessToken, {
+      httpOnly: true,
+      maxAge: 2 * 24 * 60 * 60 * 1000, // 2 days
+    });
 
     res
-      .cookie('access_token', accessToken, {
+      .cookie('refresh_token', refreshToken, {
         httpOnly: true,
-        maxAge: 2 * 24 * 60 * 60 * 1000, // 2 days
+        maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+      })
+      .status(200)
+      .end();
+  }
+
+  @Post('refresh')
+  @UseGuards(AuthGuard)
+  async refresh(@Req() req: AuthRequest, @Res() res: Response) {
+    const refreshTokenCookie = req.cookies.refresh_token;
+
+    if (!refreshTokenCookie)
+      throw new UnauthorizedException('Refresh token is missing');
+
+    const { accessToken, refreshToken } =
+      await this.authService.refresh(refreshTokenCookie);
+
+    res.cookie('access_token', accessToken, {
+      httpOnly: true,
+      maxAge: 2 * 24 * 60 * 60 * 1000, // 2 days
+    });
+
+    res
+      .cookie('refresh_token', refreshToken, {
+        httpOnly: true,
+        maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
       })
       .status(200)
       .end();
@@ -38,6 +84,16 @@ export class AuthController {
   @Post('logout')
   @UseGuards(AuthGuard)
   async logout(@Res() res: Response) {
-    res.clearCookie('access_token').status(200).end();
+    res.clearCookie('access_token');
+    res.clearCookie('refresh_token').status(200).end();
+  }
+
+  @Post('logout-all')
+  @UseGuards(AuthGuard)
+  async logoutAll(@User() user: AccessTokenPayload, @Res() res: Response) {
+    await this.authService.logoutAll(user.id);
+
+    res.clearCookie('access_token');
+    res.clearCookie('refresh_token').status(200).end();
   }
 }

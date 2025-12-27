@@ -4,7 +4,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { Message, Role } from '../../../generated/prisma/client';
-import { JwtPayload } from '../../common/interfaces';
+import { AccessTokenPayload } from '../../common/interfaces';
 import { CreateMessageDto } from './dto/create-message.dto';
 import { UpdateMessageDto } from './dto/update-message.dto';
 import { MessageRepository } from './message.repository';
@@ -14,7 +14,7 @@ export class MessageService {
   constructor(private readonly messageRepository: MessageRepository) {}
 
   private async validateMessageOwnership(
-    user: JwtPayload,
+    user: AccessTokenPayload,
     messageId: number,
   ): Promise<Message> {
     const message = await this.messageRepository.findById(messageId);
@@ -37,7 +37,10 @@ export class MessageService {
     return await this.messageRepository.create(userId, chatId, dto);
   }
 
-  async findById(user: JwtPayload, messageId: number): Promise<Message> {
+  async findById(
+    user: AccessTokenPayload,
+    messageId: number,
+  ): Promise<Message> {
     const message = await this.validateMessageOwnership(user, messageId);
 
     if (!message) throw new NotFoundException('Message not found');
@@ -55,7 +58,7 @@ export class MessageService {
   }
 
   async update(
-    user: JwtPayload,
+    user: AccessTokenPayload,
     messageId: number,
     dto: UpdateMessageDto,
   ): Promise<Message> {
@@ -63,7 +66,7 @@ export class MessageService {
     return await this.messageRepository.update(messageId, dto);
   }
 
-  async delete(user: JwtPayload, messageId: number): Promise<Message> {
+  async delete(user: AccessTokenPayload, messageId: number): Promise<Message> {
     await this.validateMessageOwnership(user, messageId);
     return await this.messageRepository.delete(messageId);
   }

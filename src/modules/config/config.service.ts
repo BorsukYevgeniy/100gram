@@ -21,7 +21,19 @@ export class ConfigService {
     return this.configService.getOrThrow<string>('ACCESS_TOKEN_SECRET');
   }
 
-  get ACCESS_TOKEN_EXP(): string {
-    return this.configService.getOrThrow<string>('ACCESS_TOKEN_EXP');
+  get ACCESS_TOKEN_EXPIRATION_TIME(): string {
+    return this.configService.getOrThrow<string>(
+      'ACCESS_TOKEN_EXPIRATION_TIME',
+    );
+  }
+
+  get REFRESH_TOKEN_SECRET(): string {
+    return this.configService.getOrThrow<string>('REFRESH_TOKEN_SECRET');
+  }
+
+  get REFRESH_TOKEN_EXPIRATION_TIME(): string {
+    return this.configService.getOrThrow<string>(
+      'REFRESH_TOKEN_EXPIRATION_TIME',
+    );
   }
 }

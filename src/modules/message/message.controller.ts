@@ -10,7 +10,7 @@ import {
 } from '@nestjs/common';
 import { Message } from '../../../generated/prisma/client';
 import { User } from '../../common/decorators/user.decorator';
-import { JwtPayload } from '../../common/interfaces';
+import { AccessTokenPayload } from '../../common/interfaces';
 import { AuthGuard } from '../auth/guards/auth.guard';
 import { UpdateMessageDto } from './dto/update-message.dto';
 import { MessageService } from './message.service';
@@ -22,7 +22,7 @@ export class MessageController {
 
   @Get(':id')
   async findOne(
-    @User() user: JwtPayload,
+    @User() user: AccessTokenPayload,
     @Param('id', ParseIntPipe) messageId: number,
   ): Promise<Message> {
     return await this.messageService.findById(user, messageId);
@@ -30,7 +30,7 @@ export class MessageController {
 
   @Patch(':id')
   async update(
-    @User() user: JwtPayload,
+    @User() user: AccessTokenPayload,
     @Param('id', ParseIntPipe) messageId: number,
     @Body() updateMessageDto: UpdateMessageDto,
   ): Promise<Message> {
@@ -39,7 +39,7 @@ export class MessageController {
 
   @Delete(':id')
   async delete(
-    @User() user: JwtPayload,
+    @User() user: AccessTokenPayload,
     @Param('id', ParseIntPipe) messageId: number,
   ): Promise<Message> {
     return await this.messageService.delete(user, messageId);

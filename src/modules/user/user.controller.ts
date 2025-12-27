@@ -7,7 +7,7 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { Role, User } from '../../../generated/prisma/client';
-import { JwtPayload } from '../../common/interfaces';
+import { AccessTokenPayload } from '../../common/interfaces';
 import { RequiredRoles } from '../auth/decorator/required-roles.decorator';
 import { AuthGuard } from '../auth/guards/auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
@@ -28,7 +28,7 @@ export class UserController {
 
   @UseGuards(AuthGuard)
   @Delete('me')
-  async deleteMe(@UserFromReq() user: JwtPayload): Promise<User> {
+  async deleteMe(@UserFromReq() user: AccessTokenPayload): Promise<User> {
     return await this.userService.delete(user.id);
   }
 

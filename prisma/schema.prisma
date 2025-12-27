@@ -15,15 +15,14 @@ model User {
   role        Role         @default(USER)
   messages    Message[]
   chatToUsers ChatToUser[]
-
+  tokens      Token[]
   // Chats where the user is the owner
-  chatsOwned Chat[]
+  chatsOwned  Chat[]
 }
 
 model Message {
-  id   Int    @id @default(autoincrement())
-  text String
-
+  id        Int      @id @default(autoincrement())
+  text      String
   createdAt DateTime @default(now())
 
   userId Int
@@ -55,6 +54,15 @@ model Chat {
 
   ownerId Int?
   owner   User? @relation(fields: [ownerId], references: [id])
+}
+
+model Token {
+  id        Int      @id @default(autoincrement())
+  token     String   @unique
+  expiresAt DateTime
+
+  userId Int
+  user   User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 enum ChatType {
