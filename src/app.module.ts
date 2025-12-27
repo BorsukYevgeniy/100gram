@@ -7,6 +7,13 @@ import { UserModule } from './modules/user/user.module';
 import { TokenModule } from './modules/token/token.module';
 
 @Module({
-  imports: [UserModule, ConfigModule, AuthModule, MessageModule, ChatModule, TokenModule],
+  imports: [
+    UserModule,
+    ConfigModule,
+    AuthModule,
+    MessageModule,
+    ChatModule,
+    TokenModule,
+  ],
 })
 export class AppModule {}
