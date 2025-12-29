@@ -56,6 +56,14 @@ export class AuthService {
     return await this.tokenService.generateTokens(user.id, user.role as Role);
   }
 
+  async loginById(userId: number) {
+    const user = await this.userService.findById(userId);
+
+    if (!user) throw new BadRequestException('Invalid credentials');
+
+    return await this.tokenService.generateTokens(user.id, user.role as Role);
+  }
+
   async logout(token: string) {
     return await this.tokenService.deleteToken(token);
   }
@@ -76,5 +84,13 @@ export class AuthService {
     const { role } = await this.userService.findById(id);
 
     return await this.tokenService.update(id, role, token);
+  }
+
+  async validateGoogleUser(googleUser: CreateUserDto) {
+    const user = await this.userService.findByEmail(googleUser.email);
+
+    if (user) return user;
+
+    return await this.userService.create(googleUser);
   }
 }

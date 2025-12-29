@@ -36,4 +36,14 @@ export class ConfigService {
       'REFRESH_TOKEN_EXPIRATION_TIME',
     );
   }
+
+  get GOOGLE_CONFIG() {
+    return {
+      clientID: this.configService.getOrThrow<string>('GOOGLE_CLIENT_ID'),
+      clientSecret: this.configService.getOrThrow<string>(
+        'GOOGLE_CLIENT_SECRET',
+      ),
+      callbackURL: this.configService.getOrThrow<string>('GOOGLE_CALLBACK_URL'),
+    };
+  }
 }

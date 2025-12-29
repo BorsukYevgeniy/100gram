@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Get,
   Post,
   Req,
   Res,
@@ -13,8 +14,10 @@ import { AccessTokenPayload } from '../../common/interfaces';
 import { AuthRequest } from '../../common/interfaces/auth-request.interface';
 import { CreateUserDto } from '../user/dto/create-user.dto';
 import { AuthService } from './auth.service';
+import { Public } from './decorator/public.decorator';
 import { LoginDto } from './dto/login.dto';
 import { AuthGuard } from './guards/auth.guard';
+import { GoogleGuard } from './guards/google.guard';
 
 @Controller('auth')
 export class AuthController {
@@ -95,5 +98,32 @@ export class AuthController {
 
     res.clearCookie('access_token');
     res.clearCookie('refresh_token').status(200).end();
+  }
+
+  @Public()
+  @Get('google/login')
+  @UseGuards(GoogleGuard)
+  async googleLogin() {}
+
+  @Public()
+  @Get('google/callback')
+  @UseGuards(GoogleGuard)
+  async googleCallback(@Req() req: AuthRequest, @Res() res: Response) {
+    const { accessToken, refreshToken } = await this.authService.loginById(
+      req.user.id,
+    );
+
+    res.cookie('access_token', accessToken, {
+      httpOnly: true,
+      maxAge: 2 * 24 * 60 * 60 * 1000, // 2 days
+    });
+
+    res
+      .cookie('refresh_token', refreshToken, {
+        httpOnly: true,
+        maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+      })
+      .status(200)
+      .end();
   }
 }
