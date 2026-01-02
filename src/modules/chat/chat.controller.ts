@@ -12,6 +12,7 @@ import {
 import { User } from '../../common/decorators/user.decorator';
 import { AccessTokenPayload } from '../../common/interfaces';
 import { AuthGuard } from '../auth/guards/auth.guard';
+import { ChatGateway } from './chat.gateway';
 import { ChatService } from './chat.service';
 import { CreateGroupChatDto } from './dto/create-group-chat.dto';
 import { CreatePrivateChatDto } from './dto/create-private-chat.dto';
@@ -20,7 +21,10 @@ import { UpdateGroupChatDto } from './dto/update-group-chat.dto';
 @Controller('chats')
 @UseGuards(AuthGuard)
 export class ChatController {
-  constructor(private readonly chatService: ChatService) {}
+  constructor(
+    private readonly chatService: ChatService,
+    private readonly chatGateway: ChatGateway,
+  ) {}
 
   @Post('private')
   async createPrivateChat(
@@ -67,7 +71,10 @@ export class ChatController {
     @Param('chatId', ParseIntPipe) chatId: number,
     @Param('userId', ParseIntPipe) userId: number,
   ) {
-    return await this.chatService.deleteUserFromChat(chatId, userId);
+    const chat = await this.chatService.deleteUserFromChat(chatId, userId);
+    await this.chatGateway.leaveChat(chatId, userId);
+
+    return chat;
   }
 
   @Delete(':id')
