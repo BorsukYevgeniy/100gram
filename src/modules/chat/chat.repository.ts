@@ -39,7 +39,7 @@ export class ChatRepository {
         chatType: ChatType.GROUP,
         ownerId,
         title: dto.title,
-        description: dto.desctiption,
+        description: dto.description,
         chatToUsers: {
           create: dto.userIds.map((id) => ({ userId: id })),
         },

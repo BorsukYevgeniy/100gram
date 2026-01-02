@@ -56,7 +56,8 @@ export class ChatGateway {
   @SubscribeMessage('updateMessage')
   async handleUpdatingMessage(
     @ConnectedSocket() client: Socket,
-    @MessageBody() payload: UpdateMessageDto & { chatId: number },
+    @MessageBody()
+    payload: UpdateMessageDto & { chatId: number; messageId: number },
   ) {
     const { chatId, ...dto } = payload;
     const user = await this.getUserFromWs(client);
@@ -104,7 +105,7 @@ export class ChatGateway {
     const accessToken = cookie
       .split(';')
       .map((cookie) => cookie.trim())
-      .find((cookie) => cookie.startsWith('accessToken='))
+      .find((cookie) => cookie.startsWith('access_token='))
       .split('=')[1];
 
     const tokenPayload = await this.tokenService.verifyAccessToken(accessToken);

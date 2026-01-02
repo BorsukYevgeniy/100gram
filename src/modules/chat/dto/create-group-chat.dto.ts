@@ -15,7 +15,7 @@ export class CreateGroupChatDto {
   @IsOptional()
   @IsString()
   @Length(2, 500)
-  desctiption?: string;
+  description?: string;
 
   @IsArray()
   @IsInt({ each: true })
