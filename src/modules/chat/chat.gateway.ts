@@ -1,3 +1,4 @@
+import { HttpException, UsePipes, ValidationPipe } from '@nestjs/common';
 import {
   ConnectedSocket,
   MessageBody,
@@ -8,12 +9,31 @@ import {
 } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
 import { AccessTokenPayload } from '../../common/interfaces';
-import { CreateMessageDto } from '../message/dto/create-message.dto';
-import { UpdateMessageDto } from '../message/dto/update-message.dto';
+import { DeleteMessageGatewayDto } from '../message/dto/delete-message-gateway.dto';
+import { SendMessageDto } from '../message/dto/send-message.dto';
+import { UpdateMessageGatewayDto } from '../message/dto/update-message-gateway.dto';
 import { MessageService } from '../message/message.service';
 import { TokenService } from '../token/token.service';
 import { ChatService } from './chat.service';
 
+@UsePipes(
+  new ValidationPipe({
+    whitelist: true,
+    transform: true,
+    exceptionFactory: (errors) => {
+      const formattedErrors = errors.map((err) => ({
+        property: err.property,
+        target: err.target,
+        messages: err.constraints ? Object.values(err.constraints) : [],
+      }));
+
+      return new WsException({
+        errorCode: 400,
+        errors: formattedErrors,
+      });
+    },
+  }),
+)
 @WebSocketGateway({
   cors: {
     origin: '*',
@@ -43,7 +63,7 @@ export class ChatGateway {
   @SubscribeMessage('createMessage')
   async handleCreatingMessage(
     @ConnectedSocket() client: Socket,
-    @MessageBody() payload: CreateMessageDto & { chatId: number },
+    @MessageBody() payload: SendMessageDto,
   ) {
     const { id } = await this.getUserFromWs(client);
     const { chatId, ...dto } = payload;
@@ -57,26 +77,35 @@ export class ChatGateway {
   async handleUpdatingMessage(
     @ConnectedSocket() client: Socket,
     @MessageBody()
-    payload: UpdateMessageDto & { chatId: number; messageId: number },
+    payload: UpdateMessageGatewayDto,
   ) {
     const { chatId, ...dto } = payload;
     const user = await this.getUserFromWs(client);
-    const message = await this.messageService.update(user, chatId, dto);
 
-    this.server.to(`chat-${chatId}`).emit('chatUpdatedMessage', message);
+    try {
+      const message = await this.messageService.update(user, chatId, dto);
+      this.server.to(`chat-${chatId}`).emit('chatUpdatedMessage', message);
+    } catch (e) {
+      if (e instanceof HttpException) throw new WsException(e.message);
+    }
   }
 
   @SubscribeMessage('deleteMessage')
   async handleDeletingMessage(
     @ConnectedSocket() client: Socket,
     @MessageBody()
-    payload: { chatId: number; messageId: number },
+    payload: DeleteMessageGatewayDto,
   ) {
     const { chatId, messageId } = payload;
     const user = await this.getUserFromWs(client);
-    const message = await this.messageService.delete(user, messageId);
 
-    this.server.to(`chat-${chatId}`).emit('chatDeletedMessage', message);
+    try {
+      const message = await this.messageService.delete(user, messageId);
+
+      this.server.to(`chat-${chatId}`).emit('chatDeletedMessage', message);
+    } catch (e) {
+      if (e instanceof HttpException) throw new WsException(e.message);
+    }
   }
 
   @SubscribeMessage('leaveChat')
