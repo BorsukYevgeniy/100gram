@@ -7,7 +7,6 @@ import {
 import { PrismaClientKnownRequestError } from '@prisma/client/runtime/client';
 import { Chat, ChatType, Role } from '../../../generated/prisma/client';
 import { AccessTokenPayload } from '../../common/interfaces';
-import { MessageService } from '../message/message.service';
 import { ChatRepository } from './chat.repository';
 import { CreateGroupChatDto } from './dto/create-group-chat.dto';
 import { CreatePrivateChatDto } from './dto/create-private-chat.dto';
@@ -15,13 +14,12 @@ import { UpdateGroupChatDto } from './dto/update-group-chat.dto';
 
 @Injectable()
 export class ChatService {
-  constructor(
-    private readonly chatRepository: ChatRepository,
-    private readonly messageService: MessageService,
-  ) {}
+  constructor(private readonly chatRepository: ChatRepository) {}
 
   private async validateChatType(chatId: number, expectedType: ChatType) {
     const chat = await this.chatRepository.getById(chatId);
+
+    if (!chat) throw new NotFoundException('Chat not found');
 
     if (chat.chatType !== expectedType)
       throw new BadRequestException(`Chat is not of type ${expectedType}`);
@@ -31,7 +29,9 @@ export class ChatService {
     user: AccessTokenPayload,
     chatId: number,
   ): Promise<void> {
-    await this.chatRepository.getById(chatId);
+    const chat: Chat | null = await this.chatRepository.getById(chatId);
+
+    if (!chat) throw new NotFoundException('Chat not found');
 
     if (user.role === Role.ADMIN) return;
 
@@ -133,7 +133,7 @@ export class ChatService {
     const isParticipant = await this.checkChatParticipation(userId, chatId);
 
     if (!isParticipant)
-      throw new NotFoundException('User is not a participant of the chat');
+      throw new ForbiddenException('User is not a participant of the chat');
 
     if (chat.chatType === ChatType.PRIVATE)
       return await this.chatRepository.delete(chatId);
@@ -142,14 +142,17 @@ export class ChatService {
       return await this.chatRepository.deleteUserFromChat(chatId, userId);
 
     const participants = await this.chatRepository.getUserIdsInChat(chatId);
-
     const newOwner = participants.find((u) => u.userId !== userId);
 
     if (newOwner) {
-      await this.chatRepository.updateOwner(chatId, newOwner.userId);
+      return await this.chatRepository.updateOwnerAndDeleteUser(
+        chatId,
+        newOwner.userId,
+        userId,
+      );
     }
 
-    return await this.chatRepository.deleteUserFromChat(chatId, userId);
+    return await this.chatRepository.delete(chatId);
   }
 
   async getUserIdsInChat(chatId: number): Promise<{ userId: number }[]> {
@@ -157,7 +160,13 @@ export class ChatService {
   }
 
   async updateOwner(chatId: number, newOwnerId: number): Promise<Chat> {
-    return await this.chatRepository.updateOwner(chatId, newOwnerId);
+    await this.validateChatType(chatId, ChatType.GROUP);
+    try {
+      return await this.chatRepository.updateOwner(chatId, newOwnerId);
+    } catch (e) {
+      if (e instanceof PrismaClientKnownRequestError && e.code === 'P2003')
+        throw new NotFoundException('User not found');
+    }
   }
 
   async getAllMessagesInChat(user: AccessTokenPayload, chatId: number) {

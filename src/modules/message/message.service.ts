@@ -3,6 +3,7 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
+import { PrismaClientKnownRequestError } from '@prisma/client/runtime/client';
 import { Message, Role } from '../../../generated/prisma/client';
 import { AccessTokenPayload } from '../../common/interfaces';
 import { CreateMessageDto } from './dto/create-message.dto';
@@ -34,18 +35,20 @@ export class MessageService {
     chatId: number,
     dto: CreateMessageDto,
   ): Promise<Message> {
-    return await this.messageRepository.create(userId, chatId, dto);
+    try {
+      return await this.messageRepository.create(userId, chatId, dto);
+    } catch (e) {
+      if (e instanceof PrismaClientKnownRequestError && e.code === 'P2003') {
+        throw new NotFoundException('Chat not found');
+      } else throw e;
+    }
   }
 
   async findById(
     user: AccessTokenPayload,
     messageId: number,
   ): Promise<Message> {
-    const message = await this.validateMessageOwnership(user, messageId);
-
-    if (!message) throw new NotFoundException('Message not found');
-
-    return message;
+    return await this.validateMessageOwnership(user, messageId);
   }
 
   async findAllMessageInChat(chatId: number): Promise<Message[]> {

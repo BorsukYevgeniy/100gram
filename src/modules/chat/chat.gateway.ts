@@ -68,9 +68,13 @@ export class ChatGateway {
     const { id } = await this.getUserFromWs(client);
     const { chatId, ...dto } = payload;
 
-    const message = await this.messageService.create(id, chatId, dto);
+    try {
+      const message = await this.messageService.create(id, chatId, dto);
 
-    this.server.to(`chat-${chatId}`).emit('chatCreatedMessage', message);
+      this.server.to(`chat-${chatId}`).emit('chatCreatedMessage', message);
+    } catch (e) {
+      if (e instanceof HttpException) throw new WsException(e.message);
+    }
   }
 
   @SubscribeMessage('updateMessage')
@@ -146,8 +150,9 @@ export class ChatGateway {
     const user = await this.getUserFromWs(client);
 
     const users = await this.chatService.getUserIdsInChat(chatId);
-    const userInChat = users.some((u) => u.userId === user.id);
+    if (users.length === 0) throw new WsException('Chat not found');
 
+    const userInChat = users.some((u) => u.userId === user.id);
     if (!userInChat) throw new WsException("You isn't participant of chat");
   }
 }

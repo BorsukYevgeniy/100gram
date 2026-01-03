@@ -50,12 +50,20 @@ export class ChatController {
     return await this.chatService.findById(user, id);
   }
 
-  @Patch(':id')
+  @Patch(':chatId/owner/:ownerId')
+  async updateOwner(
+    @Param('chatId', ParseIntPipe) chatId: number,
+    @Param('ownerId', ParseIntPipe) ownerId: number,
+  ) {
+    return await this.chatService.updateOwner(chatId, ownerId);
+  }
+
+  @Patch(':chatId')
   async updateGroupChat(
-    @Param('id', ParseIntPipe) id: number,
+    @Param('chatId', ParseIntPipe) chatId: number,
     @Body() updateChatDto: UpdateGroupChatDto,
   ) {
-    return await this.chatService.updateGroupChat(id, updateChatDto);
+    return await this.chatService.updateGroupChat(chatId, updateChatDto);
   }
 
   @Post(':chatId/users/:userId')

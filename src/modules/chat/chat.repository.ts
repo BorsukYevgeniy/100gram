@@ -103,4 +103,20 @@ export class ChatRepository {
       select: { messages: true },
     });
   }
+
+  async updateOwnerAndDeleteUser(
+    chatId: number,
+    newOwnerId: number,
+    userId: number,
+  ) {
+    return await this.prisma.$transaction([
+      this.prisma.chatToUser.delete({
+        where: { chatId_userId: { chatId, userId } },
+      }),
+      this.prisma.chat.update({
+        where: { id: chatId },
+        data: { ownerId: newOwnerId },
+      }),
+    ]);
+  }
 }
