@@ -39,4 +39,10 @@ export class TokenRepository {
       },
     });
   }
+
+  async deleteExpiredTokens() {
+    return await this.prisma.token.deleteMany({
+      where: { expiresAt: { lt: new Date() } },
+    });
+  }
 }

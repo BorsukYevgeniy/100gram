@@ -113,4 +113,8 @@ export class TokenService {
       refreshToken: newRefreshToken,
     };
   }
+
+  async deleteExpiredTokens() {
+    return await this.tokenRepository.deleteExpiredTokens();
+  }
 }
