@@ -54,6 +54,8 @@ model Chat {
 
   ownerId Int?
   owner   User? @relation(fields: [ownerId], references: [id])
+
+  // Private chats dont have owner, title and description
 }
 
 model Token {
