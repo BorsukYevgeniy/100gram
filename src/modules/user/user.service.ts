@@ -71,4 +71,8 @@ export class UserService {
   async verify(verificationLink: string) {
     return await this.userRepository.verify(verificationLink);
   }
+
+  async deleteUnverifiedUsers() {
+    return await this.userRepository.deleteUnverifiedUsers();
+  }
 }

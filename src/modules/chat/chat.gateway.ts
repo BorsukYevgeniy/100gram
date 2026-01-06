@@ -143,6 +143,9 @@ export class ChatGateway {
 
     const tokenPayload = await this.tokenService.verifyAccessToken(accessToken);
 
+    if (!tokenPayload.isVerified)
+      throw new WsException('Forbidden resource. Please verify your account');
+
     return tokenPayload;
   }
 

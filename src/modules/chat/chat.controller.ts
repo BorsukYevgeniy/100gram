@@ -11,7 +11,7 @@ import {
 } from '@nestjs/common';
 import { User } from '../../common/decorators/user.decorator';
 import { AccessTokenPayload } from '../../common/interfaces';
-import { AuthGuard } from '../auth/guards/auth.guard';
+import { VerifiedUserGuard } from '../auth/guards/verified-user.guard';
 import { ChatGateway } from './chat.gateway';
 import { ChatService } from './chat.service';
 import { CreateGroupChatDto } from './dto/create-group-chat.dto';
@@ -19,7 +19,7 @@ import { CreatePrivateChatDto } from './dto/create-private-chat.dto';
 import { UpdateGroupChatDto } from './dto/update-group-chat.dto';
 
 @Controller('chats')
-@UseGuards(AuthGuard)
+@UseGuards(VerifiedUserGuard)
 export class ChatController {
   constructor(
     private readonly chatService: ChatService,

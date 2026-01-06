@@ -13,6 +13,7 @@ model User {
   nickname    String       @unique
   password    String
   role        Role         @default(USER)
+  createdAt   DateTime     @default(now())
   messages    Message[]
   chatToUsers ChatToUser[]
   tokens      Token[]

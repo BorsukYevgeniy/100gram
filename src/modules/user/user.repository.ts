@@ -51,4 +51,18 @@ export class UserRepository {
       data: { isVerified: true, verifiedAt: new Date() },
     });
   }
+
+  async deleteUnverifiedUsers() {
+    const deletingDate = new Date();
+    deletingDate.setDate(deletingDate.getDate() - 3);
+
+    return await this.prisma.user.deleteMany({
+      where: {
+        isVerified: false,
+        createdAt: {
+          lte: deletingDate,
+        },
+      },
+    });
+  }
 }

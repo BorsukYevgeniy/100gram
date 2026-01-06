@@ -11,12 +11,12 @@ import {
 import { Message } from '../../../generated/prisma/client';
 import { User } from '../../common/decorators/user.decorator';
 import { AccessTokenPayload } from '../../common/interfaces';
-import { AuthGuard } from '../auth/guards/auth.guard';
+import { VerifiedUserGuard } from '../auth/guards/verified-user.guard';
 import { UpdateMessageDto } from './dto/update-message.dto';
 import { MessageService } from './message.service';
 
 @Controller('message')
-@UseGuards(AuthGuard)
+@UseGuards(VerifiedUserGuard)
 export class MessageController {
   constructor(private readonly messageService: MessageService) {}
 

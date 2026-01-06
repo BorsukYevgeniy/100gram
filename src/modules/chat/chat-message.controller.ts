@@ -10,13 +10,13 @@ import {
 import { Message } from '../../../generated/prisma/client';
 import { User } from '../../common/decorators/user.decorator';
 import { AccessTokenPayload } from '../../common/interfaces';
-import { AuthGuard } from '../auth/guards/auth.guard';
+import { VerifiedUserGuard } from '../auth/guards/verified-user.guard';
 import { CreateMessageDto } from '../message/dto/create-message.dto';
 import { MessageService } from '../message/message.service';
 import { ChatService } from './chat.service';
 
 @Controller('chats/:chatId/messages')
-@UseGuards(AuthGuard)
+@UseGuards(VerifiedUserGuard)
 export class ChatMessageController {
   constructor(
     private readonly messageService: MessageService,
