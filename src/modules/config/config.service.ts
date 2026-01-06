@@ -46,4 +46,20 @@ export class ConfigService {
       callbackURL: this.configService.getOrThrow<string>('GOOGLE_CALLBACK_URL'),
     };
   }
+
+  get SMTP_HOST(): string {
+    return this.configService.getOrThrow<string>('SMTP_HOST');
+  }
+
+  get SMTP_USER(): string {
+    return this.configService.getOrThrow<string>('SMTP_USER');
+  }
+
+  get SMTP_PASSWORD(): string {
+    return this.configService.getOrThrow<string>('SMTP_PASSWORD');
+  }
+
+  get APP_URL(): string {
+    return this.configService.getOrThrow<string>('APP_URL');
+  }
 }

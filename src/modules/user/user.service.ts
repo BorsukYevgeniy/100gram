@@ -61,4 +61,14 @@ export class UserService {
 
     return await this.userRepository.delete(userId);
   }
+
+  async getUserByVerificationLink(verificationLink: string) {
+    return await this.userRepository.getUserByVerificationLink(
+      verificationLink,
+    );
+  }
+
+  async verify(verificationLink: string) {
+    return await this.userRepository.verify(verificationLink);
+  }
 }

@@ -16,4 +16,10 @@ export const validationSchema = J.object({
   GOOGLE_CALLBACK_URL: J.string().uri().required(),
   GOOGLE_CLIENT_ID: J.string().required(),
   GOOGLE_CLIENT_SECRET: J.string().required(),
+
+  SMTP_HOST: J.string().hostname().required(),
+  SMTP_USER: J.string().required(),
+  SMTP_PASSWORD: J.string().required(),
+
+  APP_URL: J.string().uri().required(),
 });

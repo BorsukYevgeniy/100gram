@@ -2,6 +2,8 @@ import {
   Body,
   Controller,
   Get,
+  Param,
+  ParseUUIDPipe,
   Post,
   Req,
   Res,
@@ -57,6 +59,13 @@ export class AuthController {
       })
       .status(200)
       .end();
+  }
+
+  @Post('verify/:verificationLink')
+  async verify(
+    @Param('verificationLink', ParseUUIDPipe) verificationLink: string,
+  ) {
+    return await this.authService.verifyUser(verificationLink);
   }
 
   @Post('refresh')

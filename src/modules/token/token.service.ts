@@ -32,11 +32,18 @@ export class TokenService {
       this.ConfigService.REFRESH_TOKEN_EXPIRATION_TIME;
   }
 
-  private async generateAccessToken(id: number, role: Role): Promise<string> {
-    return await this.jwtService.signAsync<AccessTokenPayload>({ id, role }, {
-      secret: this.ACCESS_TOKEN_SECRET,
-      expiresIn: this.ACCESS_TOKEN_EXPIRATION_TIME,
-    } as JwtSignOptions);
+  private async generateAccessToken(
+    id: number,
+    role: Role,
+    isVerified: boolean,
+  ): Promise<string> {
+    return await this.jwtService.signAsync<AccessTokenPayload>(
+      { id, role, isVerified },
+      {
+        secret: this.ACCESS_TOKEN_SECRET,
+        expiresIn: this.ACCESS_TOKEN_EXPIRATION_TIME,
+      } as JwtSignOptions,
+    );
   }
 
   private async generateRefreshToken(id: number): Promise<string> {
@@ -75,8 +82,13 @@ export class TokenService {
   async generateTokens(
     userId: number,
     role: Role,
+    isVerified: boolean,
   ): Promise<{ accessToken: string; refreshToken: string }> {
-    const accessToken = await this.generateAccessToken(userId, role);
+    const accessToken = await this.generateAccessToken(
+      userId,
+      role,
+      isVerified,
+    );
     const refreshToken = await this.generateRefreshToken(userId);
 
     await this.saveRefreshToken(userId, refreshToken);
@@ -98,12 +110,17 @@ export class TokenService {
   async update(
     userId: number,
     role: Role,
+    isVerified: boolean,
     oldToken: string,
   ): Promise<{ accessToken: string; refreshToken: string }> {
     const expiresAt: Date = new Date();
     expiresAt.setDate(expiresAt.getDate() + 7);
 
-    const accessToken = await this.generateAccessToken(userId, role);
+    const accessToken = await this.generateAccessToken(
+      userId,
+      role,
+      isVerified,
+    );
     const newRefreshToken = await this.generateRefreshToken(userId);
 
     await this.tokenRepository.update(oldToken, newRefreshToken, expiresAt);

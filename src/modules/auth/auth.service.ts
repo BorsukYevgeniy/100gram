@@ -1,26 +1,27 @@
 import {
   BadRequestException,
   Injectable,
+  NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
 import { CreateUserDto } from '../user/dto/create-user.dto';
 import { UserService } from '../user/user.service';
 
 import { compare, hash } from 'bcryptjs';
+import { User } from '../../../generated/prisma/browser';
 import { Role } from '../../../generated/prisma/enums';
 import { ConfigService } from '../config/config.service';
+import { MailService } from '../mail/mail.service';
 import { TokenService } from '../token/token.service';
 import { LoginDto } from './dto/login.dto';
 
 @Injectable()
 export class AuthService {
-  private readonly ACCESS_TOKEN_SECRET: string;
-  private readonly ACCESS_TOKEN_EXP: string;
-
   constructor(
     private readonly configService: ConfigService,
     private readonly userService: UserService,
     private readonly tokenService: TokenService,
+    private readonly mailService: MailService,
   ) {}
 
   async register(dto: CreateUserDto) {
@@ -36,12 +37,16 @@ export class AuthService {
       this.configService.PASSWORD_SALT,
     );
 
-    const newUser = await this.userService.create({
-      ...dto,
-      password: hashedPassword,
-    });
+    const { id, email, role, verificationLink } = await this.userService.create(
+      {
+        ...dto,
+        password: hashedPassword,
+      },
+    );
 
-    return await this.tokenService.generateTokens(newUser.id, newUser.role);
+    await this.mailService.sendVerificationMail(email, verificationLink);
+
+    return await this.tokenService.generateTokens(id, role, user.isVerified);
   }
 
   async login(dto: LoginDto) {
@@ -53,7 +58,11 @@ export class AuthService {
 
     if (!isPasswordValid) throw new BadRequestException('Invalid credentials');
 
-    return await this.tokenService.generateTokens(user.id, user.role as Role);
+    return await this.tokenService.generateTokens(
+      user.id,
+      user.role as Role,
+      user.isVerified,
+    );
   }
 
   async loginById(userId: number) {
@@ -61,7 +70,11 @@ export class AuthService {
 
     if (!user) throw new BadRequestException('Invalid credentials');
 
-    return await this.tokenService.generateTokens(user.id, user.role as Role);
+    return await this.tokenService.generateTokens(
+      user.id,
+      user.role as Role,
+      user.isVerified,
+    );
   }
 
   async logout(token: string) {
@@ -81,9 +94,20 @@ export class AuthService {
 
     if (!isTokenValid) throw new UnauthorizedException('Invalid refresh token');
 
-    const { role } = await this.userService.findById(id);
+    const { role, isVerified } = await this.userService.findById(id);
 
-    return await this.tokenService.update(id, role, token);
+    return await this.tokenService.update(id, role, isVerified, token);
+  }
+
+  async verifyUser(verificationLink: string) {
+    const user: User | null =
+      await this.userService.getUserByVerificationLink(verificationLink);
+
+    if (!user) throw new NotFoundException('User not found');
+
+    if (user.isVerified) throw new BadRequestException('User already verified');
+
+    return await this.userService.verify(verificationLink);
   }
 
   async validateGoogleUser(googleUser: CreateUserDto) {

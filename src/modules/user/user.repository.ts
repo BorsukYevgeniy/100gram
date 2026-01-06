@@ -40,4 +40,15 @@ export class UserRepository {
       },
     });
   }
+
+  async getUserByVerificationLink(verificationLink: string) {
+    return await this.prisma.user.findUnique({ where: { verificationLink } });
+  }
+
+  async verify(verificationLink: string) {
+    return await this.prisma.user.update({
+      where: { verificationLink },
+      data: { isVerified: true, verifiedAt: new Date() },
+    });
+  }
 }

@@ -20,6 +20,7 @@
     "test:e2e": "jest --config ./apps/100gram/test/jest-e2e.json"
   },
   "dependencies": {
+    "@nestjs-modules/mailer": "^2.0.2",
     "@nestjs/common": "^10.0.0",
     "@nestjs/config": "^4.0.2",
     "@nestjs/core": "^10.0.0",
@@ -37,6 +38,7 @@
     "class-validator": "^0.14.3",
     "cookie-parser": "^1.4.7",
     "joi": "^18.0.2",
+    "nodemailer": "^7.0.12",
     "passport-google-oauth20": "^2.0.0",
     "reflect-metadata": "^0.2.0",
     "rxjs": "^7.8.1"
@@ -48,6 +50,7 @@
     "@types/express": "^5.0.0",
     "@types/jest": "^29.5.2",
     "@types/node": "^20.3.1",
+    "@types/nodemailer": "^7.0.4",
     "@types/passport-google-oauth20": "^2.0.17",
     "@types/supertest": "^6.0.0",
     "@typescript-eslint/eslint-plugin": "^8.0.0",
