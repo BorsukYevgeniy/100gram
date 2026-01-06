@@ -85,6 +85,11 @@ export class ChatRepository {
     return await this.prisma.chatToUser.findMany({
       where: { chatId },
       select: { userId: true },
+      orderBy: {
+        user: {
+          nickname: 'desc',
+        },
+      },
     });
   }
 
@@ -100,7 +105,13 @@ export class ChatRepository {
   ): Promise<{ messages: Message[] }> {
     return await this.prisma.chat.findUnique({
       where: { id: chatId },
-      select: { messages: true },
+      select: {
+        messages: {
+          orderBy: {
+            createdAt: 'desc',
+          },
+        },
+      },
     });
   }
 

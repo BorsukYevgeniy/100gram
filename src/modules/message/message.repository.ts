@@ -21,10 +21,6 @@ export class MessageRepository {
     return await this.prisma.message.findUnique({ where: { id } });
   }
 
-  async findAllMessageInChat(chatId: number) {
-    return await this.prisma.message.findMany({ where: { chatId } });
-  }
-
   async update(id: number, dto: UpdateMessageDto) {
     return await this.prisma.message.update({
       where: { id },

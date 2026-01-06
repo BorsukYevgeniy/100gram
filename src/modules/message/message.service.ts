@@ -51,15 +51,6 @@ export class MessageService {
     return await this.validateMessageOwnership(user, messageId);
   }
 
-  async findAllMessageInChat(chatId: number): Promise<Message[]> {
-    const messages = await this.messageRepository.findAllMessageInChat(chatId);
-
-    if (!messages)
-      throw new NotFoundException('No messages found in this chat');
-
-    return messages;
-  }
-
   async update(
     user: AccessTokenPayload,
     messageId: number,
