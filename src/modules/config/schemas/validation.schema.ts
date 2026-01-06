@@ -12,4 +12,8 @@ export const validationSchema = J.object({
 
   REFRESH_TOKEN_SECRET: J.string().required(),
   REFRESH_TOKEN_EXPIRATION_TIME: J.string().required(),
+
+  GOOGLE_CALLBACK_URL: J.string().uri().required(),
+  GOOGLE_CLIENT_ID: J.string().required(),
+  GOOGLE_CLIENT_SECRET: J.string().required(),
 });
