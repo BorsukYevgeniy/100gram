@@ -17,6 +17,12 @@ export class UserRepository {
     return await this.prisma.user.create({ data: dto });
   }
 
+  async createGoogleUser(dto: CreateUserDto): Promise<User> {
+    return await this.prisma.user.create({
+      data: { ...dto, isVerified: true, verifiedAt: new Date() },
+    });
+  }
+
   async findByEmail(email: string): Promise<User | null> {
     return await this.prisma.user.findUnique({ where: { email } });
   }

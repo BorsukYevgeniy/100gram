@@ -18,6 +18,10 @@ export class UserService {
     return await this.userRepository.create(dto);
   }
 
+  async createGoogleUser(dto: CreateUserDto) {
+    return await this.userRepository.createGoogleUser(dto);
+  }
+
   async findByEmail(email: string) {
     return await this.userRepository.findByEmail(email);
   }

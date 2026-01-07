@@ -115,6 +115,6 @@ export class AuthService {
 
     if (user) return user;
 
-    return await this.userService.create(googleUser);
+    return await this.userService.createGoogleUser(googleUser);
   }
 }
