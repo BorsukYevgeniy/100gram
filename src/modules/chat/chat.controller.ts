@@ -10,7 +10,7 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { User } from '../../common/decorators/user.decorator';
-import { AccessTokenPayload } from '../../common/interfaces';
+import { AccessTokenPayload } from '../../common/types';
 import { VerifiedUserGuard } from '../auth/guards/verified-user.guard';
 import { ChatGateway } from './chat.gateway';
 import { ChatService } from './chat.service';

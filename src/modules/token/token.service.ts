@@ -2,10 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { JwtService, JwtSignOptions } from '@nestjs/jwt';
 import { Token } from '../../../generated/prisma/browser';
 import { Role } from '../../../generated/prisma/enums';
-import {
-  AccessTokenPayload,
-  RefreshTokenPayload,
-} from '../../common/interfaces';
+import { AccessTokenPayload, RefreshTokenPayload } from '../../common/types';
 import { ConfigService } from '../config/config.service';
 import { TokenRepository } from './token.repository';
 

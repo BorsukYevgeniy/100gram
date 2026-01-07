@@ -5,10 +5,12 @@ import {
 } from '@nestjs/common';
 import { PrismaClientKnownRequestError } from '@prisma/client/runtime/client';
 import { Message, Role } from '../../../generated/prisma/client';
-import { AccessTokenPayload } from '../../common/interfaces';
+import { PaginationDto } from '../../common/dto/pagination.dto';
+import { AccessTokenPayload } from '../../common/types';
 import { CreateMessageDto } from './dto/create-message.dto';
 import { UpdateMessageDto } from './dto/update-message.dto';
 import { MessageRepository } from './message.repository';
+import { PaginatedMessages } from './types/paginated-messages.types';
 
 @Injectable()
 export class MessageService {
@@ -28,6 +30,29 @@ export class MessageService {
       );
 
     return message;
+  }
+
+  async getMessagesInChat(
+    chatId: number,
+    paginationDto: PaginationDto,
+  ): Promise<PaginatedMessages> {
+    const { cursor, limit } = paginationDto;
+
+    const messages = await this.messageRepository.findMessagesInChat(
+      chatId,
+      limit,
+      cursor,
+    );
+
+    const nextCursor = messages.length === limit ? messages.at(-1).id : null;
+    const hasMore = messages.length === limit;
+
+    return {
+      messages,
+      limit,
+      nextCursor,
+      hasMore,
+    };
   }
 
   async create(

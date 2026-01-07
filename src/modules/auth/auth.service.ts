@@ -37,16 +37,15 @@ export class AuthService {
       this.configService.PASSWORD_SALT,
     );
 
-    const { id, email, role, verificationLink } = await this.userService.create(
-      {
+    const { id, email, role, verificationLink, isVerified } =
+      await this.userService.create({
         ...dto,
         password: hashedPassword,
-      },
-    );
+      });
 
     await this.mailService.sendVerificationMail(email, verificationLink);
 
-    return await this.tokenService.generateTokens(id, role, user.isVerified);
+    return await this.tokenService.generateTokens(id, role, isVerified);
   }
 
   async login(dto: LoginDto) {

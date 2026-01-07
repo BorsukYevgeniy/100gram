@@ -8,7 +8,7 @@ import {
   WsException,
 } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
-import { AccessTokenPayload } from '../../common/interfaces';
+import { AccessTokenPayload } from '../../common/types';
 import { DeleteMessageGatewayDto } from '../message/dto/delete-message-gateway.dto';
 import { SendMessageDto } from '../message/dto/send-message.dto';
 import { UpdateMessageGatewayDto } from '../message/dto/update-message-gateway.dto';

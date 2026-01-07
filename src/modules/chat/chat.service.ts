@@ -6,7 +6,7 @@ import {
 } from '@nestjs/common';
 import { PrismaClientKnownRequestError } from '@prisma/client/runtime/client';
 import { Chat, ChatType, Role } from '../../../generated/prisma/client';
-import { AccessTokenPayload } from '../../common/interfaces';
+import { AccessTokenPayload } from '../../common/types';
 import { ChatRepository } from './chat.repository';
 import { CreateGroupChatDto } from './dto/create-group-chat.dto';
 import { CreatePrivateChatDto } from './dto/create-private-chat.dto';
@@ -25,7 +25,7 @@ export class ChatService {
       throw new BadRequestException(`Chat is not of type ${expectedType}`);
   }
 
-  private async validateChatParticipation(
+  async validateChatParticipation(
     user: AccessTokenPayload,
     chatId: number,
   ): Promise<void> {
@@ -167,15 +167,5 @@ export class ChatService {
       if (e instanceof PrismaClientKnownRequestError && e.code === 'P2003')
         throw new NotFoundException('User not found');
     }
-  }
-
-  async getAllMessagesInChat(user: AccessTokenPayload, chatId: number) {
-    await this.validateChatParticipation(user, chatId);
-
-    const messages = await this.chatRepository.findAllMessagesInChat(chatId);
-
-    if (!messages) throw new NotFoundException('Messages not found');
-
-    return messages;
   }
 }

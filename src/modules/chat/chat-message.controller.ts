@@ -5,11 +5,13 @@ import {
   Param,
   ParseIntPipe,
   Post,
+  Query,
   UseGuards,
 } from '@nestjs/common';
 import { Message } from '../../../generated/prisma/client';
 import { User } from '../../common/decorators/user.decorator';
-import { AccessTokenPayload } from '../../common/interfaces';
+import { PaginationDto } from '../../common/dto/pagination.dto';
+import { AccessTokenPayload } from '../../common/types';
 import { VerifiedUserGuard } from '../auth/guards/verified-user.guard';
 import { CreateMessageDto } from '../message/dto/create-message.dto';
 import { MessageService } from '../message/message.service';
@@ -26,9 +28,12 @@ export class ChatMessageController {
   @Get()
   async getAllMessagesInChat(
     @User() user: AccessTokenPayload,
-    @Param('chatId', ParseIntPipe) chatId: number,
+    @Param('chatId') chatId: number,
+    @Query() paginationDto: PaginationDto,
   ) {
-    return await this.chatService.getAllMessagesInChat(user, chatId);
+    await this.chatService.validateChatParticipation(user, chatId);
+
+    return await this.messageService.getMessagesInChat(chatId, paginationDto);
   }
 
   @Post()

@@ -4,7 +4,7 @@ import {
   Injectable,
   UnauthorizedException,
 } from '@nestjs/common';
-import { AuthRequest } from '../../../common/interfaces';
+import { AuthRequest } from '../../../common/types';
 import { TokenService } from '../../token/token.service';
 
 @Injectable()

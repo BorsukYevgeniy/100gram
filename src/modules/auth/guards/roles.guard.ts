@@ -6,7 +6,7 @@ import {
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 
-import { AuthRequest } from '../../../common/interfaces';
+import { AuthRequest } from '../../../common/types';
 import { TokenService } from '../../token/token.service';
 import { RequiredRoles } from '../decorator/required-roles.decorator';
 

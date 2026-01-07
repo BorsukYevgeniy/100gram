@@ -12,8 +12,7 @@ import {
 } from '@nestjs/common';
 import { Response } from 'express';
 import { User } from '../../common/decorators/user.decorator';
-import { AccessTokenPayload } from '../../common/interfaces';
-import { AuthRequest } from '../../common/interfaces/auth-request.interface';
+import { AccessTokenPayload, AuthRequest } from '../../common/types';
 import { CreateUserDto } from '../user/dto/create-user.dto';
 import { AuthService } from './auth.service';
 import { Public } from './decorator/public.decorator';

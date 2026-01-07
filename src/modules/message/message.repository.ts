@@ -7,6 +7,19 @@ import { UpdateMessageDto } from './dto/update-message.dto';
 export class MessageRepository {
   constructor(private readonly prisma: PrismaService) {}
 
+  async findMessagesInChat(chatId: number, take: number, cursor: number) {
+    return await this.prisma.message.findMany({
+      where: {
+        chatId,
+        ...(cursor && { id: { lt: cursor } }),
+      },
+      take,
+      orderBy: {
+        id: 'desc',
+      },
+    });
+  }
+
   async create(userId: number, chatId: number, dto: CreateMessageDto) {
     return await this.prisma.message.create({
       data: {

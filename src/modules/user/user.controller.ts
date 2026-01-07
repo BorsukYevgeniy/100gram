@@ -7,7 +7,7 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { Role, User } from '../../../generated/prisma/client';
-import { AccessTokenPayload } from '../../common/interfaces';
+import { AccessTokenPayload } from '../../common/types';
 import { RequiredRoles } from '../auth/decorator/required-roles.decorator';
 import { AuthGuard } from '../auth/guards/auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';

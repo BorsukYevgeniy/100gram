@@ -4,7 +4,7 @@ import {
   Injectable,
   UnauthorizedException,
 } from '@nestjs/common';
-import { AuthRequest } from '../../../common/interfaces';
+import { AuthRequest } from '../../../common/types';
 import { TokenService } from '../../token/token.service';
 
 @Injectable()
@@ -13,7 +13,7 @@ export class VerifiedUserGuard implements CanActivate {
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const req: AuthRequest = context.switchToHttp().getRequest<AuthRequest>();
-    const accessToken: string = req.cookies.accessToken;
+    const accessToken: string = req.cookies.access_token;
 
     if (!accessToken) {
       throw new UnauthorizedException();
@@ -22,11 +22,11 @@ export class VerifiedUserGuard implements CanActivate {
     try {
       const payload = await this.tokenService.verifyAccessToken(accessToken);
 
+      req.user = payload;
+
       if (payload.isVerified) {
         return true;
       }
-
-      req.user = payload;
 
       return false;
     } catch (e: unknown) {
