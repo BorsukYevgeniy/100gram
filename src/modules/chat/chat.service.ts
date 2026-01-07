@@ -37,7 +37,7 @@ export class ChatService {
 
     const usersInChat = await this.chatRepository.getUserIdsInChat(chatId);
 
-    const isParticipant = usersInChat.some((u) => u.userId === user.id);
+    const isParticipant = usersInChat.some((u) => u.user.id === user.id);
 
     if (!isParticipant)
       throw new ForbiddenException('User is not a participant of the chat');
@@ -49,7 +49,7 @@ export class ChatService {
   ): Promise<boolean> {
     const usersInChat = await this.chatRepository.getUserIdsInChat(chatId);
 
-    return usersInChat.some((u) => u.userId === userId);
+    return usersInChat.some((u) => u.user.id === userId);
   }
 
   async createPrivateChat(
@@ -142,12 +142,12 @@ export class ChatService {
       return await this.chatRepository.deleteUserFromChat(chatId, userId);
 
     const participants = await this.chatRepository.getUserIdsInChat(chatId);
-    const newOwner = participants.find((u) => u.userId !== userId);
+    const { user: newOwner } = participants.find((u) => u.user.id !== userId);
 
     if (newOwner) {
       return await this.chatRepository.updateOwnerAndDeleteUser(
         chatId,
-        newOwner.userId,
+        newOwner.id,
         userId,
       );
     }
@@ -155,8 +155,14 @@ export class ChatService {
     return await this.chatRepository.delete(chatId);
   }
 
-  async getUserIdsInChat(chatId: number): Promise<{ userId: number }[]> {
-    return await this.chatRepository.getUserIdsInChat(chatId);
+  async getUserIdsInChat(user: AccessTokenPayload, chatId: number) {
+    await this.validateChatParticipation(user, chatId);
+
+    const users = await this.chatRepository.getUserIdsInChat(chatId);
+
+    return {
+      users: users.map((u) => u.user),
+    };
   }
 
   async updateOwner(chatId: number, newOwnerId: number): Promise<Chat> {

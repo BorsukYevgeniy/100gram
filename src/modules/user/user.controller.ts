@@ -29,13 +29,16 @@ export class UserController {
   @UseGuards(AuthGuard)
   @Delete('me')
   async deleteMe(@UserFromReq() user: AccessTokenPayload): Promise<User> {
-    return await this.userService.delete(user.id);
+    return await this.userService.delete(user, user.id);
   }
 
   @RequiredRoles([Role.ADMIN])
   @UseGuards(RolesGuard)
   @Delete(':id')
-  async deleteUserById(@Param('id', ParseIntPipe) id: number): Promise<User> {
-    return await this.userService.delete(id);
+  async deleteUserById(
+    @UserFromReq() user: AccessTokenPayload,
+    @Param('id', ParseIntPipe) id: number,
+  ): Promise<User> {
+    return await this.userService.delete(user, id);
   }
 }

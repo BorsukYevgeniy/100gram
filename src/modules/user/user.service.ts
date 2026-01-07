@@ -1,6 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaClientKnownRequestError } from '@prisma/client/runtime/client';
 import { ChatType, User } from '../../../generated/prisma/client';
+import { AccessTokenPayload } from '../../common/types';
 import { ChatService } from '../chat/chat.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UserRepository } from './user.repository';
@@ -38,7 +39,7 @@ export class UserService {
     }
   }
 
-  async delete(userId: number) {
+  async delete(user: AccessTokenPayload, userId: number) {
     const chats = (await this.userRepository.getChatsWhereUserIsOwner(userId))
       .chatsOwned;
 
@@ -50,11 +51,14 @@ export class UserService {
       if (chat.chatType === ChatType.PRIVATE) {
         await this.chatService.delete(chat.id);
       } else {
-        const participants = await this.chatService.getUserIdsInChat(chat.id);
-        const newOwner = participants.find((u) => u.userId !== userId);
+        const { users } = await this.chatService.getUserIdsInChat(
+          user,
+          chat.id,
+        );
+        const newOwner = users.find((u) => u.id !== userId);
 
         if (newOwner) {
-          await this.chatService.updateOwner(chat.id, newOwner.userId);
+          await this.chatService.updateOwner(chat.id, newOwner.id);
         }
       }
     }

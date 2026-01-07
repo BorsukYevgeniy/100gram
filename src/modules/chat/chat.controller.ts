@@ -62,6 +62,14 @@ export class ChatController {
     return await this.chatService.updateGroupChat(chatId, updateChatDto);
   }
 
+  @Get(':chatId/users')
+  async getUsersInChat(
+    @User() user: AccessTokenPayload,
+    @Param('chatId') chatId: number,
+  ) {
+    return await this.chatService.getUserIdsInChat(user, chatId);
+  }
+
   @Post(':chatId/users/:userId')
   async addUserToChat(
     @Param('chatId') chatId: number,

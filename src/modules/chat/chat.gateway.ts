@@ -56,7 +56,9 @@ export class ChatGateway {
     @MessageBody() payload: { chatId: number },
     @ConnectedSocket() client: Socket,
   ) {
-    await this.isUserInChat(client, payload.chatId);
+    const user = await this.getUserFromWs(client);
+    await this.chatService.validateChatParticipation(user, payload.chatId);
+
     client.join(`chat-${payload.chatId}`);
   }
 
@@ -117,7 +119,8 @@ export class ChatGateway {
     @MessageBody() chatId: number,
     @ConnectedSocket() client: Socket,
   ) {
-    await this.isUserInChat(client, chatId);
+    const user = await this.getUserFromWs(client);
+    await this.chatService.validateChatParticipation(user, chatId);
 
     client.leave(`chat-${chatId}`);
   }
@@ -147,15 +150,5 @@ export class ChatGateway {
       throw new WsException('Forbidden resource. Please verify your account');
 
     return tokenPayload;
-  }
-
-  private async isUserInChat(client: Socket, chatId: number) {
-    const user = await this.getUserFromWs(client);
-
-    const users = await this.chatService.getUserIdsInChat(chatId);
-    if (users.length === 0) throw new WsException('Chat not found');
-
-    const userInChat = users.some((u) => u.userId === user.id);
-    if (!userInChat) throw new WsException("You isn't participant of chat");
   }
 }
