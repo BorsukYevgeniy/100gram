@@ -10,13 +10,18 @@ export class MailService {
   ) {}
 
   async sendVerificationMail(to: string, verificationLink: string) {
+    const link = this.configService.APP_URL.concat(
+      '/auth/verify/',
+      verificationLink,
+    );
+
     return await this.mailerService.sendMail({
       to,
       subject: 'Verification mail on ' + this.configService.APP_URL,
       html: `
       <div>
         <h1>For verification go to</h1>
-        <a href="${this.configService.APP_URL + verificationLink}">${this.configService.APP_URL + verificationLink}</a>
+        <a href="${link}">${link}</a>
       </div>
       `,
     });
