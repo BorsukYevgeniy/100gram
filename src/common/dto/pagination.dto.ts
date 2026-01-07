@@ -1,15 +1,15 @@
-import { Transform } from 'class-transformer';
+import { Type } from 'class-transformer';
 import { IsInt, IsOptional, IsPositive } from 'class-validator';
 
 export class PaginationDto {
   @IsOptional()
+  @Type(() => Number)
   @IsInt()
   @IsPositive()
-  @Transform(({ value }) => Number(value))
   cursor: number;
 
+  @Type(() => Number)
   @IsInt()
   @IsPositive()
-  @Transform(({ value }) => Number(value))
   limit: number = 10;
 }

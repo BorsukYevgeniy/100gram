@@ -4,7 +4,6 @@ import {
   Delete,
   Get,
   Param,
-  ParseIntPipe,
   Patch,
   Post,
   UseGuards,
@@ -43,24 +42,21 @@ export class ChatController {
   }
 
   @Get(':id')
-  async findOne(
-    @User() user: AccessTokenPayload,
-    @Param('id', ParseIntPipe) id: number,
-  ) {
+  async findOne(@User() user: AccessTokenPayload, @Param('id') id: number) {
     return await this.chatService.findById(user, id);
   }
 
   @Patch(':chatId/owner/:ownerId')
   async updateOwner(
-    @Param('chatId', ParseIntPipe) chatId: number,
-    @Param('ownerId', ParseIntPipe) ownerId: number,
+    @Param('chatId') chatId: number,
+    @Param('ownerId') ownerId: number,
   ) {
     return await this.chatService.updateOwner(chatId, ownerId);
   }
 
   @Patch(':chatId')
   async updateGroupChat(
-    @Param('chatId', ParseIntPipe) chatId: number,
+    @Param('chatId') chatId: number,
     @Body() updateChatDto: UpdateGroupChatDto,
   ) {
     return await this.chatService.updateGroupChat(chatId, updateChatDto);
@@ -68,16 +64,16 @@ export class ChatController {
 
   @Post(':chatId/users/:userId')
   async addUserToChat(
-    @Param('chatId', ParseIntPipe) chatId: number,
-    @Param('userId', ParseIntPipe) userId: number,
+    @Param('chatId') chatId: number,
+    @Param('userId') userId: number,
   ) {
     return await this.chatService.addUserToChat(chatId, userId);
   }
 
   @Delete(':chatId/users/:userId')
   async deleteUserFromChat(
-    @Param('chatId', ParseIntPipe) chatId: number,
-    @Param('userId', ParseIntPipe) userId: number,
+    @Param('chatId') chatId: number,
+    @Param('userId') userId: number,
   ) {
     const chat = await this.chatService.deleteUserFromChat(chatId, userId);
     await this.chatGateway.leaveChat(chatId, userId);
@@ -86,7 +82,7 @@ export class ChatController {
   }
 
   @Delete(':id')
-  async delete(@Param('id', ParseIntPipe) id: number) {
+  async delete(@Param('id') id: number) {
     return await this.chatService.delete(id);
   }
 }

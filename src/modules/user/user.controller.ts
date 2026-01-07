@@ -22,7 +22,7 @@ export class UserController {
   @RequiredRoles([Role.ADMIN])
   @UseGuards(RolesGuard)
   @Patch('assign-admin/:id')
-  async assignAdmin(@Param('id', ParseIntPipe) id: number): Promise<User> {
+  async assignAdmin(@Param('id') id: number): Promise<User> {
     return await this.userService.assignAdmin(id);
   }
 

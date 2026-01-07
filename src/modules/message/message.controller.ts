@@ -4,7 +4,6 @@ import {
   Delete,
   Get,
   Param,
-  ParseIntPipe,
   Patch,
   UseGuards,
 } from '@nestjs/common';
@@ -23,7 +22,7 @@ export class MessageController {
   @Get(':id')
   async findOne(
     @User() user: AccessTokenPayload,
-    @Param('id', ParseIntPipe) messageId: number,
+    @Param('id') messageId: number,
   ): Promise<Message> {
     return await this.messageService.findById(user, messageId);
   }
@@ -31,7 +30,7 @@ export class MessageController {
   @Patch(':id')
   async update(
     @User() user: AccessTokenPayload,
-    @Param('id', ParseIntPipe) messageId: number,
+    @Param('id') messageId: number,
     @Body() updateMessageDto: UpdateMessageDto,
   ): Promise<Message> {
     return await this.messageService.update(user, messageId, updateMessageDto);
@@ -40,7 +39,7 @@ export class MessageController {
   @Delete(':id')
   async delete(
     @User() user: AccessTokenPayload,
-    @Param('id', ParseIntPipe) messageId: number,
+    @Param('id') messageId: number,
   ): Promise<Message> {
     return await this.messageService.delete(user, messageId);
   }

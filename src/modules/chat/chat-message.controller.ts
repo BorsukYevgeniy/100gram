@@ -3,7 +3,6 @@ import {
   Controller,
   Get,
   Param,
-  ParseIntPipe,
   Post,
   Query,
   UseGuards,
@@ -40,7 +39,7 @@ export class ChatMessageController {
   async create(
     @User() user: AccessTokenPayload,
     @Body() createMessageDto: CreateMessageDto,
-    @Param('chatId', ParseIntPipe) chatId: number,
+    @Param('chatId') chatId: number,
   ): Promise<Message> {
     return await this.messageService.create(user.id, chatId, createMessageDto);
   }
