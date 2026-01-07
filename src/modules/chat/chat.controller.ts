@@ -11,7 +11,6 @@ import {
 import { User } from '../../common/decorators/user.decorator';
 import { AccessTokenPayload } from '../../common/types';
 import { VerifiedUserGuard } from '../auth/guards/verified-user.guard';
-import { ChatGateway } from './chat.gateway';
 import { ChatService } from './chat.service';
 import { CreateGroupChatDto } from './dto/create-group-chat.dto';
 import { CreatePrivateChatDto } from './dto/create-private-chat.dto';
@@ -20,10 +19,7 @@ import { UpdateGroupChatDto } from './dto/update-group-chat.dto';
 @Controller('chats')
 @UseGuards(VerifiedUserGuard)
 export class ChatController {
-  constructor(
-    private readonly chatService: ChatService,
-    private readonly chatGateway: ChatGateway,
-  ) {}
+  constructor(private readonly chatService: ChatService) {}
 
   @Post('private')
   async createPrivateChat(
@@ -60,33 +56,6 @@ export class ChatController {
     @Body() updateChatDto: UpdateGroupChatDto,
   ) {
     return await this.chatService.updateGroupChat(chatId, updateChatDto);
-  }
-
-  @Get(':chatId/users')
-  async getUsersInChat(
-    @User() user: AccessTokenPayload,
-    @Param('chatId') chatId: number,
-  ) {
-    return await this.chatService.getUserIdsInChat(user, chatId);
-  }
-
-  @Post(':chatId/users/:userId')
-  async addUserToChat(
-    @Param('chatId') chatId: number,
-    @Param('userId') userId: number,
-  ) {
-    return await this.chatService.addUserToChat(chatId, userId);
-  }
-
-  @Delete(':chatId/users/:userId')
-  async deleteUserFromChat(
-    @Param('chatId') chatId: number,
-    @Param('userId') userId: number,
-  ) {
-    const chat = await this.chatService.deleteUserFromChat(chatId, userId);
-    await this.chatGateway.leaveChat(chatId, userId);
-
-    return chat;
   }
 
   @Delete(':id')
