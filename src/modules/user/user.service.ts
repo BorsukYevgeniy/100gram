@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaClientKnownRequestError } from '@prisma/client/runtime/client';
-import { ChatType, User } from '../../../generated/prisma/client';
+import { User } from '../../../generated/prisma/client';
 import { AccessTokenPayload } from '../../common/types';
 import { ChatService } from '../chat/chat.service';
 import { CreateUserDto } from './dto/create-user.dto';
@@ -41,27 +41,22 @@ export class UserService {
   }
 
   async delete(user: AccessTokenPayload, userId: number) {
-    const chats = (await this.userRepository.getChatsWhereUserIsOwner(userId))
-      .chatsOwned;
+    const { chatsOwned } =
+      await this.userRepository.getChatsWhereUserIsOwner(userId);
 
-    if (!chats || chats.length === 0) {
+    if (!chatsOwned || chatsOwned.length === 0) {
       return await this.userRepository.delete(userId);
     }
 
-    for (const chat of chats) {
-      if (chat.chatType === ChatType.PRIVATE) {
-        await this.chatService.delete(chat.id);
-      } else {
-        const { users } = await this.chatService.getUserIdsInChat(
-          user,
-          chat.id,
-        );
-        const newOwner = users.find((u) => u.id !== userId);
+    for (const chat of chatsOwned) {
+      const { userId: newOwnerId } = await this.chatService.getNewOwnerId(
+        chat.id,
+        user.id,
+      );
 
-        if (newOwner) {
-          await this.chatService.updateOwner(chat.id, newOwner.id);
-        }
-      }
+      if (newOwnerId) {
+        await this.chatService.updateOwner(chat.id, newOwnerId);
+      } else await this.chatService.delete(chat.id);
     }
 
     return await this.userRepository.delete(userId);

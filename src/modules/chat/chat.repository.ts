@@ -81,7 +81,7 @@ export class ChatRepository {
     });
   }
 
-  async getUserIdsInChat(chatId: number) {
+  async getUsersInChat(chatId: number) {
     return await this.prisma.chatToUser.findMany({
       where: { chatId },
       select: {
@@ -116,5 +116,14 @@ export class ChatRepository {
         data: { ownerId: newOwnerId },
       }),
     ]);
+  }
+
+  async findNewOwner(chatId: number, currentOwnerId: number) {
+    return await this.prisma.chatToUser.findFirst({
+      where: {
+        chatId: chatId,
+        userId: { not: { equals: currentOwnerId } },
+      },
+    });
   }
 }

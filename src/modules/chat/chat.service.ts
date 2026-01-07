@@ -35,7 +35,7 @@ export class ChatService {
 
     if (user.role === Role.ADMIN) return;
 
-    const usersInChat = await this.chatRepository.getUserIdsInChat(chatId);
+    const usersInChat = await this.chatRepository.getUsersInChat(chatId);
 
     const isParticipant = usersInChat.some((u) => u.user.id === user.id);
 
@@ -47,7 +47,7 @@ export class ChatService {
     userId: number,
     chatId: number,
   ): Promise<boolean> {
-    const usersInChat = await this.chatRepository.getUserIdsInChat(chatId);
+    const usersInChat = await this.chatRepository.getUsersInChat(chatId);
 
     return usersInChat.some((u) => u.user.id === userId);
   }
@@ -141,7 +141,7 @@ export class ChatService {
     if (chat.ownerId !== userId)
       return await this.chatRepository.deleteUserFromChat(chatId, userId);
 
-    const participants = await this.chatRepository.getUserIdsInChat(chatId);
+    const participants = await this.chatRepository.getUsersInChat(chatId);
     const { user: newOwner } = participants.find((u) => u.user.id !== userId);
 
     if (newOwner) {
@@ -158,7 +158,7 @@ export class ChatService {
   async getUserIdsInChat(user: AccessTokenPayload, chatId: number) {
     await this.validateChatParticipation(user, chatId);
 
-    const users = await this.chatRepository.getUserIdsInChat(chatId);
+    const users = await this.chatRepository.getUsersInChat(chatId);
 
     return {
       users: users.map((u) => u.user),
@@ -173,5 +173,9 @@ export class ChatService {
       if (e instanceof PrismaClientKnownRequestError && e.code === 'P2003')
         throw new NotFoundException('User not found');
     }
+  }
+
+  async getNewOwnerId(chatId: number, currentOnwerId: number) {
+    return await this.chatRepository.findNewOwner(chatId, currentOnwerId);
   }
 }
