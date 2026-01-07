@@ -13,6 +13,7 @@ import { Role } from '../../../generated/prisma/enums';
 import { ConfigService } from '../config/config.service';
 import { MailService } from '../mail/mail.service';
 import { TokenService } from '../token/token.service';
+import { UserNoCredVLink } from '../user/types/user.types';
 import { LoginDto } from './dto/login.dto';
 
 @Injectable()
@@ -98,7 +99,7 @@ export class AuthService {
     return await this.tokenService.update(id, role, isVerified, token);
   }
 
-  async verifyUser(verificationLink: string) {
+  async verifyUser(verificationLink: string): Promise<UserNoCredVLink> {
     const user: User | null =
       await this.userService.getUserByVerificationLink(verificationLink);
 

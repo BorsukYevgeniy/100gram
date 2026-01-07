@@ -14,6 +14,7 @@ import { AccessTokenPayload } from '../../common/types';
 import { VerifiedUserGuard } from '../auth/guards/verified-user.guard';
 import { CreateMessageDto } from '../message/dto/create-message.dto';
 import { MessageService } from '../message/message.service';
+import { PaginatedMessages } from '../message/types/paginated-messages.types';
 import { ChatService } from './chat.service';
 
 @Controller('chats/:chatId/messages')
@@ -29,7 +30,7 @@ export class ChatMessageController {
     @User() user: AccessTokenPayload,
     @Param('chatId') chatId: number,
     @Query() paginationDto: PaginationDto,
-  ) {
+  ): Promise<PaginatedMessages> {
     await this.chatService.validateChatParticipation(user, chatId);
 
     return await this.messageService.getMessagesInChat(chatId, paginationDto);

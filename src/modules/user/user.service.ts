@@ -4,6 +4,7 @@ import { ChatType, User } from '../../../generated/prisma/client';
 import { AccessTokenPayload } from '../../common/types';
 import { ChatService } from '../chat/chat.service';
 import { CreateUserDto } from './dto/create-user.dto';
+import { UserNoCredVLink } from './types/user.types';
 import { UserRepository } from './user.repository';
 
 @Injectable()
@@ -72,7 +73,7 @@ export class UserService {
     );
   }
 
-  async verify(verificationLink: string) {
+  async verify(verificationLink: string): Promise<UserNoCredVLink> {
     return await this.userRepository.verify(verificationLink);
   }
 

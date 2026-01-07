@@ -14,6 +14,7 @@ import { Response } from 'express';
 import { User } from '../../common/decorators/user.decorator';
 import { AccessTokenPayload, AuthRequest } from '../../common/types';
 import { CreateUserDto } from '../user/dto/create-user.dto';
+import { UserNoCredVLink } from '../user/types/user.types';
 import { AuthService } from './auth.service';
 import { Public } from './decorator/public.decorator';
 import { LoginDto } from './dto/login.dto';
@@ -63,13 +64,13 @@ export class AuthController {
   @Post('verify/:verificationLink')
   async verify(
     @Param('verificationLink', ParseUUIDPipe) verificationLink: string,
-  ) {
+  ): Promise<UserNoCredVLink> {
     return await this.authService.verifyUser(verificationLink);
   }
 
   @Post('refresh')
   @UseGuards(AuthGuard)
-  async refresh(@Req() req: AuthRequest, @Res() res: Response) {
+  async refresh(@Req() req: AuthRequest, @Res() res: Response): Promise<void> {
     const refreshTokenCookie = req.cookies.refresh_token;
 
     if (!refreshTokenCookie)
@@ -94,14 +95,17 @@ export class AuthController {
 
   @Post('logout')
   @UseGuards(AuthGuard)
-  async logout(@Res() res: Response) {
+  async logout(@Res() res: Response): Promise<void> {
     res.clearCookie('access_token');
     res.clearCookie('refresh_token').status(200).end();
   }
 
   @Post('logout-all')
   @UseGuards(AuthGuard)
-  async logoutAll(@User() user: AccessTokenPayload, @Res() res: Response) {
+  async logoutAll(
+    @User() user: AccessTokenPayload,
+    @Res() res: Response,
+  ): Promise<void> {
     await this.authService.logoutAll(user.id);
 
     res.clearCookie('access_token');
@@ -111,12 +115,15 @@ export class AuthController {
   @Public()
   @Get('google/login')
   @UseGuards(GoogleGuard)
-  async googleLogin() {}
+  async googleLogin(): Promise<void> {}
 
   @Public()
   @Get('google/callback')
   @UseGuards(GoogleGuard)
-  async googleCallback(@Req() req: AuthRequest, @Res() res: Response) {
+  async googleCallback(
+    @Req() req: AuthRequest,
+    @Res() res: Response,
+  ): Promise<void> {
     const { accessToken, refreshToken } = await this.authService.loginById(
       req.user.id,
     );

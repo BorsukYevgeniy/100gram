@@ -49,6 +49,11 @@ export class UserRepository {
     return await this.prisma.user.update({
       where: { verificationLink },
       data: { isVerified: true, verifiedAt: new Date() },
+      omit: {
+        email: true,
+        password: true,
+        verificationLink: true,
+      },
     });
   }
 
