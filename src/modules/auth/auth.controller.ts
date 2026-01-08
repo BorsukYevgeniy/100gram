@@ -14,7 +14,7 @@ import { Response } from 'express';
 import { User } from '../../common/decorators/user.decorator';
 import { AccessTokenPayload, AuthRequest } from '../../common/types';
 import { CreateUserDto } from '../user/dto/create-user.dto';
-import { UserNoCredVLink } from '../user/types/user.types';
+import { UserNoCredVCode } from '../user/types/user.types';
 import { AuthService } from './auth.service';
 import { Public } from './decorator/public.decorator';
 import { LoginDto } from './dto/login.dto';
@@ -64,7 +64,7 @@ export class AuthController {
   @Post('verify/:verificationLink')
   async verify(
     @Param('verificationLink', ParseUUIDPipe) verificationLink: string,
-  ): Promise<UserNoCredVLink> {
+  ): Promise<UserNoCredVCode> {
     return await this.authService.verifyUser(verificationLink);
   }
 

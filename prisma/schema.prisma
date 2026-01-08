@@ -22,7 +22,7 @@ model User {
 
   isVerified       Boolean   @default(false)
   verifiedAt       DateTime?
-  verificationLink String    @unique @default(uuid())
+  verificationCode String    @unique @default(uuid())
 }
 
 model Message {

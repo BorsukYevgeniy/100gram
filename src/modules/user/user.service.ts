@@ -4,7 +4,7 @@ import { User } from '../../../generated/prisma/client';
 import { AccessTokenPayload } from '../../common/types';
 import { ChatService } from '../chat/chat.service';
 import { CreateUserDto } from './dto/create-user.dto';
-import { UserNoCredVLink } from './types/user.types';
+import { UserNoCredVCode } from './types/user.types';
 import { UserRepository } from './user.repository';
 
 @Injectable()
@@ -66,13 +66,13 @@ export class UserService {
     return await this.userRepository.delete(userId);
   }
 
-  async getUserByVerificationLink(verificationLink: string) {
-    return await this.userRepository.getUserByVerificationLink(
-      verificationLink,
+  async getUserByVerificationCode(verificationCode: string) {
+    return await this.userRepository.getUserByVerificationCode(
+      verificationCode,
     );
   }
 
-  async verify(verificationLink: string): Promise<UserNoCredVLink> {
+  async verify(verificationLink: string): Promise<UserNoCredVCode> {
     return await this.userRepository.verify(verificationLink);
   }
 

@@ -13,7 +13,7 @@ import { Role } from '../../../generated/prisma/enums';
 import { ConfigService } from '../config/config.service';
 import { MailService } from '../mail/mail.service';
 import { TokenService } from '../token/token.service';
-import { UserNoCredVLink } from '../user/types/user.types';
+import { UserNoCredVCode } from '../user/types/user.types';
 import { LoginDto } from './dto/login.dto';
 
 @Injectable()
@@ -38,13 +38,13 @@ export class AuthService {
       this.configService.PASSWORD_SALT,
     );
 
-    const { id, email, role, verificationLink, isVerified } =
+    const { id, email, role, verificationCode, isVerified } =
       await this.userService.create({
         ...dto,
         password: hashedPassword,
       });
 
-    await this.mailService.sendVerificationMail(email, verificationLink);
+    await this.mailService.sendVerificationMail(email, verificationCode);
 
     return await this.tokenService.generateTokens(id, role, isVerified);
   }
@@ -99,15 +99,15 @@ export class AuthService {
     return await this.tokenService.update(id, role, isVerified, token);
   }
 
-  async verifyUser(verificationLink: string): Promise<UserNoCredVLink> {
+  async verifyUser(verificationCode: string): Promise<UserNoCredVCode> {
     const user: User | null =
-      await this.userService.getUserByVerificationLink(verificationLink);
+      await this.userService.getUserByVerificationCode(verificationCode);
 
     if (!user) throw new NotFoundException('User not found');
 
     if (user.isVerified) throw new BadRequestException('User already verified');
 
-    return await this.userService.verify(verificationLink);
+    return await this.userService.verify(verificationCode);
   }
 
   async validateGoogleUser(googleUser: CreateUserDto) {

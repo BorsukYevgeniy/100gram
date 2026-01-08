@@ -47,18 +47,18 @@ export class UserRepository {
     });
   }
 
-  async getUserByVerificationLink(verificationLink: string) {
-    return await this.prisma.user.findUnique({ where: { verificationLink } });
+  async getUserByVerificationCode(verificationCode: string) {
+    return await this.prisma.user.findUnique({ where: { verificationCode } });
   }
 
-  async verify(verificationLink: string) {
+  async verify(verificationCode: string) {
     return await this.prisma.user.update({
-      where: { verificationLink },
+      where: { verificationCode },
       data: { isVerified: true, verifiedAt: new Date() },
       omit: {
         email: true,
         password: true,
-        verificationLink: true,
+        verificationCode: true,
       },
     });
   }

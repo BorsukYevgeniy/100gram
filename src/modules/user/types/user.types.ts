@@ -1,9 +1,9 @@
 import { User } from '../../../../generated/prisma/client';
 
 /**
- * Represents type User without `email`, `password`, `verificationLink` fields
+ * Represents type User without `email`, `password`, `verificationCode` fields
  */
-export type UserNoCredVLink = Omit<
+export type UserNoCredVCode = Omit<
   User,
-  'email' | 'verificationLink' | 'password'
+  'email' | 'verificationCode' | 'password'
 >;

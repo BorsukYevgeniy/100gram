@@ -9,10 +9,10 @@ export class MailService {
     private readonly configService: ConfigService,
   ) {}
 
-  async sendVerificationMail(to: string, verificationLink: string) {
+  async sendVerificationMail(to: string, verificationCode: string) {
     const link = this.configService.APP_URL.concat(
       '/auth/verify/',
-      verificationLink,
+      verificationCode,
     );
 
     return await this.mailerService.sendMail({
