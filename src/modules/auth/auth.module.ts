@@ -19,10 +19,7 @@ import { GoogleStrategy } from './strategies/google.strategy';
       imports: [ConfigModule],
       inject: [ConfigService],
       useFactory: (configService: ConfigService) => [
-        {
-          limit: configService.THROTTLE_LIMIT,
-          ttl: configService.THROTTLE_TTL,
-        },
+        configService.THROTTLE_CONFIG,
       ],
     }),
   ],

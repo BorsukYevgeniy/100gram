@@ -1,9 +1,68 @@
+import { MailerOptions } from '@nestjs-modules/mailer';
 import { Injectable } from '@nestjs/common';
 import { ConfigService as NestConfigService } from '@nestjs/config';
+import { JwtSignOptions } from '@nestjs/jwt';
+import { ThrottlerOptions } from '@nestjs/throttler';
 
 @Injectable()
 export class ConfigService {
   constructor(private readonly configService: NestConfigService) {}
+
+  get GOOGLE_CONFIG() {
+    return {
+      clientID: this.configService.getOrThrow<string>('GOOGLE_CLIENT_ID'),
+      clientSecret: this.configService.getOrThrow<string>(
+        'GOOGLE_CLIENT_SECRET',
+      ),
+      callbackURL: this.configService.getOrThrow<string>('GOOGLE_CALLBACK_URL'),
+      scope: ['email', 'profile'],
+    };
+  }
+
+  get THROTTLE_CONFIG(): ThrottlerOptions {
+    return {
+      ttl: this.configService.getOrThrow<number>('THROTTLE_TTL'),
+      limit: this.configService.getOrThrow<number>('THROTTLE_LIMIT'),
+    };
+  }
+
+  get REFRESH_TOKEN_CONFIG(): JwtSignOptions {
+    return {
+      secret: this.configService.getOrThrow<string>('REFRESH_TOKEN_SECRET'),
+
+      expiresIn: this.configService.getOrThrow<string>(
+        'REFRESH_TOKEN_EXPIRATION_TIME',
+      ),
+    } as JwtSignOptions;
+  }
+
+  get ACCESS_TOKEN_CONFIG(): JwtSignOptions {
+    return {
+      secret: this.configService.getOrThrow<string>('ACCESS_TOKEN_SECRET'),
+
+      expiresIn: this.configService.getOrThrow<string>(
+        'ACCESS_TOKEN_EXPIRATION_TIME',
+      ),
+    } as JwtSignOptions;
+  }
+
+  get MAILER_CONFIG(): MailerOptions {
+    return {
+      transport: {
+        host: this.configService.getOrThrow<string>('SMTP_HOST'),
+      },
+      defaults: {
+        auth: {
+          user: this.configService.getOrThrow<string>('SMTP_USER'),
+          pass: this.configService.getOrThrow<string>('SMTP_PASSWORD'),
+        },
+      },
+    };
+  }
+
+  get APP_URL(): string {
+    return this.configService.getOrThrow<string>('APP_URL');
+  }
 
   get DATABASE_URL(): string {
     return this.configService.getOrThrow<string>('DATABASE_URL');
@@ -15,59 +74,5 @@ export class ConfigService {
 
   get PASSWORD_SALT(): number {
     return Number(this.configService.getOrThrow<number>('PASSWORD_SALT'));
-  }
-
-  get ACCESS_TOKEN_SECRET(): string {
-    return this.configService.getOrThrow<string>('ACCESS_TOKEN_SECRET');
-  }
-
-  get ACCESS_TOKEN_EXPIRATION_TIME(): string {
-    return this.configService.getOrThrow<string>(
-      'ACCESS_TOKEN_EXPIRATION_TIME',
-    );
-  }
-
-  get REFRESH_TOKEN_SECRET(): string {
-    return this.configService.getOrThrow<string>('REFRESH_TOKEN_SECRET');
-  }
-
-  get REFRESH_TOKEN_EXPIRATION_TIME(): string {
-    return this.configService.getOrThrow<string>(
-      'REFRESH_TOKEN_EXPIRATION_TIME',
-    );
-  }
-
-  get GOOGLE_CONFIG() {
-    return {
-      clientID: this.configService.getOrThrow<string>('GOOGLE_CLIENT_ID'),
-      clientSecret: this.configService.getOrThrow<string>(
-        'GOOGLE_CLIENT_SECRET',
-      ),
-      callbackURL: this.configService.getOrThrow<string>('GOOGLE_CALLBACK_URL'),
-    };
-  }
-
-  get SMTP_HOST(): string {
-    return this.configService.getOrThrow<string>('SMTP_HOST');
-  }
-
-  get SMTP_USER(): string {
-    return this.configService.getOrThrow<string>('SMTP_USER');
-  }
-
-  get SMTP_PASSWORD(): string {
-    return this.configService.getOrThrow<string>('SMTP_PASSWORD');
-  }
-
-  get APP_URL(): string {
-    return this.configService.getOrThrow<string>('APP_URL');
-  }
-
-  get THROTTLE_TTL(): number {
-    return this.configService.getOrThrow<number>('THROTTLE_TTL');
-  }
-
-  get THROTTLE_LIMIT(): number {
-    return this.configService.getOrThrow<number>('THROTTLE_LIMIT');
   }
 }

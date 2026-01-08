@@ -10,12 +10,7 @@ export class GoogleStrategy extends PassportStrategy(Strategy) {
     private readonly configService: ConfigService,
     private readonly authService: AuthService,
   ) {
-    super({
-      clientID: configService.GOOGLE_CONFIG.clientID,
-      clientSecret: configService.GOOGLE_CONFIG.clientSecret,
-      callbackURL: configService.GOOGLE_CONFIG.callbackURL,
-      scope: ['email', 'profile'],
-    });
+    super(configService.GOOGLE_CONFIG);
   }
 
   async validate(

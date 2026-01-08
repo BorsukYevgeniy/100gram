@@ -11,19 +11,7 @@ import { ConfigService } from '../config/config.service';
     MailerModule.forRootAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
-      useFactory: (configService: ConfigService) => {
-        return {
-          transport: {
-            host: configService.SMTP_HOST,
-          },
-          defaults: {
-            auth: {
-              user: configService.SMTP_USER,
-              pass: configService.SMTP_PASSWORD,
-            },
-          },
-        };
-      },
+      useFactory: (configService: ConfigService) => configService.MAILER_CONFIG,
     }),
   ],
   providers: [MailService],
