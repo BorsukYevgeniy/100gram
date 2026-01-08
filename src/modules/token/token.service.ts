@@ -2,7 +2,11 @@ import { Injectable } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { Token } from '../../../generated/prisma/browser';
 import { Role } from '../../../generated/prisma/enums';
-import { AccessTokenPayload, RefreshTokenPayload } from '../../common/types';
+import {
+  AccessTokenPayload,
+  RefreshTokenPayload,
+  TokenPair,
+} from '../../common/types';
 import { ConfigService } from '../config/config.service';
 import { TokenRepository } from './token.repository';
 
@@ -25,21 +29,21 @@ export class TokenService {
     );
   }
 
-  private generateRefreshToken(id: number): Promise<string> {
-    return this.jwtService.signAsync<RefreshTokenPayload>(
+  private async generateRefreshToken(id: number): Promise<string> {
+    return await this.jwtService.signAsync<RefreshTokenPayload>(
       { id },
       this.configService.REFRESH_TOKEN_CONFIG,
     );
   }
 
-  verifyAccessToken(token: string): Promise<AccessTokenPayload> {
-    return this.jwtService.verifyAsync(token, {
+  async verifyAccessToken(token: string): Promise<AccessTokenPayload> {
+    return await this.jwtService.verifyAsync(token, {
       secret: this.configService.ACCESS_TOKEN_CONFIG.secret,
     });
   }
 
-  verifyRefreshToken(token: string): Promise<RefreshTokenPayload> {
-    return this.jwtService.verifyAsync(token, {
+  async verifyRefreshToken(token: string): Promise<RefreshTokenPayload> {
+    return await this.jwtService.verifyAsync(token, {
       secret: this.configService.REFRESH_TOKEN_CONFIG.secret,
     });
   }
@@ -62,13 +66,11 @@ export class TokenService {
     userId: number,
     role: Role,
     isVerified: boolean,
-  ): Promise<{ accessToken: string; refreshToken: string }> {
-    const accessToken = await this.generateAccessToken(
-      userId,
-      role,
-      isVerified,
-    );
-    const refreshToken = await this.generateRefreshToken(userId);
+  ): Promise<TokenPair> {
+    const [accessToken, refreshToken] = await Promise.all([
+      this.generateAccessToken(userId, role, isVerified),
+      this.generateRefreshToken(userId),
+    ]);
 
     await this.saveRefreshToken(userId, refreshToken);
 
@@ -91,22 +93,19 @@ export class TokenService {
     role: Role,
     isVerified: boolean,
     oldToken: string,
-  ): Promise<{ accessToken: string; refreshToken: string }> {
+  ): Promise<TokenPair> {
     const expiresAt: Date = new Date();
     expiresAt.setDate(expiresAt.getDate() + 7);
 
-    const accessToken = await this.generateAccessToken(
-      userId,
-      role,
-      isVerified,
-    );
-    const newRefreshToken = await this.generateRefreshToken(userId);
-
-    await this.tokenRepository.update(oldToken, newRefreshToken, expiresAt);
+    const [accessToken, refreshToken] = await Promise.all([
+      this.generateAccessToken(userId, role, isVerified),
+      this.generateRefreshToken(userId),
+    ]);
+    await this.tokenRepository.update(oldToken, refreshToken, expiresAt);
 
     return {
       accessToken,
-      refreshToken: newRefreshToken,
+      refreshToken,
     };
   }
 

@@ -45,7 +45,7 @@ export class AuthService {
         password: hashedPassword,
       });
 
-    await this.mailService.sendVerificationMail(email, verificationCode);
+    this.mailService.sendVerificationMail(email, verificationCode);
 
     return await this.tokenService.generateTokens(id, role, isVerified);
   }

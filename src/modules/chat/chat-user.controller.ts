@@ -32,9 +32,6 @@ export class ChatUserController {
     @Param('chatId') chatId: number,
     @Param('userId') userId: number,
   ) {
-    const chat = await this.chatService.deleteUserFromChat(chatId, userId);
-    await this.chatGateway.leaveChat(chatId, userId);
-
-    return chat;
+    return await this.chatService.deleteUserFromChat(chatId, userId);
   }
 }

@@ -129,14 +129,6 @@ export class ChatGateway {
     client.leave(`chat-${chatId}`);
   }
 
-  async leaveChat(chatId: number, userId: number) {
-    const sockets = await this.server.to(`chat-${chatId}`).fetchSockets();
-
-    sockets
-      .filter((s) => s.data.id === userId)
-      .forEach((s) => s.leave(`chat-${chatId}`));
-  }
-
   private async getUserFromWs(client: Socket): Promise<AccessTokenPayload> {
     const cookie = client.handshake.headers.cookie;
 
