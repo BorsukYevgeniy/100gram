@@ -23,7 +23,7 @@ export class ChatService {
     if (!chat) throw new NotFoundException('Chat not found');
 
     if (chat.ownerId === user.id || user.role === Role.ADMIN) {
-      return await this.chatRepo.delete(chatId);
+      return this.chatRepo.delete(chatId);
     }
 
     throw new ForbiddenException();
@@ -65,7 +65,7 @@ export class ChatService {
     return usersInChat.some((u) => u.user.id === userId);
   }
 
-  async createPrivateChat(
+  createPrivateChat(
     userId: number,
     createChatDto: CreatePrivateChatDto,
   ): Promise<Chat> {
@@ -73,29 +73,23 @@ export class ChatService {
       throw new BadRequestException('Cannot create private chat with yourself');
 
     try {
-      return await this.chatRepo.createPrivateChat(
-        userId,
-        createChatDto.userId,
-      );
+      return this.chatRepo.createPrivateChat(userId, createChatDto.userId);
     } catch (e) {
       if (e instanceof PrismaClientKnownRequestError && e.code === 'P2003')
         throw new BadRequestException('User not found');
     }
   }
 
-  async createGroupChat(
-    ownerId: number,
-    dto: CreateGroupChatDto,
-  ): Promise<Chat> {
+  createGroupChat(ownerId: number, dto: CreateGroupChatDto): Promise<Chat> {
     try {
-      return await this.chatRepo.createGroupChat(ownerId, dto);
+      return this.chatRepo.createGroupChat(ownerId, dto);
     } catch (e) {
       if (e instanceof PrismaClientKnownRequestError && e.code === 'P2003')
         throw new BadRequestException('User not found');
     }
   }
 
-  async findById(user: AccessTokenPayload, chatId: number): Promise<Chat> {
+  async getById(user: AccessTokenPayload, chatId: number): Promise<Chat> {
     await this.validateChatParticipation(user, chatId);
 
     const chat: Chat | null = await this.chatRepo.getById(chatId);
@@ -105,9 +99,9 @@ export class ChatService {
     return chat;
   }
 
-  async updateGroupChat(id: number, dto: UpdateGroupChatDto): Promise<Chat> {
+  updateGroupChat(id: number, dto: UpdateGroupChatDto): Promise<Chat> {
     try {
-      return await this.chatRepo.updateGroupChat(id, dto);
+      return this.chatRepo.updateGroupChat(id, dto);
     } catch (e) {
       if (e instanceof PrismaClientKnownRequestError && e.code === 'P2025')
         throw new NotFoundException('Chat not found');
@@ -118,7 +112,7 @@ export class ChatService {
   async delete(user: AccessTokenPayload, id: number): Promise<Chat> {
     await this.validateOwner(user, id);
 
-    return await this.chatRepo.delete(id);
+    return this.chatRepo.delete(id);
   }
 
   async addUserToChat(chatId: number, userId: number) {
@@ -131,7 +125,7 @@ export class ChatService {
         'User already is a participant of the chat',
       );
 
-    return await this.chatRepo.addUserToChat(chatId, userId);
+    return this.chatRepo.addUserToChat(chatId, userId);
   }
 
   async deleteUserFromChat(chatId: number, userId: number) {
@@ -144,11 +138,10 @@ export class ChatService {
     if (!isParticipant)
       throw new ForbiddenException('User is not a participant of the chat');
 
-    if (chat.chatType === ChatType.PRIVATE)
-      return await this.chatRepo.delete(chatId);
+    if (chat.chatType === ChatType.PRIVATE) return this.chatRepo.delete(chatId);
 
     if (chat.ownerId !== userId)
-      return await this.chatRepo.deleteUserFromChat(chatId, userId);
+      return this.chatRepo.deleteUserFromChat(chatId, userId);
 
     const { userId: newOwnerId } = await this.chatRepo.findNewOwner(
       chatId,
@@ -156,14 +149,10 @@ export class ChatService {
     );
 
     if (newOwnerId) {
-      return await this.chatRepo.updateOwnerAndDeleteUser(
-        chatId,
-        newOwnerId,
-        userId,
-      );
+      return this.chatRepo.updateOwnerAndDeleteUser(chatId, newOwnerId, userId);
     }
 
-    return await this.chatRepo.delete(chatId);
+    return this.chatRepo.delete(chatId);
   }
 
   async getUserIdsInChat(
@@ -182,10 +171,10 @@ export class ChatService {
   async updateOwner(chatId: number, newOwnerId: number): Promise<Chat> {
     await this.validateChatType(chatId, ChatType.GROUP);
 
-    return await this.chatRepo.updateOwner(chatId, newOwnerId);
+    return this.chatRepo.updateOwner(chatId, newOwnerId);
   }
 
   async getNewOwnerId(chatId: number, currentOnwerId: number) {
-    return await this.chatRepo.findNewOwner(chatId, currentOnwerId);
+    return this.chatRepo.findNewOwner(chatId, currentOnwerId);
   }
 }

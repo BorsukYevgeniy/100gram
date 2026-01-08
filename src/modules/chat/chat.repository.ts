@@ -13,7 +13,7 @@ export class ChatRepository {
     userId: number,
     participantId: number,
   ): Promise<Chat> {
-    return await this.prisma.chat.create({
+    return this.prisma.chat.create({
       data: {
         chatType: ChatType.PRIVATE,
         chatToUsers: {
@@ -34,7 +34,7 @@ export class ChatRepository {
     ownerId: number,
     dto: CreateGroupChatDto,
   ): Promise<Chat> {
-    return await this.prisma.chat.create({
+    return this.prisma.chat.create({
       data: {
         chatType: ChatType.GROUP,
         ownerId,
@@ -48,20 +48,20 @@ export class ChatRepository {
   }
 
   async updateGroupChat(id: number, dto: UpdateGroupChatDto): Promise<Chat> {
-    return await this.prisma.chat.update({
+    return this.prisma.chat.update({
       where: { id },
       data: dto,
     });
   }
 
   async getById(id: number): Promise<Chat> {
-    return await this.prisma.chat.findUnique({
+    return this.prisma.chat.findUnique({
       where: { id },
     });
   }
 
   async delete(id: number): Promise<Chat> {
-    return await this.prisma.chat.delete({
+    return this.prisma.chat.delete({
       where: { id },
     });
   }
@@ -70,19 +70,19 @@ export class ChatRepository {
     chatId: number,
     userId: number,
   ): Promise<ChatToUser> {
-    return await this.prisma.chatToUser.delete({
+    return this.prisma.chatToUser.delete({
       where: { chatId_userId: { chatId, userId } },
     });
   }
 
   async addUserToChat(chatId: number, userId: number): Promise<ChatToUser> {
-    return await this.prisma.chatToUser.create({
+    return this.prisma.chatToUser.create({
       data: { chatId, userId },
     });
   }
 
   async getUsersInChat(chatId: number) {
-    return await this.prisma.chatToUser.findMany({
+    return this.prisma.chatToUser.findMany({
       where: { chatId },
       select: {
         user: { omit: { password: true, verificationCode: true, email: true } },
@@ -96,7 +96,7 @@ export class ChatRepository {
   }
 
   async updateOwner(chatId: number, newOnwerId: number) {
-    return await this.prisma.chat.update({
+    return this.prisma.chat.update({
       where: { id: chatId },
       data: { ownerId: newOnwerId },
     });
@@ -107,7 +107,7 @@ export class ChatRepository {
     newOwnerId: number,
     userId: number,
   ) {
-    return await this.prisma.$transaction([
+    return this.prisma.$transaction([
       this.prisma.chatToUser.delete({
         where: { chatId_userId: { chatId, userId } },
       }),
@@ -119,7 +119,7 @@ export class ChatRepository {
   }
 
   async findNewOwner(chatId: number, currentOwnerId: number) {
-    return await this.prisma.chatToUser.findFirst({
+    return this.prisma.chatToUser.findFirst({
       where: {
         chatId: chatId,
         userId: { not: { equals: currentOwnerId } },

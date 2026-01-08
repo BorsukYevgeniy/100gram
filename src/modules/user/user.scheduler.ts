@@ -7,7 +7,7 @@ export class UserScheduler {
   constructor(private readonly userService: UserService) {}
 
   @Cron('0 0 */3 * *')
-  async deleteUnverifiedUsers() {
-    return await this.userService.deleteUnverifiedUsers();
+  deleteUnverifiedUsers() {
+    return this.userService.deleteUnverifiedUsers();
   }
 }

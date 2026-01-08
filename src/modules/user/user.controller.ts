@@ -22,23 +22,23 @@ export class UserController {
   @RequiredRoles([Role.ADMIN])
   @UseGuards(RolesGuard)
   @Patch('assign-admin/:id')
-  async assignAdmin(@Param('id') id: number): Promise<User> {
-    return await this.userService.assignAdmin(id);
+  assignAdmin(@Param('id') id: number): Promise<User> {
+    return this.userService.assignAdmin(id);
   }
 
   @UseGuards(AuthGuard)
   @Delete('me')
-  async deleteMe(@UserFromReq() user: AccessTokenPayload): Promise<User> {
-    return await this.userService.delete(user, user.id);
+  deleteMe(@UserFromReq() user: AccessTokenPayload): Promise<User> {
+    return this.userService.delete(user, user.id);
   }
 
   @RequiredRoles([Role.ADMIN])
   @UseGuards(RolesGuard)
   @Delete(':id')
-  async deleteUserById(
+  deleteUserById(
     @UserFromReq() user: AccessTokenPayload,
     @Param('id', ParseIntPipe) id: number,
   ): Promise<User> {
-    return await this.userService.delete(user, id);
+    return this.userService.delete(user, id);
   }
 }

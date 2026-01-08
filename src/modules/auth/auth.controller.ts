@@ -40,28 +40,28 @@ export class AuthController {
   ): Promise<void> {
     const tokens = await this.authService.loginById(req.user.id);
 
-    await this.setTokenCookie(res, tokens);
+    this.setTokenCookie(res, tokens);
   }
 
   @Post('register')
   async register(@Body() dto: CreateUserDto, @Res() res: Response) {
     const tokens = await this.authService.register(dto);
 
-    await this.setTokenCookie(res, tokens, 201);
+    this.setTokenCookie(res, tokens, 201);
   }
 
   @Post('login')
   async login(@Body() dto: LoginDto, @Res() res: Response) {
     const tokens = await this.authService.login(dto);
 
-    await this.setTokenCookie(res, tokens);
+    this.setTokenCookie(res, tokens);
   }
 
   @Post('logout')
   @UseGuards(AuthGuard)
   async logout(@Req() req: AuthRequest, @Res() res: Response): Promise<void> {
     await this.authService.logout(req.cookies.refresh_token);
-    await this.clearTokenCookie(res);
+    this.clearTokenCookie(res);
   }
 
   @Post('logout-all')
@@ -71,14 +71,14 @@ export class AuthController {
     @Res() res: Response,
   ): Promise<void> {
     await this.authService.logoutAll(user.id);
-    await this.clearTokenCookie(res);
+    this.clearTokenCookie(res);
   }
 
   @Post('verify/:verificationCode')
-  async verify(
+  verify(
     @Param('verificationCode', ParseUUIDPipe) verificationCode: string,
   ): Promise<UserNoCredVCode> {
-    return await this.authService.verifyUser(verificationCode);
+    return this.authService.verifyUser(verificationCode);
   }
 
   @Post('refresh')
@@ -91,16 +91,16 @@ export class AuthController {
 
     const tokens = await this.authService.refresh(refreshTokenCookie);
 
-    await this.setTokenCookie(res, tokens);
+    this.setTokenCookie(res, tokens);
   }
 
   @Post('resend-email')
   @UseGuards(AuthGuard, ThrottlerGuard)
-  async resendVerificationMail(@User() user: AccessTokenPayload) {
-    return await this.authService.resendVerificationMail(user);
+  resendVerificationMail(@User() user: AccessTokenPayload) {
+    return this.authService.resendVerificationMail(user);
   }
 
-  private async setTokenCookie(
+  private setTokenCookie(
     res: Response,
     tokens: TokenPair,
     status: 200 | 201 = 200,
@@ -121,7 +121,7 @@ export class AuthController {
       .end();
   }
 
-  private async clearTokenCookie(res: Response) {
+  private clearTokenCookie(res: Response) {
     res.clearCookie('access_token');
     res.clearCookie('refresh_token').status(200).end();
   }

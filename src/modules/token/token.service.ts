@@ -29,12 +29,12 @@ export class TokenService {
       this.ConfigService.REFRESH_TOKEN_EXPIRATION_TIME;
   }
 
-  private async generateAccessToken(
+  private generateAccessToken(
     id: number,
     role: Role,
     isVerified: boolean,
   ): Promise<string> {
-    return await this.jwtService.signAsync<AccessTokenPayload>(
+    return this.jwtService.signAsync<AccessTokenPayload>(
       { id, role, isVerified },
       {
         secret: this.ACCESS_TOKEN_SECRET,
@@ -43,37 +43,34 @@ export class TokenService {
     );
   }
 
-  private async generateRefreshToken(id: number): Promise<string> {
-    return await this.jwtService.signAsync<RefreshTokenPayload>({ id }, {
+  private generateRefreshToken(id: number): Promise<string> {
+    return this.jwtService.signAsync<RefreshTokenPayload>({ id }, {
       secret: this.REFRESH_TOKEN_SECRET,
       expiresIn: this.REFRESH_TOKEN_EXPIRATION_TIME,
     } as JwtSignOptions);
   }
 
-  async verifyAccessToken(token: string): Promise<AccessTokenPayload> {
-    return await this.jwtService.verifyAsync(token, {
+  verifyAccessToken(token: string): Promise<AccessTokenPayload> {
+    return this.jwtService.verifyAsync(token, {
       secret: this.ACCESS_TOKEN_SECRET,
     });
   }
 
-  async verifyRefreshToken(token: string): Promise<RefreshTokenPayload> {
-    return await this.jwtService.verifyAsync(token, {
+  verifyRefreshToken(token: string): Promise<RefreshTokenPayload> {
+    return this.jwtService.verifyAsync(token, {
       secret: this.REFRESH_TOKEN_SECRET,
     });
   }
 
-  private async saveRefreshToken(
-    userId: number,
-    token: string,
-  ): Promise<Token> {
+  private saveRefreshToken(userId: number, token: string): Promise<Token> {
     const expiresAt: Date = new Date();
     expiresAt.setDate(expiresAt.getDate() + 7);
 
-    return await this.tokenRepository.create(userId, token, expiresAt);
+    return this.tokenRepository.create(userId, token, expiresAt);
   }
 
-  async getUserTokens(userId: number): Promise<Token[]> {
-    return await this.tokenRepository.getUserToken(userId);
+  getUserTokens(userId: number): Promise<Token[]> {
+    return this.tokenRepository.getUserToken(userId);
   }
 
   async generateTokens(
@@ -81,14 +78,12 @@ export class TokenService {
     role: Role,
     isVerified: boolean,
   ): Promise<{ accessToken: string; refreshToken: string }> {
-    const accessToken = await this.generateAccessToken(
-      userId,
-      role,
-      isVerified,
-    );
-    const refreshToken = await this.generateRefreshToken(userId);
+    const [accessToken, refreshToken] = await Promise.all([
+      this.generateAccessToken(userId, role, isVerified),
+      this.generateRefreshToken(userId),
+    ]);
 
-    await this.saveRefreshToken(userId, refreshToken);
+    this.saveRefreshToken(userId, refreshToken);
 
     return {
       accessToken,
@@ -96,12 +91,12 @@ export class TokenService {
     };
   }
 
-  async deleteToken(token: string): Promise<Token> {
-    return await this.tokenRepository.delete(token);
+  deleteToken(token: string): Promise<Token> {
+    return this.tokenRepository.delete(token);
   }
 
-  async deleteAllUserTokens(userId: number) {
-    return await this.tokenRepository.deleteAllUserToken(userId);
+  deleteAllUserTokens(userId: number) {
+    return this.tokenRepository.deleteAllUserToken(userId);
   }
 
   async update(
@@ -113,14 +108,12 @@ export class TokenService {
     const expiresAt: Date = new Date();
     expiresAt.setDate(expiresAt.getDate() + 7);
 
-    const accessToken = await this.generateAccessToken(
-      userId,
-      role,
-      isVerified,
-    );
-    const newRefreshToken = await this.generateRefreshToken(userId);
+    const [accessToken, newRefreshToken] = await Promise.all([
+      this.generateAccessToken(userId, role, isVerified),
+      this.generateRefreshToken(userId),
+    ]);
 
-    await this.tokenRepository.update(oldToken, newRefreshToken, expiresAt);
+    this.tokenRepository.update(oldToken, newRefreshToken, expiresAt);
 
     return {
       accessToken,
@@ -128,7 +121,7 @@ export class TokenService {
     };
   }
 
-  async deleteExpiredTokens() {
-    return await this.tokenRepository.deleteExpiredTokens();
+  deleteExpiredTokens() {
+    return this.tokenRepository.deleteExpiredTokens();
   }
 }

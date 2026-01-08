@@ -33,15 +33,15 @@ export class ChatMessageController {
   ): Promise<PaginatedMessages> {
     await this.chatService.validateChatParticipation(user, chatId);
 
-    return await this.messageService.getMessagesInChat(chatId, paginationDto);
+    return this.messageService.getMessagesInChat(chatId, paginationDto);
   }
 
   @Post()
-  async create(
+  create(
     @User() user: AccessTokenPayload,
     @Body() createMessageDto: CreateMessageDto,
     @Param('chatId') chatId: number,
   ): Promise<Message> {
-    return await this.messageService.create(user.id, chatId, createMessageDto);
+    return this.messageService.create(user.id, chatId, createMessageDto);
   }
 }

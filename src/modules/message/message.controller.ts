@@ -20,27 +20,27 @@ export class MessageController {
   constructor(private readonly messageService: MessageService) {}
 
   @Get(':id')
-  async findOne(
+  findOne(
     @User() user: AccessTokenPayload,
     @Param('id') messageId: number,
   ): Promise<Message> {
-    return await this.messageService.findById(user, messageId);
+    return this.messageService.findById(user, messageId);
   }
 
   @Patch(':id')
-  async update(
+  update(
     @User() user: AccessTokenPayload,
     @Param('id') messageId: number,
     @Body() updateMessageDto: UpdateMessageDto,
   ): Promise<Message> {
-    return await this.messageService.update(user, messageId, updateMessageDto);
+    return this.messageService.update(user, messageId, updateMessageDto);
   }
 
   @Delete(':id')
-  async delete(
+  delete(
     @User() user: AccessTokenPayload,
     @Param('id') messageId: number,
   ): Promise<Message> {
-    return await this.messageService.delete(user, messageId);
+    return this.messageService.delete(user, messageId);
   }
 }
