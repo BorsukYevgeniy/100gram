@@ -59,7 +59,7 @@ export class ChatController {
   }
 
   @Delete(':id')
-  async delete(@Param('id') id: number) {
-    return await this.chatService.delete(id);
+  async delete(@User() user: AccessTokenPayload, @Param('id') id: number) {
+    return await this.chatService.delete(user, id);
   }
 }

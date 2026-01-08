@@ -60,7 +60,7 @@ export class UserService {
 
       if (newOwnerId) {
         await this.chatService.updateOwner(chat.id, newOwnerId);
-      } else await this.chatService.delete(chat.id);
+      } else await this.chatService.delete(user, chat.id);
     }
 
     return await this.userRepository.delete(userId);

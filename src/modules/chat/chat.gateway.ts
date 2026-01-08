@@ -51,15 +51,19 @@ export class ChatGateway {
   @WebSocketServer()
   server: Server;
 
-  @SubscribeMessage('joinChat')
-  async handleJoinChat(
+  @SubscribeMessage('joinRoom')
+  async handleJoinRoom(
     @MessageBody() payload: { chatId: number },
     @ConnectedSocket() client: Socket,
   ) {
     const user = await this.getUserFromWs(client);
-    await this.chatService.validateChatParticipation(user, payload.chatId);
 
-    client.join(`chat-${payload.chatId}`);
+    try {
+      await this.chatService.validateChatParticipation(user, payload.chatId);
+      client.join(`chat-${payload.chatId}`);
+    } catch (e) {
+      if (e instanceof HttpException) throw new WsException(e.message);
+    }
   }
 
   @SubscribeMessage('createMessage')
@@ -114,8 +118,8 @@ export class ChatGateway {
     }
   }
 
-  @SubscribeMessage('leaveChat')
-  async handleLeaveChat(
+  @SubscribeMessage('leaveRoom')
+  async handleLeaveRoom(
     @MessageBody() chatId: number,
     @ConnectedSocket() client: Socket,
   ) {
@@ -129,7 +133,7 @@ export class ChatGateway {
     const sockets = await this.server.to(`chat-${chatId}`).fetchSockets();
 
     sockets
-      .filter((s) => s.data.userId === userId)
+      .filter((s) => s.data.id === userId)
       .forEach((s) => s.leave(`chat-${chatId}`));
   }
 
@@ -148,6 +152,8 @@ export class ChatGateway {
 
     if (!tokenPayload.isVerified)
       throw new WsException('Forbidden resource. Please verify your account');
+
+    client.data = tokenPayload;
 
     return tokenPayload;
   }
