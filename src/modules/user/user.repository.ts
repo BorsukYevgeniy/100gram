@@ -8,38 +8,38 @@ export class UserRepository {
   constructor(private readonly prisma: PrismaService) {}
 
   async delete(userId: number): Promise<User> {
-    return this.prisma.user.delete({
+    return await this.prisma.user.delete({
       where: { id: userId },
     });
   }
 
   async create(dto: CreateUserDto): Promise<User> {
-    return this.prisma.user.create({ data: dto });
+    return await this.prisma.user.create({ data: dto });
   }
 
   async createGoogleUser(dto: CreateUserDto): Promise<User> {
-    return this.prisma.user.create({
+    return await this.prisma.user.create({
       data: { ...dto, isVerified: true, verifiedAt: new Date() },
     });
   }
 
   async findByEmail(email: string): Promise<User | null> {
-    return this.prisma.user.findUnique({ where: { email } });
+    return await this.prisma.user.findUnique({ where: { email } });
   }
 
   async findById(id: number): Promise<User | null> {
-    return this.prisma.user.findUnique({ where: { id } });
+    return await this.prisma.user.findUnique({ where: { id } });
   }
 
   async assingAdmin(id: number): Promise<User> {
-    return this.prisma.user.update({
+    return await this.prisma.user.update({
       where: { id },
       data: { role: Role.ADMIN },
     });
   }
 
   async getChatsWhereUserIsOwner(userId: number) {
-    return this.prisma.user.findUnique({
+    return await this.prisma.user.findUnique({
       where: { id: userId },
       select: {
         chatsOwned: { select: { id: true, ownerId: true, chatType: true } },
@@ -48,11 +48,11 @@ export class UserRepository {
   }
 
   async getUserByVerificationCode(verificationCode: string) {
-    return this.prisma.user.findUnique({ where: { verificationCode } });
+    return await this.prisma.user.findUnique({ where: { verificationCode } });
   }
 
   async verify(verificationCode: string) {
-    return this.prisma.user.update({
+    return await this.prisma.user.update({
       where: { verificationCode },
       data: { isVerified: true, verifiedAt: new Date() },
       omit: {
@@ -67,7 +67,7 @@ export class UserRepository {
     const deletingDate = new Date();
     deletingDate.setDate(deletingDate.getDate() - 3);
 
-    return this.prisma.user.deleteMany({
+    return await this.prisma.user.deleteMany({
       where: {
         isVerified: false,
         createdAt: {

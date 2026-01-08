@@ -55,23 +55,25 @@ export class MessageService {
     };
   }
 
-  create(
+  async create(
     userId: number,
     chatId: number,
     dto: CreateMessageDto,
   ): Promise<Message> {
     try {
-      return this.messageRepository.create(userId, chatId, dto);
+      return await this.messageRepository.create(userId, chatId, dto);
     } catch (e) {
       if (e instanceof PrismaClientKnownRequestError && e.code === 'P2003') {
         throw new NotFoundException('Chat not found');
-      }
-      throw e;
+      } else throw e;
     }
   }
 
-  findById(user: AccessTokenPayload, messageId: number): Promise<Message> {
-    return this.validateMessageOwnership(user, messageId);
+  async findById(
+    user: AccessTokenPayload,
+    messageId: number,
+  ): Promise<Message> {
+    return await this.validateMessageOwnership(user, messageId);
   }
 
   async update(
@@ -80,11 +82,11 @@ export class MessageService {
     dto: UpdateMessageDto,
   ): Promise<Message> {
     await this.validateMessageOwnership(user, messageId);
-    return this.messageRepository.update(messageId, dto);
+    return await this.messageRepository.update(messageId, dto);
   }
 
   async delete(user: AccessTokenPayload, messageId: number): Promise<Message> {
     await this.validateMessageOwnership(user, messageId);
-    return this.messageRepository.delete(messageId);
+    return await this.messageRepository.delete(messageId);
   }
 }

@@ -14,16 +14,16 @@ export class UserService {
     private readonly chatService: ChatService,
   ) {}
 
-  create(dto: CreateUserDto) {
-    return this.userRepository.create(dto);
+  async create(dto: CreateUserDto) {
+    return await this.userRepository.create(dto);
   }
 
-  createGoogleUser(dto: CreateUserDto) {
-    return this.userRepository.createGoogleUser(dto);
+  async createGoogleUser(dto: CreateUserDto) {
+    return await this.userRepository.createGoogleUser(dto);
   }
 
-  findByEmail(email: string) {
-    return this.userRepository.findByEmail(email);
+  async findByEmail(email: string) {
+    return await this.userRepository.findByEmail(email);
   }
 
   async findById(id: number) {
@@ -34,9 +34,9 @@ export class UserService {
     return user;
   }
 
-  assignAdmin(id: number) {
+  async assignAdmin(id: number) {
     try {
-      return this.userRepository.assingAdmin(id);
+      return await this.userRepository.assingAdmin(id);
     } catch (e) {
       if (e instanceof PrismaClientKnownRequestError && e.code === 'P2025')
         throw new NotFoundException('User not found');
@@ -66,15 +66,17 @@ export class UserService {
     return await this.userRepository.delete(userId);
   }
 
-  getUserByVerificationCode(verificationCode: string) {
-    return this.userRepository.getUserByVerificationCode(verificationCode);
+  async getUserByVerificationCode(verificationCode: string) {
+    return await this.userRepository.getUserByVerificationCode(
+      verificationCode,
+    );
   }
 
-  verify(verificationLink: string): Promise<UserNoCredVCode> {
-    return this.userRepository.verify(verificationLink);
+  async verify(verificationLink: string): Promise<UserNoCredVCode> {
+    return await this.userRepository.verify(verificationLink);
   }
 
-  deleteUnverifiedUsers() {
-    return this.userRepository.deleteUnverifiedUsers();
+  async deleteUnverifiedUsers() {
+    return await this.userRepository.deleteUnverifiedUsers();
   }
 }

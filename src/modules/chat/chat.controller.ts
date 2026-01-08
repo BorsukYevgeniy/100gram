@@ -22,44 +22,44 @@ export class ChatController {
   constructor(private readonly chatService: ChatService) {}
 
   @Post('private')
-  createPrivateChat(
+  async createPrivateChat(
     @User() user: AccessTokenPayload,
     @Body() dto: CreatePrivateChatDto,
   ) {
-    return this.chatService.createPrivateChat(user.id, dto);
+    return await this.chatService.createPrivateChat(user.id, dto);
   }
 
   @Post('group')
-  createGroupChat(
+  async createGroupChat(
     @User() user: AccessTokenPayload,
     @Body() dto: CreateGroupChatDto,
   ) {
-    return this.chatService.createGroupChat(user.id, dto);
+    return await this.chatService.createGroupChat(user.id, dto);
   }
 
   @Get(':id')
-  findOne(@User() user: AccessTokenPayload, @Param('id') id: number) {
-    return this.chatService.getById(user, id);
+  async findOne(@User() user: AccessTokenPayload, @Param('id') id: number) {
+    return await this.chatService.findById(user, id);
   }
 
   @Patch(':chatId/owner/:ownerId')
-  updateOwner(
+  async updateOwner(
     @Param('chatId') chatId: number,
     @Param('ownerId') ownerId: number,
   ) {
-    return this.chatService.updateOwner(chatId, ownerId);
+    return await this.chatService.updateOwner(chatId, ownerId);
   }
 
   @Patch(':chatId')
-  updateGroupChat(
+  async updateGroupChat(
     @Param('chatId') chatId: number,
     @Body() updateChatDto: UpdateGroupChatDto,
   ) {
-    return this.chatService.updateGroupChat(chatId, updateChatDto);
+    return await this.chatService.updateGroupChat(chatId, updateChatDto);
   }
 
   @Delete(':id')
-  delete(@User() user: AccessTokenPayload, @Param('id') id: number) {
-    return this.chatService.delete(user, id);
+  async delete(@User() user: AccessTokenPayload, @Param('id') id: number) {
+    return await this.chatService.delete(user, id);
   }
 }

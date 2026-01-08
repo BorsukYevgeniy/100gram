@@ -8,7 +8,7 @@ export class MessageRepository {
   constructor(private readonly prisma: PrismaService) {}
 
   async findMessagesInChat(chatId: number, take: number, cursor: number) {
-    return this.prisma.message.findMany({
+    return await this.prisma.message.findMany({
       where: {
         chatId,
         ...(cursor && { id: { lt: cursor } }),
@@ -21,7 +21,7 @@ export class MessageRepository {
   }
 
   async create(userId: number, chatId: number, dto: CreateMessageDto) {
-    return this.prisma.message.create({
+    return await this.prisma.message.create({
       data: {
         ...dto,
         userId: userId,
@@ -31,17 +31,17 @@ export class MessageRepository {
   }
 
   async findById(id: number) {
-    return this.prisma.message.findUnique({ where: { id } });
+    return await this.prisma.message.findUnique({ where: { id } });
   }
 
   async update(id: number, dto: UpdateMessageDto) {
-    return this.prisma.message.update({
+    return await this.prisma.message.update({
       where: { id },
       data: dto,
     });
   }
 
   async delete(id: number) {
-    return this.prisma.message.delete({ where: { id } });
+    return await this.prisma.message.delete({ where: { id } });
   }
 }

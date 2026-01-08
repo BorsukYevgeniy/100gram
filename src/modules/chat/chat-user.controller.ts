@@ -11,29 +11,29 @@ export class ChatUserController {
     private readonly chatGateway: ChatGateway,
   ) {}
 
-  @Get('users')
-  getUsersInChat(
+  @Get(':chatId/users')
+  async getUsersInChat(
     @User() user: AccessTokenPayload,
     @Param('chatId') chatId: number,
   ) {
-    return this.chatService.getUserIdsInChat(user, chatId);
+    return await this.chatService.getUserIdsInChat(user, chatId);
   }
 
-  @Post(':userId')
-  addUserToChat(
+  @Post(':chatId/users/:userId')
+  async addUserToChat(
     @Param('chatId') chatId: number,
     @Param('userId') userId: number,
   ) {
-    return this.chatService.addUserToChat(chatId, userId);
+    return await this.chatService.addUserToChat(chatId, userId);
   }
 
-  @Delete(':userId')
+  @Delete(':chatId/users/:userId')
   async deleteUserFromChat(
     @Param('chatId') chatId: number,
     @Param('userId') userId: number,
   ) {
     const chat = await this.chatService.deleteUserFromChat(chatId, userId);
-    this.chatGateway.leaveChat(chatId, userId);
+    await this.chatGateway.leaveChat(chatId, userId);
 
     return chat;
   }

@@ -7,7 +7,7 @@ export class TokenScheduler {
   constructor(private readonly tokenService: TokenService) {}
 
   @Cron('0 0 */7 * *')
-  deleteExpiredTokens() {
-    return this.tokenService.deleteExpiredTokens();
+  async deleteExpiredTokens() {
+    return await this.tokenService.deleteExpiredTokens();
   }
 }

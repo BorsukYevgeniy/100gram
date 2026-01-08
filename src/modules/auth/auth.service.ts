@@ -45,9 +45,9 @@ export class AuthService {
         password: hashedPassword,
       });
 
-    this.mailService.sendVerificationMail(email, verificationCode);
+    await this.mailService.sendVerificationMail(email, verificationCode);
 
-    return this.tokenService.generateTokens(id, role, isVerified);
+    return await this.tokenService.generateTokens(id, role, isVerified);
   }
 
   async login(dto: LoginDto): Promise<TokenPair> {
@@ -59,7 +59,7 @@ export class AuthService {
 
     if (!isPasswordValid) throw new BadRequestException('Invalid credentials');
 
-    return this.tokenService.generateTokens(
+    return await this.tokenService.generateTokens(
       user.id,
       user.role as Role,
       user.isVerified,
@@ -71,19 +71,19 @@ export class AuthService {
 
     if (!user) throw new BadRequestException('Invalid credentials');
 
-    return this.tokenService.generateTokens(
+    return await this.tokenService.generateTokens(
       user.id,
       user.role as Role,
       user.isVerified,
     );
   }
 
-  logout(token: string) {
-    return this.tokenService.deleteToken(token);
+  async logout(token: string) {
+    return await this.tokenService.deleteToken(token);
   }
 
-  logoutAll(userId: number) {
-    return this.tokenService.deleteAllUserTokens(userId);
+  async logoutAll(userId: number) {
+    return await this.tokenService.deleteAllUserTokens(userId);
   }
 
   async refresh(token: string): Promise<TokenPair> {
@@ -97,7 +97,7 @@ export class AuthService {
 
     const { role, isVerified } = await this.userService.findById(id);
 
-    return this.tokenService.update(id, role, isVerified, token);
+    return await this.tokenService.update(id, role, isVerified, token);
   }
 
   async verifyUser(verificationCode: string): Promise<UserNoCredVCode> {
@@ -108,7 +108,7 @@ export class AuthService {
 
     if (user.isVerified) throw new BadRequestException('User already verified');
 
-    return this.userService.verify(verificationCode);
+    return await this.userService.verify(verificationCode);
   }
 
   async validateGoogleUser(googleUser: CreateUserDto) {
@@ -116,7 +116,7 @@ export class AuthService {
 
     if (user) return user;
 
-    return this.userService.createGoogleUser(googleUser);
+    return await this.userService.createGoogleUser(googleUser);
   }
 
   async resendVerificationMail(user: AccessTokenPayload) {
@@ -126,6 +126,6 @@ export class AuthService {
       user.id,
     );
 
-    return this.mailService.sendVerificationMail(email, verificationCode);
+    return await this.mailService.sendVerificationMail(email, verificationCode);
   }
 }
