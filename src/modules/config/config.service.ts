@@ -62,4 +62,12 @@ export class ConfigService {
   get APP_URL(): string {
     return this.configService.getOrThrow<string>('APP_URL');
   }
+
+  get THROTTLE_TTL(): number {
+    return this.configService.getOrThrow<number>('THROTTLE_TTL');
+  }
+
+  get THROTTLE_LIMIT(): number {
+    return this.configService.getOrThrow<number>('THROTTLE_LIMIT');
+  }
 }

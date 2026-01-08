@@ -10,6 +10,7 @@ import {
   UnauthorizedException,
   UseGuards,
 } from '@nestjs/common';
+import { ThrottlerGuard } from '@nestjs/throttler';
 import { Response } from 'express';
 import { User } from '../../common/decorators/user.decorator';
 import { AccessTokenPayload, AuthRequest, TokenPair } from '../../common/types';
@@ -94,7 +95,7 @@ export class AuthController {
   }
 
   @Post('resend-email')
-  @UseGuards(AuthGuard)
+  @UseGuards(AuthGuard, ThrottlerGuard)
   async resendVerificationMail(@User() user: AccessTokenPayload) {
     return await this.authService.resendVerificationMail(user);
   }
