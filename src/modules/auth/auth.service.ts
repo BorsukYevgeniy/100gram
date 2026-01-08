@@ -10,6 +10,7 @@ import { UserService } from '../user/user.service';
 import { compare, hash } from 'bcryptjs';
 import { User } from '../../../generated/prisma/browser';
 import { Role } from '../../../generated/prisma/enums';
+import { AccessTokenPayload, TokenPair } from '../../common/types';
 import { ConfigService } from '../config/config.service';
 import { MailService } from '../mail/mail.service';
 import { TokenService } from '../token/token.service';
@@ -25,7 +26,7 @@ export class AuthService {
     private readonly mailService: MailService,
   ) {}
 
-  async register(dto: CreateUserDto) {
+  async register(dto: CreateUserDto): Promise<TokenPair> {
     const user = await this.userService.findByEmail(dto.email);
 
     if (user)
@@ -49,7 +50,7 @@ export class AuthService {
     return await this.tokenService.generateTokens(id, role, isVerified);
   }
 
-  async login(dto: LoginDto) {
+  async login(dto: LoginDto): Promise<TokenPair> {
     const user = await this.userService.findByEmail(dto.email);
 
     if (!user) throw new BadRequestException('Invalid credentials');
@@ -65,7 +66,7 @@ export class AuthService {
     );
   }
 
-  async loginById(userId: number) {
+  async loginById(userId: number): Promise<TokenPair> {
     const user = await this.userService.findById(userId);
 
     if (!user) throw new BadRequestException('Invalid credentials');
@@ -85,7 +86,7 @@ export class AuthService {
     return await this.tokenService.deleteAllUserTokens(userId);
   }
 
-  async refresh(token: string) {
+  async refresh(token: string): Promise<TokenPair> {
     const { id } = await this.tokenService.verifyRefreshToken(token);
 
     const userTokens = await this.tokenService.getUserTokens(id);
@@ -116,5 +117,15 @@ export class AuthService {
     if (user) return user;
 
     return await this.userService.createGoogleUser(googleUser);
+  }
+
+  async resendVerificationMail(user: AccessTokenPayload) {
+    if (user.isVerified) throw new BadRequestException('User already verified');
+
+    const { verificationCode, email } = await this.userService.findById(
+      user.id,
+    );
+
+    return await this.mailService.sendVerificationMail(email, verificationCode);
   }
 }

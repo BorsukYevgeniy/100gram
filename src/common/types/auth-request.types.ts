@@ -1,6 +1,6 @@
 import { Request } from 'express';
 import { AccessTokenPayload } from './token-payload.types';
 
-export interface AuthRequest extends Request {
+export type AuthRequest = Request & {
   user: AccessTokenPayload;
-}
+};

@@ -1,11 +1,11 @@
 import { Role } from '../../../generated/prisma/enums';
 
-export interface AccessTokenPayload {
+export type AccessTokenPayload = {
   id: number;
   role: Role;
   isVerified: boolean;
-}
+};
 
-export interface RefreshTokenPayload {
+export type RefreshTokenPayload = {
   id: number;
-}
+};
