@@ -1,9 +1,12 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
-import { AccessTokenPayload } from '../../../dist/src/common/types/token-payload.types';
 import { Token } from '../../../generated/prisma/browser';
 import { Role } from '../../../generated/prisma/enums';
-import { RefreshTokenPayload, TokenPair } from '../../common/types';
+import {
+  AccessTokenPayload,
+  RefreshTokenPayload,
+  TokenPair,
+} from '../../common/types';
 import { ConfigService } from '../config/config.service';
 import { TokenRepository } from './token.repository';
 

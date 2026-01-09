@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
+import { PinoLogger } from 'nestjs-pino';
 import { Strategy, VerifyCallback } from 'passport-google-oauth20';
 import { ConfigService } from '../../config/config.service';
 import { AuthService } from '../auth.service';
@@ -9,8 +10,10 @@ export class GoogleStrategy extends PassportStrategy(Strategy) {
   constructor(
     private readonly configService: ConfigService,
     private readonly authService: AuthService,
+    private readonly logger: PinoLogger,
   ) {
     super(configService.GOOGLE_CONFIG);
+    logger.setContext(GoogleStrategy.name);
   }
 
   async validate(
@@ -24,6 +27,14 @@ export class GoogleStrategy extends PassportStrategy(Strategy) {
       nickname: profile._json.name,
       password: '',
     });
+
+    this.logger.info(
+      {
+        userId: user.id,
+        provider: 'google',
+      },
+      'Google login success',
+    );
 
     done(null, {
       id: user.id,

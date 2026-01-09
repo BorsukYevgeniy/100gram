@@ -59,8 +59,12 @@ export class AuthController {
 
   @Post('logout')
   @UseGuards(AuthGuard)
-  async logout(@Req() req: AuthRequest, @Res() res: Response): Promise<void> {
-    await this.authService.logout(req.cookies.refresh_token);
+  async logout(
+    @User() user: AccessTokenPayload,
+    @Req() req: AuthRequest,
+    @Res() res: Response,
+  ): Promise<void> {
+    await this.authService.logout(req.cookies.refresh_token, user.id);
     await this.clearTokenCookie(res);
   }
 

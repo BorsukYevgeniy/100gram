@@ -3,10 +3,35 @@ import { Injectable } from '@nestjs/common';
 import { ConfigService as NestConfigService } from '@nestjs/config';
 import { JwtSignOptions } from '@nestjs/jwt';
 import { ThrottlerOptions } from '@nestjs/throttler';
+import { Params } from 'nestjs-pino';
 
 @Injectable()
 export class ConfigService {
   constructor(private readonly configService: NestConfigService) {}
+
+  get PINO_CONFIG(): Params {
+    return {
+      pinoHttp: {
+        level: 'info',
+        autoLogging: false,
+
+        redact: [
+          'req.headers.cookie',
+          'req.headers.authorization',
+          'req.query.code',
+        ],
+
+        transport: {
+          target: 'pino-pretty',
+          options: {
+            colorize: true,
+            translateTime: 'HH:MM:ss',
+            ignore: 'pid,hostname',
+          },
+        },
+      },
+    };
+  }
 
   get GOOGLE_CONFIG() {
     return {
