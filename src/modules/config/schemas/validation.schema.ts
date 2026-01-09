@@ -22,4 +22,7 @@ export const validationSchema = J.object({
   SMTP_PASSWORD: J.string().required(),
 
   APP_URL: J.string().uri().required(),
+
+  THROTTLE_TTL: J.number().positive().required(),
+  THROTTLE_LIMIT: J.number().positive().required(),
 });
