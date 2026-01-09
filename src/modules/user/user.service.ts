@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { PrismaClientKnownRequestError } from '@prisma/client/runtime/client';
 import { User } from '../../../generated/prisma/client';
 import { AccessTokenPayload } from '../../common/types';
@@ -9,37 +9,57 @@ import { UserRepository } from './user.repository';
 
 @Injectable()
 export class UserService {
+  private readonly logger = new Logger(UserService.name);
+
   constructor(
     private readonly userRepository: UserRepository,
     private readonly chatService: ChatService,
   ) {}
 
   async create(dto: CreateUserDto) {
-    return await this.userRepository.create(dto);
+    const user = await this.userRepository.create(dto);
+
+    this.logger.log(`User ${user.id} created successfully by local provider`);
+    return user;
   }
 
   async createGoogleUser(dto: CreateUserDto) {
-    return await this.userRepository.createGoogleUser(dto);
+    const user = await this.userRepository.createGoogleUser(dto);
+
+    this.logger.log(`User ${user.id} created successfully by google provider`);
+    return user;
   }
 
   async findByEmail(email: string) {
-    return await this.userRepository.findByEmail(email);
+    const user = await this.userRepository.findByEmail(email);
+
+    this.logger.log(`User ${user.id} fethed successfully by email`);
+    return user;
   }
 
   async findById(id: number) {
     const user: User | null = await this.userRepository.findById(id);
 
-    if (!user) throw new NotFoundException('User not found');
+    if (!user) {
+      this.logger.warn(`User ${user.id} doesn't exist`);
+      throw new NotFoundException('User not found');
+    }
 
+    this.logger.log(`User ${user.id} fetched successfully`);
     return user;
   }
 
   async assignAdmin(id: number) {
     try {
-      return await this.userRepository.assingAdmin(id);
+      const admin = await this.userRepository.assingAdmin(id);
+
+      this.logger.log(`User ${admin.id} assigned as admin successfully`);
+      return admin;
     } catch (e) {
-      if (e instanceof PrismaClientKnownRequestError && e.code === 'P2025')
+      if (e instanceof PrismaClientKnownRequestError && e.code === 'P2025') {
+        this.logger.warn(`User ${id} doesn't exist`);
         throw new NotFoundException('User not found');
+      }
       throw e;
     }
   }
@@ -48,35 +68,46 @@ export class UserService {
     const { chatsOwned } =
       await this.userRepository.getChatsWhereUserIsOwner(userId);
 
+    this.logger.log(`Chat where user ${userId} is owner fetched successfully`);
+
     if (!chatsOwned || chatsOwned.length === 0) {
-      return await this.userRepository.delete(userId);
+      const user = await this.userRepository.delete(userId);
+      this.logger.log(`User ${user.id} deleted successfully`);
+      return user;
     }
 
     for (const chat of chatsOwned) {
-      const { userId: newOwnerId } = await this.chatService.getNewOwnerId(
-        chat.id,
-        user.id,
-      );
+      const newOwnerId = await this.chatService.getNewOwnerId(chat.id, user.id);
 
       if (newOwnerId) {
         await this.chatService.updateOwner(chat.id, newOwnerId);
       } else await this.chatService.delete(user, chat.id);
     }
 
-    return await this.userRepository.delete(userId);
+    const deletedUser = await this.userRepository.delete(userId);
+
+    this.logger.log(`User ${deletedUser.id} deleted successfully`);
+    return deletedUser;
   }
 
   async getUserByVerificationCode(verificationCode: string) {
-    return await this.userRepository.getUserByVerificationCode(
-      verificationCode,
-    );
+    const user =
+      await this.userRepository.getUserByVerificationCode(verificationCode);
+
+    this.logger.log(`User ${user.id} fethed successfully by verification code`);
+    return user;
   }
 
   async verify(verificationLink: string): Promise<UserNoCredVCode> {
-    return await this.userRepository.verify(verificationLink);
+    const user = await this.userRepository.verify(verificationLink);
+
+    this.logger.log(`User ${user.id} verified succesfully`);
+    return user;
   }
 
   async deleteUnverifiedUsers() {
-    return await this.userRepository.deleteUnverifiedUsers();
+    const { count } = await this.userRepository.deleteUnverifiedUsers();
+    this.logger.log(`Deleted ${count} unverified users`);
+    return count;
   }
 }

@@ -1,9 +1,10 @@
 import { MailerService } from '@nestjs-modules/mailer';
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '../config/config.service';
 
 @Injectable()
 export class MailService {
+  private readonly logger = new Logger(MailService.name);
   constructor(
     private readonly mailerService: MailerService,
     private readonly configService: ConfigService,
@@ -15,7 +16,7 @@ export class MailService {
       verificationCode,
     );
 
-    return await this.mailerService.sendMail({
+    await this.mailerService.sendMail({
       to,
       subject: 'Verification mail on ' + this.configService.APP_URL,
       html: `
@@ -25,5 +26,7 @@ export class MailService {
       </div>
       `,
     });
+
+    this.logger.log(`Verification mail sended successfully to ${to}`);
   }
 }
