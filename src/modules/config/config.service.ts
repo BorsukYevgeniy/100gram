@@ -16,9 +16,12 @@ export class ConfigService {
         autoLogging: false,
 
         redact: [
-          'req.headers.cookie',
-          'req.headers.authorization',
-          'req.query.code',
+          'req.headers',
+          'req.cookies',
+          'req.query',
+          'req.params',
+          'req.remoteAddress',
+          'req.remotePort',
         ],
 
         transport: {

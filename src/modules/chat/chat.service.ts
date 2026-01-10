@@ -12,6 +12,7 @@ import { UserNoCredVCode } from '../user/types/user.types';
 import { ChatRepository } from './chat.repository';
 import { CreateGroupChatDto } from './dto/create-group-chat.dto';
 import { CreatePrivateChatDto } from './dto/create-private-chat.dto';
+import { UpdateGroupChatDto } from './dto/update-group-chat.dto';
 
 @Injectable()
 export class ChatService {
@@ -152,6 +153,37 @@ export class ChatService {
         throw new NotFoundException('User not found');
       }
       throw e;
+    }
+  }
+
+  async findById(user: AccessTokenPayload, chatId: number): Promise<Chat> {
+    await this.validateChatParticipation(user, chatId);
+
+    const chat: Chat | null = await this.chatRepo.getById(chatId);
+
+    if (!chat) {
+      this.logger.warn({ chatId }, 'Chat not found');
+      throw new NotFoundException('Chat not found');
+    }
+
+    return chat;
+  }
+
+  async updateGroupChat(id: number, dto: UpdateGroupChatDto): Promise<Chat> {
+    try {
+      const chat = await this.chatRepo.updateGroupChat(id, dto);
+
+      this.logger.info('Chat updated', {
+        chatId: id,
+        title: dto.title,
+        description: dto.description,
+      });
+      return chat;
+    } catch (e) {
+      if (e instanceof PrismaClientKnownRequestError && e.code === 'P2025') {
+        this.logger.warn({ chatId: id }, 'Chat not found');
+        throw new NotFoundException('Chat not found');
+      }
     }
   }
 
