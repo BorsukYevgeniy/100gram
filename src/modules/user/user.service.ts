@@ -1,5 +1,6 @@
-import { Injectable, Logger, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaClientKnownRequestError } from '@prisma/client/runtime/client';
+import { PinoLogger } from 'nestjs-pino';
 import { User } from '../../../generated/prisma/client';
 import { AccessTokenPayload } from '../../common/types';
 import { ChatService } from '../chat/chat.service';
@@ -9,31 +10,32 @@ import { UserRepository } from './user.repository';
 
 @Injectable()
 export class UserService {
-  private readonly logger = new Logger(UserService.name);
-
   constructor(
     private readonly userRepository: UserRepository,
     private readonly chatService: ChatService,
-  ) {}
+    private readonly logger: PinoLogger,
+  ) {
+    this.logger.setContext(UserService.name);
+  }
 
   async create(dto: CreateUserDto) {
     const user = await this.userRepository.create(dto);
 
-    this.logger.log(`User ${user.id} created successfully by local provider`);
+    this.logger.info('User created', { userId: user.id, provider: 'local' });
+
     return user;
   }
 
   async createGoogleUser(dto: CreateUserDto) {
     const user = await this.userRepository.createGoogleUser(dto);
 
-    this.logger.log(`User ${user.id} created successfully by google provider`);
+    this.logger.info('User created', { userId: user.id, provider: 'google' });
     return user;
   }
 
   async findByEmail(email: string) {
     const user = await this.userRepository.findByEmail(email);
 
-    this.logger.log(`User ${user.id} fethed successfully by email`);
     return user;
   }
 
@@ -41,11 +43,12 @@ export class UserService {
     const user: User | null = await this.userRepository.findById(id);
 
     if (!user) {
-      this.logger.warn(`User ${user.id} doesn't exist`);
+      this.logger.warn("User doesn't exist", {
+        userId: id,
+      });
       throw new NotFoundException('User not found');
     }
 
-    this.logger.log(`User ${user.id} fetched successfully`);
     return user;
   }
 
@@ -53,11 +56,16 @@ export class UserService {
     try {
       const admin = await this.userRepository.assingAdmin(id);
 
-      this.logger.log(`User ${admin.id} assigned as admin successfully`);
+      this.logger.info('User assigned as admin successfully', {
+        userId: id,
+      });
+
       return admin;
     } catch (e) {
       if (e instanceof PrismaClientKnownRequestError && e.code === 'P2025') {
-        this.logger.warn(`User ${id} doesn't exist`);
+        this.logger.warn("User doesn't exist", {
+          userId: id,
+        });
         throw new NotFoundException('User not found');
       }
       throw e;
@@ -68,11 +76,10 @@ export class UserService {
     const { chatsOwned } =
       await this.userRepository.getChatsWhereUserIsOwner(userId);
 
-    this.logger.log(`Chat where user ${userId} is owner fetched successfully`);
-
     if (!chatsOwned || chatsOwned.length === 0) {
       const user = await this.userRepository.delete(userId);
-      this.logger.log(`User ${user.id} deleted successfully`);
+
+      this.logger.info('User deleted', { userId: user.id });
       return user;
     }
 
@@ -86,7 +93,7 @@ export class UserService {
 
     const deletedUser = await this.userRepository.delete(userId);
 
-    this.logger.log(`User ${deletedUser.id} deleted successfully`);
+    this.logger.info('User deleted', { userId: user.id });
     return deletedUser;
   }
 
@@ -94,20 +101,20 @@ export class UserService {
     const user =
       await this.userRepository.getUserByVerificationCode(verificationCode);
 
-    this.logger.log(`User ${user.id} fethed successfully by verification code`);
     return user;
   }
 
   async verify(verificationLink: string): Promise<UserNoCredVCode> {
     const user = await this.userRepository.verify(verificationLink);
 
-    this.logger.log(`User ${user.id} verified succesfully`);
+    this.logger.info('User verified', { userId: user.id });
     return user;
   }
 
   async deleteUnverifiedUsers() {
     const { count } = await this.userRepository.deleteUnverifiedUsers();
-    this.logger.log(`Deleted ${count} unverified users`);
+
+    this.logger.info('Deleted unverified users', { count });
     return count;
   }
 }

@@ -1,5 +1,6 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
+import { PinoLogger } from 'nestjs-pino';
 import { Token } from '../../../generated/prisma/browser';
 import { Role } from '../../../generated/prisma/enums';
 import {
@@ -12,35 +13,31 @@ import { TokenRepository } from './token.repository';
 
 @Injectable()
 export class TokenService {
-  private readonly logger = new Logger(TokenService.name);
   constructor(
     private readonly tokenRepository: TokenRepository,
     private readonly jwtService: JwtService,
     private readonly configService: ConfigService,
-  ) {}
+    private readonly logger: PinoLogger,
+  ) {
+    this.logger.setContext(TokenService.name);
+  }
 
   private async generateAccessToken(
-    id: number,
+    userId: number,
     role: Role,
     isVerified: boolean,
   ): Promise<string> {
-    const token = await this.jwtService.signAsync<AccessTokenPayload>(
-      { id, role, isVerified },
+    return this.jwtService.signAsync<AccessTokenPayload>(
+      { id: userId, role, isVerified },
       this.configService.ACCESS_TOKEN_CONFIG,
     );
-
-    this.logger.log(`Generated access token for user ${id} successfully`);
-    return token;
   }
 
-  private async generateRefreshToken(id: number): Promise<string> {
-    const token = await this.jwtService.signAsync<RefreshTokenPayload>(
-      { id },
+  private async generateRefreshToken(userId: number): Promise<string> {
+    return this.jwtService.signAsync<RefreshTokenPayload>(
+      { id: userId },
       this.configService.REFRESH_TOKEN_CONFIG,
     );
-
-    this.logger.log(`Generated refresh token for user ${id} successfully`);
-    return token;
   }
 
   async verifyAccessToken(token: string): Promise<AccessTokenPayload> {
@@ -51,9 +48,7 @@ export class TokenService {
       },
     );
 
-    this.logger.log(
-      `Verified access token for user ${payload.id} successfully`,
-    );
+    this.logger.debug({ userId: payload.id }, 'Access token verified');
 
     return payload;
   }
@@ -66,9 +61,7 @@ export class TokenService {
       },
     );
 
-    this.logger.log(
-      `Verified refresh token for user ${payload.id} successfully`,
-    );
+    this.logger.debug({ userId: payload.id }, 'Refresh token verified');
 
     return payload;
   }
@@ -86,16 +79,11 @@ export class TokenService {
       expiresAt,
     );
 
-    this.logger.log(`Saved refresh token user ${userId} to db successfully`);
     return token;
   }
 
   async getUserTokens(userId: number): Promise<Token[]> {
     const tokens = await this.tokenRepository.getUserToken(userId);
-
-    this.logger.log(
-      `Fetched tokens ${tokens.length} for user ${userId} successfully `,
-    );
 
     return tokens;
   }
@@ -112,27 +100,24 @@ export class TokenService {
 
     await this.saveRefreshToken(userId, refreshToken);
 
-    this.logger.log(`Generated token pair for user ${userId} successfully`);
+    this.logger.info({ userId }, 'Token pair generated');
 
-    return {
-      accessToken,
-      refreshToken,
-    };
+    return { accessToken, refreshToken };
   }
 
   async deleteToken(token: string): Promise<Token> {
     const deletedToken = await this.tokenRepository.delete(token);
 
-    this.logger.log(
-      `Deleted token for user ${deletedToken.userId}successfully`,
-    );
+    this.logger.info({ userId: deletedToken.userId }, 'Token deleted');
+
     return deletedToken;
   }
 
   async deleteAllUserTokens(userId: number) {
     const { count } = await this.tokenRepository.deleteAllUserToken(userId);
 
-    this.logger.log(`Deleted ${count} token for user ${userId}`);
+    this.logger.info({ userId, count }, 'All user tokens deleted');
+
     return count;
   }
 
@@ -142,7 +127,7 @@ export class TokenService {
     isVerified: boolean,
     oldToken: string,
   ): Promise<TokenPair> {
-    const expiresAt: Date = new Date();
+    const expiresAt = new Date();
     expiresAt.setDate(expiresAt.getDate() + 7);
 
     const [accessToken, refreshToken] = await Promise.all([
@@ -152,18 +137,16 @@ export class TokenService {
 
     await this.tokenRepository.update(oldToken, refreshToken, expiresAt);
 
-    this.logger.log(`Updated token for user ${userId}`);
+    this.logger.info({ userId }, 'Token pair rotated');
 
-    return {
-      accessToken,
-      refreshToken,
-    };
+    return { accessToken, refreshToken };
   }
 
   async deleteExpiredTokens() {
     const { count } = await this.tokenRepository.deleteExpiredTokens();
 
-    this.logger.log(`Deleted ${count} expired tokens`);
+    this.logger.debug({ count }, 'Expired tokens deleted');
+
     return count;
   }
 }

@@ -2,52 +2,58 @@ import {
   BadRequestException,
   ForbiddenException,
   Injectable,
-  Logger,
   NotFoundException,
 } from '@nestjs/common';
 import { PrismaClientKnownRequestError } from '@prisma/client/runtime/client';
+import { PinoLogger } from 'nestjs-pino';
 import { Chat, ChatType, Role } from '../../../generated/prisma/client';
 import { AccessTokenPayload } from '../../common/types';
 import { UserNoCredVCode } from '../user/types/user.types';
 import { ChatRepository } from './chat.repository';
 import { CreateGroupChatDto } from './dto/create-group-chat.dto';
 import { CreatePrivateChatDto } from './dto/create-private-chat.dto';
-import { UpdateGroupChatDto } from './dto/update-group-chat.dto';
 
 @Injectable()
 export class ChatService {
-  private readonly logger = new Logger(ChatService.name);
-
-  constructor(private readonly chatRepo: ChatRepository) {}
+  constructor(
+    private readonly chatRepo: ChatRepository,
+    private readonly logger: PinoLogger,
+  ) {
+    this.logger.setContext(ChatService.name);
+  }
 
   private async validateOwner(user: AccessTokenPayload, chatId: number) {
-    this.logger.log(`Validating owner for user ${user.id} in chat ${chatId}`);
+    this.logger.debug({ userId: user.id, chatId }, 'Validating chat owner');
 
     const chat = await this.chatRepo.getById(chatId);
 
     if (!chat) {
-      this.logger.warn(`Chat ${chatId} doesn't exists`);
+      this.logger.warn({ chatId }, 'Chat not found');
       throw new NotFoundException('Chat not found');
     }
 
-    if (chat.ownerId !== user.id || user.role !== Role.ADMIN) {
-      this.logger.warn(`User ${user.id} doesn't owner of chat ${chatId}`);
+    if (chat.ownerId !== user.id && user.role !== Role.ADMIN) {
+      this.logger.warn({ userId: user.id, chatId }, 'User is not chat owner');
       throw new ForbiddenException();
     }
   }
 
   private async validateChatType(chatId: number, expectedType: ChatType) {
-    this.logger.log(`Validating chat type for chat ${chatId}`);
+    this.logger.debug({ chatId, expectedType }, 'Validating chat type');
+
     const chat = await this.chatRepo.getById(chatId);
 
     if (!chat) {
-      this.logger.warn(`Chat ${chatId} doesn't exists`);
+      this.logger.warn({ chatId }, 'Chat not found');
       throw new NotFoundException('Chat not found');
     }
 
     if (chat.chatType !== expectedType) {
-      this.logger.warn(`Chat ${chatId} is not of type ${expectedType}`);
-      throw new BadRequestException(`Chat is not of type ${expectedType}`);
+      this.logger.warn(
+        { chatId, expectedType, actualType: chat.chatType },
+        'Chat has invalid type',
+      );
+      throw new BadRequestException('Chat is not of type ${expectedType}');
     }
   }
 
@@ -55,29 +61,33 @@ export class ChatService {
     user: AccessTokenPayload,
     chatId: number,
   ): Promise<void> {
-    this.logger.log(
-      `Validating chat particapation for user ${user.id} in chat ${chatId}`,
+    this.logger.debug(
+      { userId: user.id, chatId },
+      'Validating chat participation',
     );
 
-    const chat: Chat | null = await this.chatRepo.getById(chatId);
+    const chat = await this.chatRepo.getById(chatId);
 
     if (!chat) {
-      this.logger.warn(`Chat ${chatId} doesn't exists`);
+      this.logger.warn({ chatId }, 'Chat not found');
       throw new NotFoundException('Chat not found');
     }
 
     if (user.role === Role.ADMIN) {
-      this.logger.log(`Validated chat participation for admin ${user.id}`);
+      this.logger.debug(
+        { userId: user.id, chatId },
+        'Admin bypassed participation check',
+      );
       return;
     }
 
     const usersInChat = await this.chatRepo.getUsersInChat(chatId);
-
     const isParticipant = usersInChat.some((u) => u.user.id === user.id);
 
     if (!isParticipant) {
       this.logger.warn(
-        `User ${user.id} is not participant of the chat ${chatId}`,
+        { userId: user.id, chatId },
+        'User is not chat participant',
       );
       throw new ForbiddenException('User is not a participant of the chat');
     }
@@ -87,39 +97,39 @@ export class ChatService {
     userId: number,
     chatId: number,
   ): Promise<boolean> {
-    this.logger.log(
-      `Checking chat participation for user ${userId} in chat ${chatId}`,
-    );
-    const usersInChat = await this.chatRepo.getUsersInChat(chatId);
+    this.logger.debug({ userId, chatId }, 'Checking chat participation');
 
+    const usersInChat = await this.chatRepo.getUsersInChat(chatId);
     return usersInChat.some((u) => u.user.id === userId);
   }
 
   async createPrivateChat(
     userId: number,
-    createChatDto: CreatePrivateChatDto,
+    dto: CreatePrivateChatDto,
   ): Promise<Chat> {
-    if (userId === createChatDto.userId) {
-      this.logger.warn(`User ${userId} tries to create chat with yourself`);
+    if (userId === dto.userId) {
+      this.logger.warn(
+        { userId },
+        'Attempt to create private chat with yourself',
+      );
       throw new BadRequestException('Cannot create private chat with yourself');
     }
 
     try {
-      const chat = await this.chatRepo.createPrivateChat(
-        userId,
-        createChatDto.userId,
-      );
+      const chat = await this.chatRepo.createPrivateChat(userId, dto.userId);
 
-      this.logger.log(
-        `Created private chat with user ${userId} and user ${createChatDto.userId} successfully`,
+      this.logger.info(
+        { chatId: chat.id, userId, peerId: dto.userId },
+        'Private chat created',
       );
 
       return chat;
     } catch (e) {
       if (e instanceof PrismaClientKnownRequestError && e.code === 'P2003') {
-        this.logger.warn(`User ${createChatDto.userId} doesn't exists`);
+        this.logger.warn({ peerId: dto.userId }, 'Peer user not found');
         throw new NotFoundException('User not found');
       }
+      throw e;
     }
   }
 
@@ -129,59 +139,34 @@ export class ChatService {
   ): Promise<Chat> {
     try {
       const chat = await this.chatRepo.createGroupChat(ownerId, dto);
-      this.logger.log(
-        `Created group chat with users ${dto.userIds} by user ${ownerId} successfully `,
+
+      this.logger.info(
+        { chatId: chat.id, ownerId, users: dto.userIds },
+        'Group chat created',
       );
 
       return chat;
     } catch (e) {
       if (e instanceof PrismaClientKnownRequestError && e.code === 'P2003') {
-        this.logger.warn(`One of users doesn't exists`);
+        this.logger.warn({ users: dto.userIds }, 'One of users not found');
         throw new NotFoundException('User not found');
-      }
-    }
-  }
-
-  async findById(user: AccessTokenPayload, chatId: number): Promise<Chat> {
-    await this.validateChatParticipation(user, chatId);
-
-    const chat: Chat | null = await this.chatRepo.getById(chatId);
-
-    if (!chat) {
-      this.logger.warn(`Chat ${chat.id} doescn't exists`);
-      throw new NotFoundException('Chat not found');
-    }
-
-    this.logger.log(`Fetched chat ${chat.id} successfully`);
-    return chat;
-  }
-
-  async updateGroupChat(id: number, dto: UpdateGroupChatDto): Promise<Chat> {
-    try {
-      const chat = await this.chatRepo.updateGroupChat(id, dto);
-
-      this.logger.log(`Chat ${id} updated successfully`);
-      return chat;
-    } catch (e) {
-      if (e instanceof PrismaClientKnownRequestError && e.code === 'P2025') {
-        this.logger.warn(`Chat ${id} doesn't exists`);
-        throw new NotFoundException('Chat not found');
       }
       throw e;
     }
   }
 
-  async delete(user: AccessTokenPayload, id: number): Promise<Chat> {
-    await this.validateOwner(user, id);
+  async delete(user: AccessTokenPayload, chatId: number): Promise<Chat> {
+    await this.validateOwner(user, chatId);
 
     try {
-      const chat = await this.chatRepo.delete(id);
+      const chat = await this.chatRepo.delete(chatId);
 
-      this.logger.log(`Chat ${id} deleted successfully`);
+      this.logger.info({ chatId, deletedBy: user.id }, 'Chat deleted');
+
       return chat;
     } catch (e) {
       if (e instanceof PrismaClientKnownRequestError && e.code === 'P2025') {
-        this.logger.warn(`Chat ${id} doesn't exists`);
+        this.logger.warn({ chatId }, 'Chat not found');
         throw new NotFoundException('Chat not found');
       }
       throw e;
@@ -194,7 +179,7 @@ export class ChatService {
     const isParticipant = await this.checkChatParticipation(userId, chatId);
 
     if (isParticipant) {
-      this.logger.warn(`User ${userId} already exists in chat ${chatId}`);
+      this.logger.warn({ chatId, userId }, 'User already in chat');
       throw new BadRequestException(
         'User already is a participant of the chat',
       );
@@ -202,7 +187,8 @@ export class ChatService {
 
     const chatUser = await this.chatRepo.addUserToChat(chatId, userId);
 
-    this.logger.log(`Added user ${userId} to chat ${chatId} successfully`);
+    this.logger.info({ chatId, userId }, 'User added to chat');
+
     return chatUser;
   }
 
@@ -210,30 +196,29 @@ export class ChatService {
     const chat = await this.chatRepo.getById(chatId);
 
     if (!chat) {
-      this.logger.warn(`Chat ${chatId} doesn't exists`);
+      this.logger.warn("Chat doesn't exists", { chatId });
       throw new NotFoundException('Chat not found');
     }
 
     const isParticipant = await this.checkChatParticipation(userId, chatId);
 
     if (!isParticipant) {
-      this.logger.warn(
-        `User ${userId} is not participant of the chat ${chatId}`,
-      );
+      this.logger.warn('User is not participant of the chat ', {
+        userId,
+        chatId,
+      });
       throw new ForbiddenException('User is not a participant of the chat');
     }
 
     if (chat.chatType === ChatType.PRIVATE) {
       const chat = await this.chatRepo.delete(chatId);
 
-      this.logger.log(`Deleted chat ${chatId} successfully`);
+      this.logger.info('Deleted chat', { chatId });
       return chat;
     } else if (chat.ownerId !== userId) {
       const chatUser = await this.chatRepo.deleteUserFromChat(chatId, userId);
 
-      this.logger.log(
-        `Deleted user ${userId} from chat ${chatId} successfully`,
-      );
+      this.logger.info('Deleted user from chat', { userId, chatId });
       return chatUser;
     } else {
       const { userId: newOwnerId } = await this.chatRepo.findNewOwner(
@@ -248,15 +233,17 @@ export class ChatService {
           userId,
         );
 
-        this.logger.log(
-          `Updated owner to user ${newOwnerId} on chat ${chatId} and deleted user ${userId} from chat ${chatId}`,
-        );
+        this.logger.info('Updated owner in chat and deleted user from chat', {
+          newOwnerId,
+          chatId,
+          userId,
+        });
         return ownerAndChatUser;
       }
 
       const chat = await this.chatRepo.delete(chatId);
 
-      this.logger.log(`Deleted chat ${chat.id} successfully`);
+      this.logger.info('Deleted chat successfully', { chatId });
       return chat;
     }
   }
@@ -279,14 +266,12 @@ export class ChatService {
 
     const owner = await this.chatRepo.updateOwner(chatId, newOwnerId);
 
-    this.logger.log(`Updated owner to user ${newOwnerId} in chat ${chatId}`);
+    this.logger.info('Updated owner in chat', { chatId, newOwnerId });
     return owner;
   }
 
   async getNewOwnerId(chatId: number, currentOnwerId: number) {
     const { userId } = await this.chatRepo.findNewOwner(chatId, currentOnwerId);
-
-    this.logger.log(`Getted new owner for chat ${chatId}`);
 
     return userId;
   }

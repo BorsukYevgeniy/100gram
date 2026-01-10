@@ -1,14 +1,17 @@
 import { MailerService } from '@nestjs-modules/mailer';
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { PinoLogger } from 'nestjs-pino';
 import { ConfigService } from '../config/config.service';
 
 @Injectable()
 export class MailService {
-  private readonly logger = new Logger(MailService.name);
   constructor(
     private readonly mailerService: MailerService,
     private readonly configService: ConfigService,
-  ) {}
+    private readonly logger: PinoLogger,
+  ) {
+    this.logger.setContext(MailService.name);
+  }
 
   async sendVerificationMail(to: string, verificationCode: string) {
     const link = this.configService.APP_URL.concat(
@@ -27,6 +30,6 @@ export class MailService {
       `,
     });
 
-    this.logger.log(`Verification mail sended successfully to ${to}`);
+    this.logger.info('Verification mail sended successfully', { to });
   }
 }
