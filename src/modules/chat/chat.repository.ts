@@ -81,7 +81,7 @@ export class ChatRepository {
     });
   }
 
-  async getUsersInChat(chatId: number) {
+  async getUsersInChat(chatId: number, take: number, userCursor: number) {
     return await this.prisma.chatToUser.findMany({
       where: { chatId },
       select: {
@@ -93,9 +93,31 @@ export class ChatRepository {
           },
         },
       },
+
+      ...(userCursor && {
+        cursor: {
+          chatId_userId: {
+            chatId,
+            userId: userCursor,
+          },
+        },
+        skip: 1,
+      }),
+      take,
       orderBy: {
         user: {
-          id: 'desc',
+          id: 'asc',
+        },
+      },
+    });
+  }
+
+  async getUserIdsInChat(chatId: number) {
+    return await this.prisma.chatToUser.findMany({
+      where: { chatId },
+      select: {
+        user: {
+          select: { id: true },
         },
       },
     });

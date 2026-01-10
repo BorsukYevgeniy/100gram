@@ -3,13 +3,13 @@ import { Injectable } from '@nestjs/common';
 import { ConfigService as NestConfigService } from '@nestjs/config';
 import { JwtSignOptions } from '@nestjs/jwt';
 import { ThrottlerOptions } from '@nestjs/throttler';
-import { Params } from 'nestjs-pino';
+import { Params as PinoOptions } from 'nestjs-pino';
 
 @Injectable()
 export class ConfigService {
   constructor(private readonly configService: NestConfigService) {}
 
-  get PINO_CONFIG(): Params {
+  get PINO_CONFIG(): PinoOptions {
     return {
       pinoHttp: {
         level: 'info',

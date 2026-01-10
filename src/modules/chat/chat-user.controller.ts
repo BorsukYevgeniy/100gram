@@ -1,22 +1,31 @@
-import { Controller, Delete, Get, Param, Post } from '@nestjs/common';
+import {
+  Controller,
+  Delete,
+  Get,
+  Param,
+  Post,
+  Query,
+  UseGuards,
+} from '@nestjs/common';
 import { User } from '../../common/decorators/user.decorator';
+import { PaginationDto } from '../../common/dto/pagination.dto';
 import { AccessTokenPayload } from '../../common/types';
-import { ChatGateway } from './chat.gateway';
+import { VerifiedUserGuard } from '../auth/guards/verified-user.guard';
+import { PaginatedUserNoCredVCode } from '../user/types/user.types';
 import { ChatService } from './chat.service';
 
+@UseGuards(VerifiedUserGuard)
 @Controller('chats/:chatId/users')
 export class ChatUserController {
-  constructor(
-    private readonly chatService: ChatService,
-    private readonly chatGateway: ChatGateway,
-  ) {}
+  constructor(private readonly chatService: ChatService) {}
 
   @Get()
   async getUsersInChat(
     @User() user: AccessTokenPayload,
     @Param('chatId') chatId: number,
-  ) {
-    return await this.chatService.getUsersInChat(user, chatId);
+    @Query() paginationDto: PaginationDto,
+  ): Promise<PaginatedUserNoCredVCode> {
+    return await this.chatService.getUsersInChat(user, chatId, paginationDto);
   }
 
   @Post(':userId')

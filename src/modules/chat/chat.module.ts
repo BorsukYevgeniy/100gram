@@ -11,7 +11,7 @@ import { ChatService } from './chat.service';
 
 @Module({
   imports: [PrismaModule, TokenModule, MessageModule],
-  controllers: [ChatController, ChatMessageController, ChatUserController],
+  controllers: [ChatMessageController, ChatUserController, ChatController],
   providers: [ChatGateway, ChatService, ChatRepository],
   exports: [ChatService],
 })

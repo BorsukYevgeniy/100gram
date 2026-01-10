@@ -7,8 +7,9 @@ import {
 import { PrismaClientKnownRequestError } from '@prisma/client/runtime/client';
 import { PinoLogger } from 'nestjs-pino';
 import { Chat, ChatType, Role } from '../../../generated/prisma/client';
+import { PaginationDto } from '../../common/dto/pagination.dto';
 import { AccessTokenPayload } from '../../common/types';
-import { UserNoCredVCode } from '../user/types/user.types';
+import { PaginatedUserNoCredVCode } from '../user/types/user.types';
 import { ChatRepository } from './chat.repository';
 import { CreateGroupChatDto } from './dto/create-group-chat.dto';
 import { CreatePrivateChatDto } from './dto/create-private-chat.dto';
@@ -82,8 +83,8 @@ export class ChatService {
       return;
     }
 
-    const usersInChat = await this.chatRepo.getUsersInChat(chatId);
-    const isParticipant = usersInChat.some((u) => u.user.id === user.id);
+    const usersInChat = await this.chatRepo.getUserIdsInChat(chatId);
+    const isParticipant = usersInChat.some(({ user }) => user.id === user.id);
 
     if (!isParticipant) {
       this.logger.warn(
@@ -100,8 +101,8 @@ export class ChatService {
   ): Promise<boolean> {
     this.logger.debug({ userId, chatId }, 'Checking chat participation');
 
-    const usersInChat = await this.chatRepo.getUsersInChat(chatId);
-    return usersInChat.some((u) => u.user.id === userId);
+    const usersInChat = await this.chatRepo.getUserIdsInChat(chatId);
+    return usersInChat.some(({ user }) => user.id === userId);
   }
 
   async createPrivateChat(
@@ -283,12 +284,29 @@ export class ChatService {
   async getUsersInChat(
     user: AccessTokenPayload,
     chatId: number,
-  ): Promise<UserNoCredVCode[]> {
+    paginationDto: PaginationDto,
+  ): Promise<PaginatedUserNoCredVCode> {
     await this.validateChatParticipation(user, chatId);
 
-    const users = await this.chatRepo.getUsersInChat(chatId);
+    const { limit, cursor } = paginationDto;
 
-    return users.map((u) => u.user);
+    const users = await this.chatRepo.getUsersInChat(chatId, limit, cursor);
+
+    const formattedUsers = users.map(({ user }) => user);
+
+    const nextCursor =
+      formattedUsers.length === limit
+        ? formattedUsers[formattedUsers.length - 1].id
+        : null;
+
+    const hasMore = nextCursor !== null;
+
+    return {
+      users: formattedUsers,
+      nextCursor,
+      limit,
+      hasMore,
+    };
   }
 
   async updateOwner(chatId: number, newOwnerId: number): Promise<Chat> {
