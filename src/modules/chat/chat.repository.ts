@@ -85,11 +85,17 @@ export class ChatRepository {
     return await this.prisma.chatToUser.findMany({
       where: { chatId },
       select: {
-        user: { omit: { password: true, verificationCode: true, email: true } },
+        user: {
+          omit: {
+            email: true,
+            password: true,
+            verificationCode: true,
+          },
+        },
       },
       orderBy: {
         user: {
-          nickname: 'desc',
+          id: 'desc',
         },
       },
     });

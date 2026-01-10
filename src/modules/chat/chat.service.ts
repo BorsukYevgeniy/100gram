@@ -280,17 +280,15 @@ export class ChatService {
     }
   }
 
-  async getUserIdsInChat(
+  async getUsersInChat(
     user: AccessTokenPayload,
     chatId: number,
-  ): Promise<{ users: UserNoCredVCode[] }> {
+  ): Promise<UserNoCredVCode[]> {
     await this.validateChatParticipation(user, chatId);
 
     const users = await this.chatRepo.getUsersInChat(chatId);
 
-    return {
-      users: users.map((u) => u.user),
-    };
+    return users.map((u) => u.user);
   }
 
   async updateOwner(chatId: number, newOwnerId: number): Promise<Chat> {

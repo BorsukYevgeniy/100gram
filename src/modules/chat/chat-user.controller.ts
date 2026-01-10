@@ -11,15 +11,15 @@ export class ChatUserController {
     private readonly chatGateway: ChatGateway,
   ) {}
 
-  @Get(':chatId/users')
+  @Get()
   async getUsersInChat(
     @User() user: AccessTokenPayload,
     @Param('chatId') chatId: number,
   ) {
-    return await this.chatService.getUserIdsInChat(user, chatId);
+    return await this.chatService.getUsersInChat(user, chatId);
   }
 
-  @Post(':chatId/users/:userId')
+  @Post(':userId')
   async addUserToChat(
     @Param('chatId') chatId: number,
     @Param('userId') userId: number,
@@ -27,7 +27,7 @@ export class ChatUserController {
     return await this.chatService.addUserToChat(chatId, userId);
   }
 
-  @Delete(':chatId/users/:userId')
+  @Delete(':userId')
   async deleteUserFromChat(
     @Param('chatId') chatId: number,
     @Param('userId') userId: number,
