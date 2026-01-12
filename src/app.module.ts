@@ -8,6 +8,7 @@ import { MailModule } from './modules/mail/mail.module';
 import { MessageModule } from './modules/message/message.module';
 import { TokenModule } from './modules/token/token.module';
 import { UserModule } from './modules/user/user.module';
+import { FileModule } from './modules/file/file.module';
 
 @Module({
   imports: [
@@ -22,6 +23,7 @@ import { UserModule } from './modules/user/user.module';
       inject: [ConfigService],
       useFactory: (configService: ConfigService) => configService.PINO_CONFIG,
     }),
+    FileModule,
   ],
 })
 export class AppModule {}

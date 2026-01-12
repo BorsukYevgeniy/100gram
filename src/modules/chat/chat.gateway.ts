@@ -75,7 +75,7 @@ export class ChatGateway {
     const { chatId, ...dto } = payload;
 
     try {
-      const message = await this.messageService.create(id, chatId, dto);
+      const message = await this.messageService.create(id, chatId, dto, []);
 
       this.server.to(`chat-${chatId}`).emit('chatCreatedMessage', message);
     } catch (e) {
@@ -93,7 +93,7 @@ export class ChatGateway {
     const user = await this.getUserFromWs(client);
 
     try {
-      const message = await this.messageService.update(user, chatId, dto);
+      const message = await this.messageService.update(user, chatId, dto, []);
       this.server.to(`chat-${chatId}`).emit('chatUpdatedMessage', message);
     } catch (e) {
       if (e instanceof HttpException) throw new WsException(e.message);

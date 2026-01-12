@@ -20,12 +20,18 @@ export class MessageRepository {
     });
   }
 
-  async create(userId: number, chatId: number, dto: CreateMessageDto) {
+  async create(
+    userId: number,
+    chatId: number,
+    dto: CreateMessageDto,
+    files: string[] = [],
+  ) {
     return await this.prisma.message.create({
       data: {
         ...dto,
-        userId: userId,
-        chatId: chatId,
+        userId,
+        chatId,
+        files,
       },
     });
   }
@@ -34,10 +40,13 @@ export class MessageRepository {
     return await this.prisma.message.findUnique({ where: { id } });
   }
 
-  async update(id: number, dto: UpdateMessageDto) {
+  async update(id: number, dto: UpdateMessageDto, files: string[]) {
     return await this.prisma.message.update({
       where: { id },
-      data: dto,
+      data: {
+        text: dto.text,
+        ...(files.length !== 0 && { files }),
+      },
     });
   }
 

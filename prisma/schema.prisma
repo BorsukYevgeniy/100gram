@@ -12,8 +12,8 @@ model User {
   email       String       @unique
   nickname    String       @unique
   password    String
-  role        Role         @default(USER)
   createdAt   DateTime     @default(now())
+  role        Role         @default(USER)
   messages    Message[]
   chatToUsers ChatToUser[]
   tokens      Token[]
@@ -29,6 +29,7 @@ model Message {
   id        Int      @id @default(autoincrement())
   text      String
   createdAt DateTime @default(now())
+  files     String[]
 
   userId Int
   user   User @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -38,8 +39,9 @@ model Message {
 }
 
 model ChatToUser {
-  chatId      Int
-  userId      Int
+  chatId Int
+  userId Int
+
   connectedAt DateTime @default(now())
 
   chat Chat @relation(fields: [chatId], references: [id], onDelete: Cascade)

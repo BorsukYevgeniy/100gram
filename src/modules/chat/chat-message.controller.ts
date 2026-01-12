@@ -5,11 +5,14 @@ import {
   Param,
   Post,
   Query,
+  UploadedFiles,
   UseGuards,
+  UseInterceptors,
 } from '@nestjs/common';
 import { Message } from '../../../generated/prisma/client';
 import { User } from '../../common/decorators/user.decorator';
 import { PaginationDto } from '../../common/dto/pagination.dto';
+import { FilesInterceptor } from '../../common/interceptor/files.interceptor';
 import { AccessTokenPayload } from '../../common/types';
 import { VerifiedUserGuard } from '../auth/guards/verified-user.guard';
 import { CreateMessageDto } from '../message/dto/create-message.dto';
@@ -37,11 +40,18 @@ export class ChatMessageController {
   }
 
   @Post()
+  @UseInterceptors(FilesInterceptor)
   async create(
     @User() user: AccessTokenPayload,
-    @Body() createMessageDto: CreateMessageDto,
     @Param('chatId') chatId: number,
+    @Body() createMessageDto: CreateMessageDto,
+    @UploadedFiles() files: Express.Multer.File[],
   ): Promise<Message> {
-    return await this.messageService.create(user.id, chatId, createMessageDto);
+    return await this.messageService.create(
+      user.id,
+      chatId,
+      createMessageDto,
+      files,
+    );
   }
 }

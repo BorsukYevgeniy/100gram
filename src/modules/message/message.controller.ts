@@ -5,16 +5,19 @@ import {
   Get,
   Param,
   Patch,
+  UploadedFiles,
   UseGuards,
+  UseInterceptors,
 } from '@nestjs/common';
 import { Message } from '../../../generated/prisma/client';
 import { User } from '../../common/decorators/user.decorator';
+import { FilesInterceptor } from '../../common/interceptor/files.interceptor';
 import { AccessTokenPayload } from '../../common/types';
 import { VerifiedUserGuard } from '../auth/guards/verified-user.guard';
 import { UpdateMessageDto } from './dto/update-message.dto';
 import { MessageService } from './message.service';
 
-@Controller('message')
+@Controller('messages')
 @UseGuards(VerifiedUserGuard)
 export class MessageController {
   constructor(private readonly messageService: MessageService) {}
@@ -28,12 +31,19 @@ export class MessageController {
   }
 
   @Patch(':id')
+  @UseInterceptors(FilesInterceptor)
   async update(
     @User() user: AccessTokenPayload,
     @Param('id') messageId: number,
     @Body() updateMessageDto: UpdateMessageDto,
+    @UploadedFiles() files: Express.Multer.File[],
   ): Promise<Message> {
-    return await this.messageService.update(user, messageId, updateMessageDto);
+    return await this.messageService.update(
+      user,
+      messageId,
+      updateMessageDto,
+      files,
+    );
   }
 
   @Delete(':id')

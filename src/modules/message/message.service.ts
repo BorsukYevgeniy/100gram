@@ -8,6 +8,7 @@ import { PinoLogger } from 'nestjs-pino';
 import { Message, Role } from '../../../generated/prisma/client';
 import { PaginationDto } from '../../common/dto/pagination.dto';
 import { AccessTokenPayload } from '../../common/types';
+import { FileService } from '../file/file.service';
 import { CreateMessageDto } from './dto/create-message.dto';
 import { UpdateMessageDto } from './dto/update-message.dto';
 import { MessageRepository } from './message.repository';
@@ -17,6 +18,7 @@ import { PaginatedMessages } from './types/paginated-messages.types';
 export class MessageService {
   constructor(
     private readonly messageRepository: MessageRepository,
+    private readonly fileService: FileService,
     private readonly logger: PinoLogger,
   ) {
     this.logger.setContext(MessageService.name);
@@ -88,9 +90,17 @@ export class MessageService {
     userId: number,
     chatId: number,
     dto: CreateMessageDto,
+    files: Express.Multer.File[],
   ): Promise<Message> {
     try {
-      const message = await this.messageRepository.create(userId, chatId, dto);
+      const fileNames: string[] = await this.fileService.createFiles(files);
+
+      const message = await this.messageRepository.create(
+        userId,
+        chatId,
+        dto,
+        fileNames,
+      );
 
       this.logger.info(
         { messageId: message.id, chatId, userId },
@@ -122,10 +132,16 @@ export class MessageService {
     user: AccessTokenPayload,
     messageId: number,
     dto: UpdateMessageDto,
+    files: Express.Multer.File[],
   ): Promise<Message> {
     await this.validateMessageOwnership(user, messageId);
 
-    const message = await this.messageRepository.update(messageId, dto);
+    const fileNames = await this.fileService.createFiles(files);
+    const message = await this.messageRepository.update(
+      messageId,
+      dto,
+      fileNames,
+    );
 
     this.logger.info({ messageId, updatedBy: user.id }, 'Message updated');
 
