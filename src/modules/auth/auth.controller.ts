@@ -12,7 +12,7 @@ import {
 } from '@nestjs/common';
 import { ThrottlerGuard } from '@nestjs/throttler';
 import { Response } from 'express';
-import { User } from '../../common/decorators/user.decorator';
+import { User } from '../../common/decorators/routes/user.decorator';
 import { AccessTokenPayload, AuthRequest, TokenPair } from '../../common/types';
 import { CreateUserDto } from '../user/dto/create-user.dto';
 import { UserNoCredVCode } from '../user/types/user.types';

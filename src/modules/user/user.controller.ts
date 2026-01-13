@@ -13,7 +13,7 @@ import { AuthGuard } from '../auth/guards/auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { UserService } from './user.service';
 
-import { User as UserFromReq } from '../../common/decorators/user.decorator';
+import { User as UserFromReq } from '../../common/decorators/routes/user.decorator';
 
 @Controller('users')
 export class UserController {

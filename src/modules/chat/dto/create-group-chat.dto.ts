@@ -6,15 +6,18 @@ import {
   IsString,
   Length,
 } from 'class-validator';
+import { Trim } from '../../../common/decorators/validation/trim.decorator';
 
 export class CreateGroupChatDto {
   @IsString()
+  @Trim()
   @Length(3, 20)
   title: string;
 
   @IsOptional()
   @IsString()
   @Length(2, 500)
+  @Trim()
   description?: string;
 
   @IsArray()
