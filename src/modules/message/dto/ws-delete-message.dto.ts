@@ -1,6 +1,6 @@
 import { IsInt, IsPositive } from 'class-validator';
 
-export class DeleteMessageGatewayDto {
+export class WsDeleteMessageDto {
   @IsInt()
   @IsPositive()
   chatId: number;

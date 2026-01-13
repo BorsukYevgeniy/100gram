@@ -9,9 +9,9 @@ import {
 } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
 import { AccessTokenPayload } from '../../common/types';
-import { DeleteMessageGatewayDto } from '../message/dto/delete-message-gateway.dto';
-import { SendMessageDto } from '../message/dto/send-message.dto';
-import { UpdateMessageGatewayDto } from '../message/dto/update-message-gateway.dto';
+import { WsCreateMessageDto } from '../message/dto/ws-create-message.dto';
+import { WsDeleteMessageDto } from '../message/dto/ws-delete-message.dto';
+import { WsUpdateMessageDto } from '../message/dto/ws-update-message.dto';
 import { MessageService } from '../message/message.service';
 import { TokenService } from '../token/token.service';
 import { ChatService } from './chat.service';
@@ -69,13 +69,18 @@ export class ChatGateway {
   @SubscribeMessage('createMessage')
   async handleCreatingMessage(
     @ConnectedSocket() client: Socket,
-    @MessageBody() payload: SendMessageDto,
+    @MessageBody() payload: WsCreateMessageDto,
   ) {
     const { id } = await this.getUserFromWs(client);
-    const { chatId, ...dto } = payload;
+    const { chatId, fileIds, ...dto } = payload;
 
     try {
-      const message = await this.messageService.create(id, chatId, dto, []);
+      const message = await this.messageService.createFromWs(
+        id,
+        chatId,
+        dto,
+        fileIds,
+      );
 
       this.server.to(`chat-${chatId}`).emit('chatCreatedMessage', message);
     } catch (e) {
@@ -87,13 +92,19 @@ export class ChatGateway {
   async handleUpdatingMessage(
     @ConnectedSocket() client: Socket,
     @MessageBody()
-    payload: UpdateMessageGatewayDto,
+    payload: WsUpdateMessageDto,
   ) {
-    const { chatId, ...dto } = payload;
+    const { chatId, fileIds, messageId, ...dto } = payload;
     const user = await this.getUserFromWs(client);
 
     try {
-      const message = await this.messageService.update(user, chatId, dto, []);
+      const message = await this.messageService.updateFromWs(
+        user,
+        messageId,
+        dto,
+        fileIds,
+      );
+
       this.server.to(`chat-${chatId}`).emit('chatUpdatedMessage', message);
     } catch (e) {
       if (e instanceof HttpException) throw new WsException(e.message);
@@ -104,7 +115,7 @@ export class ChatGateway {
   async handleDeletingMessage(
     @ConnectedSocket() client: Socket,
     @MessageBody()
-    payload: DeleteMessageGatewayDto,
+    payload: WsDeleteMessageDto,
   ) {
     const { chatId, messageId } = payload;
     const user = await this.getUserFromWs(client);

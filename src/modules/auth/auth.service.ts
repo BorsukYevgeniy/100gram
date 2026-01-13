@@ -176,15 +176,24 @@ export class AuthService {
   async validateGoogleUser(googleUser: CreateUserDto) {
     const user = await this.userService.findByEmail(googleUser.email);
 
-    if (user) return user;
+    if (user) {
+      this.logger.info('User validated', {
+        userId: user.id,
+        role: user.role,
+        isVerified: user.isVerified,
+      });
+      return user;
+    }
+
+    const createdUser = await this.userService.createGoogleUser(googleUser);
 
     this.logger.info('User validated', {
-      userId: user.id,
-      role: user.role,
-      isVerified: user.isVerified,
+      userId: createdUser.id,
+      role: createdUser.role,
+      isVerified: createdUser.isVerified,
     });
 
-    return await this.userService.createGoogleUser(googleUser);
+    return createdUser;
   }
 
   async resendVerificationMail(user: AccessTokenPayload) {

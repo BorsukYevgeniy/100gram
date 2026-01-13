@@ -1,31 +1,41 @@
 import { Injectable } from '@nestjs/common';
 import { randomUUID } from 'crypto';
 
-import * as fs from 'fs/promises';
-import * as path from 'path';
+import { File } from '../../../generated/prisma/client';
+import { FileRepository } from './file.repository';
+
+import { extname } from 'path';
+import { FileStorage } from './file.storage';
 
 @Injectable()
 export class FileService {
-  async createFiles(files: Express.Multer.File[]): Promise<string[]> {
+  private readonly DIR_PATH: string;
+  constructor(
+    private readonly fileRepo: FileRepository,
+    private readonly fileStorage: FileStorage,
+  ) {}
+
+  async createFiles(
+    files: Express.Multer.File[],
+    userId: number,
+    messageId?: number,
+  ): Promise<File[]> {
     if (files.length === 0) return [];
-
-    const dirPath = path.resolve('..', '..', '..', 'files');
-
-    await fs.mkdir(dirPath, { recursive: true });
 
     const fileNames = [];
 
-    const writePromises: Promise<void>[] = files.map((file) => {
-      const fileExt = path.extname(file.originalname);
+    const savePromises = files.map((f) => {
+      const fileName = randomUUID().concat(extname(f.originalname));
 
-      const fileName = randomUUID().concat(fileExt);
       fileNames.push(fileName);
-
-      return fs.writeFile(path.resolve(dirPath, fileName), file.buffer);
+      return this.fileStorage.writeFiles(fileName, f.buffer);
     });
 
-    await Promise.all(writePromises);
-
-    return fileNames;
+    try {
+      await Promise.all(savePromises);
+      return await this.fileRepo.createFiles(fileNames, userId, messageId);
+    } catch (e) {
+      await this.fileStorage.unlinkFiles(fileNames);
+    }
   }
 }

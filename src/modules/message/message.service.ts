@@ -5,14 +5,14 @@ import {
 } from '@nestjs/common';
 import { PrismaClientKnownRequestError } from '@prisma/client/runtime/client';
 import { PinoLogger } from 'nestjs-pino';
-import { Message, Role } from '../../../generated/prisma/client';
+import { Role } from '../../../generated/prisma/client';
 import { PaginationDto } from '../../common/dto/pagination.dto';
 import { AccessTokenPayload } from '../../common/types';
 import { FileService } from '../file/file.service';
 import { CreateMessageDto } from './dto/create-message.dto';
 import { UpdateMessageDto } from './dto/update-message.dto';
 import { MessageRepository } from './message.repository';
-import { PaginatedMessages } from './types/paginated-messages.types';
+import { MessageFiles, PaginatedMessageFiles } from './types/message.types';
 
 @Injectable()
 export class MessageService {
@@ -27,7 +27,7 @@ export class MessageService {
   private async validateMessageOwnership(
     user: AccessTokenPayload,
     messageId: number,
-  ): Promise<Message> {
+  ): Promise<MessageFiles> {
     this.logger.debug(
       { userId: user.id, messageId },
       'Validating message ownership',
@@ -56,7 +56,7 @@ export class MessageService {
   async getMessagesInChat(
     chatId: number,
     paginationDto: PaginationDto,
-  ): Promise<PaginatedMessages> {
+  ): Promise<PaginatedMessageFiles> {
     const { cursor, limit } = paginationDto;
 
     const messages = await this.messageRepository.findMessagesInChat(
@@ -91,20 +91,63 @@ export class MessageService {
     chatId: number,
     dto: CreateMessageDto,
     files: Express.Multer.File[],
-  ): Promise<Message> {
+  ): Promise<MessageFiles> {
     try {
-      const fileNames: string[] = await this.fileService.createFiles(files);
+      const createdFiles = await this.fileService.createFiles(files, userId);
+
+      const fileIds = createdFiles.map(({ id }) => id);
 
       const message = await this.messageRepository.create(
         userId,
         chatId,
         dto,
-        fileNames,
+        fileIds,
       );
 
       this.logger.info(
-        { messageId: message.id, chatId, userId },
-        'Message created',
+        {
+          messageId: message.id,
+          chatId,
+          userId,
+          fileIds,
+          provider: 'http',
+        },
+        'Message created via REST API',
+      );
+
+      return message;
+    } catch (e) {
+      if (e instanceof PrismaClientKnownRequestError && e.code === 'P2003') {
+        this.logger.warn({ chatId }, 'Chat not found while creating message');
+        throw new NotFoundException('Chat not found');
+      }
+      throw e;
+    }
+  }
+
+  async createFromWs(
+    userId: number,
+    chatId: number,
+    dto: CreateMessageDto,
+    fileIds: number[],
+  ): Promise<MessageFiles> {
+    try {
+      const message = await this.messageRepository.create(
+        userId,
+        chatId,
+        dto,
+        fileIds,
+      );
+
+      this.logger.info(
+        {
+          messageId: message.id,
+          chatId,
+          userId,
+          fileIds,
+          provider: 'ws',
+        },
+        'Message created via WS',
       );
 
       return message;
@@ -120,7 +163,7 @@ export class MessageService {
   async findById(
     user: AccessTokenPayload,
     messageId: number,
-  ): Promise<Message> {
+  ): Promise<MessageFiles> {
     const message = await this.validateMessageOwnership(user, messageId);
 
     this.logger.debug({ messageId }, 'Fetched message');
@@ -133,22 +176,55 @@ export class MessageService {
     messageId: number,
     dto: UpdateMessageDto,
     files: Express.Multer.File[],
-  ): Promise<Message> {
+  ): Promise<MessageFiles> {
     await this.validateMessageOwnership(user, messageId);
 
-    const fileNames = await this.fileService.createFiles(files);
+    const createdFiles = await this.fileService.createFiles(
+      files,
+      user.id,
+      messageId,
+    );
+
     const message = await this.messageRepository.update(
       messageId,
       dto,
-      fileNames,
+      createdFiles.map(({ id }) => id),
     );
 
-    this.logger.info({ messageId, updatedBy: user.id }, 'Message updated');
+    this.logger.info(
+      { messageId, updatedBy: user.id, provider: 'http' },
+      'Message updated via REST API',
+    );
 
     return message;
   }
 
-  async delete(user: AccessTokenPayload, messageId: number): Promise<Message> {
+  async updateFromWs(
+    user: AccessTokenPayload,
+    messageId: number,
+    dto: UpdateMessageDto,
+    fileIds: number[],
+  ): Promise<MessageFiles> {
+    await this.validateMessageOwnership(user, messageId);
+
+    const message = await this.messageRepository.update(
+      messageId,
+      dto,
+      fileIds,
+    );
+
+    this.logger.info(
+      { messageId, updatedBy: user.id, provider: 'ws' },
+      'Message updated via WS',
+    );
+
+    return message;
+  }
+
+  async delete(
+    user: AccessTokenPayload,
+    messageId: number,
+  ): Promise<MessageFiles> {
     await this.validateMessageOwnership(user, messageId);
 
     const message = await this.messageRepository.delete(messageId);

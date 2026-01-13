@@ -23,13 +23,15 @@ model User {
   isVerified       Boolean   @default(false)
   verifiedAt       DateTime?
   verificationCode String    @unique @default(uuid())
+  files            File[]
 }
 
 model Message {
   id        Int      @id @default(autoincrement())
   text      String
   createdAt DateTime @default(now())
-  files     String[]
+
+  files File[]
 
   userId Int
   user   User @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -72,6 +74,18 @@ model Token {
 
   userId Int
   user   User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model File {
+  id        Int      @id @default(autoincrement())
+  name      String   @unique
+  createdAt DateTime @default(now())
+
+  messageId Int?
+  message   Message? @relation(fields: [messageId], references: [id], onDelete: SetNull)
+
+  userId Int?
+  user   User? @relation(fields: [userId], references: [id], onDelete: SetNull)
 }
 
 enum ChatType {
