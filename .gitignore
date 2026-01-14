@@ -9,4 +9,7 @@
 generated
 
 #Message files
-files
+files/avatars/users/*
+files/messages
+!files/avatars/users/DEFAULT_USER_AVATAR.png
+

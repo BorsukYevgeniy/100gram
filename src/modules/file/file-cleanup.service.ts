@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { Cron } from '@nestjs/schedule';
+import { FileStorage } from '../../common/storage/file.storage';
 import { FileRepository } from './file.repository';
-import { FileStorage } from './file.storage';
 
 @Injectable()
 export class FileCleanUpService {
@@ -16,7 +16,7 @@ export class FileCleanUpService {
 
     const fileNames = unusedFiles.map(({ name }) => name);
 
-    await this.fileStorage.unlinkFiles(fileNames);
+    await this.fileStorage.unlinkMessageFiles(fileNames);
     await this.fileRepo.deleteUnusedFiles();
   }
 }

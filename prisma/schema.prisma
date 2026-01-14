@@ -12,6 +12,7 @@ model User {
   email       String       @unique
   nickname    String       @unique
   password    String
+  avatar      String       @default("DEFAULT_USER_AVATAR.png")
   createdAt   DateTime     @default(now())
   role        Role         @default(USER)
   messages    Message[]

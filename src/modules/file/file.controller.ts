@@ -7,7 +7,7 @@ import {
 } from '@nestjs/common';
 import { File } from '../../../generated/prisma/client';
 import { User } from '../../common/decorators/routes/user.decorator';
-import { FilesInterceptor } from '../../common/interceptor/files.interceptor';
+import { MessageFilesInterceptor } from '../../common/interceptor/message-files.interceptor';
 import { AccessTokenPayload } from '../../common/types';
 import { VerifiedUserGuard } from '../auth/guards/verified-user.guard';
 import { FileService } from './file.service';
@@ -18,7 +18,7 @@ export class FileController {
 
   @Post('upload')
   @UseGuards(VerifiedUserGuard)
-  @UseInterceptors(FilesInterceptor)
+  @UseInterceptors(MessageFilesInterceptor)
   async upload(
     @UploadedFiles() files: Express.Multer.File[],
     @User() user: AccessTokenPayload,

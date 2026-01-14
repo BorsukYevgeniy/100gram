@@ -12,7 +12,7 @@ import {
 import { Message } from '../../../generated/prisma/client';
 import { User } from '../../common/decorators/routes/user.decorator';
 import { PaginationDto } from '../../common/dto/pagination.dto';
-import { FilesInterceptor } from '../../common/interceptor/files.interceptor';
+import { MessageFilesInterceptor } from '../../common/interceptor/message-files.interceptor';
 import { AccessTokenPayload } from '../../common/types';
 import { VerifiedUserGuard } from '../auth/guards/verified-user.guard';
 import { CreateMessageDto } from '../message/dto/create-message.dto';
@@ -40,7 +40,7 @@ export class ChatMessageController {
   }
 
   @Post()
-  @UseInterceptors(FilesInterceptor)
+  @UseInterceptors(MessageFilesInterceptor)
   async create(
     @User() user: AccessTokenPayload,
     @Param('chatId') chatId: number,

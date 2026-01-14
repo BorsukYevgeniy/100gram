@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { Role, User } from '../../../generated/prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateUserDto } from './dto/create-user.dto';
+import { UserNoCredVCode } from './types/user.types';
 
 @Injectable()
 export class UserRepository {
@@ -73,6 +74,23 @@ export class UserRepository {
         createdAt: {
           lte: deletingDate,
         },
+      },
+    });
+  }
+
+  async updateAvatar(
+    userId: number,
+    avatar?: string,
+  ): Promise<UserNoCredVCode> {
+    return this.prisma.user.update({
+      where: { id: userId },
+      data: {
+        avatar: avatar ? avatar : 'DEFAULT_USER_AVATAR.png',
+      },
+      omit: {
+        email: true,
+        password: true,
+        verificationCode: true,
       },
     });
   }

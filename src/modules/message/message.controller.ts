@@ -11,7 +11,7 @@ import {
 } from '@nestjs/common';
 import { Message } from '../../../generated/prisma/client';
 import { User } from '../../common/decorators/routes/user.decorator';
-import { FilesInterceptor } from '../../common/interceptor/files.interceptor';
+import { MessageFilesInterceptor } from '../../common/interceptor/message-files.interceptor';
 import { AccessTokenPayload } from '../../common/types';
 import { VerifiedUserGuard } from '../auth/guards/verified-user.guard';
 import { UpdateMessageDto } from './dto/update-message.dto';
@@ -31,7 +31,7 @@ export class MessageController {
   }
 
   @Patch(':id')
-  @UseInterceptors(FilesInterceptor)
+  @UseInterceptors(MessageFilesInterceptor)
   async update(
     @User() user: AccessTokenPayload,
     @Param('id') messageId: number,
