@@ -1,5 +1,6 @@
 import { Injectable, OnModuleInit } from '@nestjs/common';
 import { mkdir, unlink, writeFile } from 'fs/promises';
+import { PinoLogger } from 'nestjs-pino';
 import { resolve } from 'path';
 
 @Injectable()
@@ -7,7 +8,7 @@ export class FileStorage implements OnModuleInit {
   private readonly MESSAGE_FILE_DIR_PATH: string;
   private readonly USER_AVATAR_DIR_PATH: string;
 
-  constructor() {
+  constructor(private readonly logger: PinoLogger) {
     this.MESSAGE_FILE_DIR_PATH = resolve(
       __dirname,
       '../../../../files/messages',
@@ -17,34 +18,55 @@ export class FileStorage implements OnModuleInit {
       __dirname,
       '../../../../files/avatars/users',
     );
+
+    this.logger.setContext(FileStorage.name);
   }
 
   async onModuleInit() {
     // Creating dirs for storing files if they didn't exist
 
-    await Promise.all([
-      mkdir(this.MESSAGE_FILE_DIR_PATH, { recursive: true }),
-      mkdir(this.USER_AVATAR_DIR_PATH, { recursive: true }),
-    ]);
+    this.logger.debug(
+      {
+        MESSAGE_FILE_DIR_PATH: this.MESSAGE_FILE_DIR_PATH,
+        USER_AVATAR_DIR_PATH: this.USER_AVATAR_DIR_PATH,
+      },
+      'Creating directories for storing files',
+    );
+
+    try {
+      await Promise.all([
+        mkdir(this.MESSAGE_FILE_DIR_PATH, { recursive: true }),
+        mkdir(this.USER_AVATAR_DIR_PATH, { recursive: true }),
+      ]);
+    } catch (e) {
+      this.logger.fatal('Cannot create directories for storing files');
+
+      throw e;
+    }
   }
 
   async writeMessageFile(fileName: string, content: Buffer): Promise<void> {
-    return writeFile(resolve(this.MESSAGE_FILE_DIR_PATH, fileName), content);
+    await writeFile(resolve(this.MESSAGE_FILE_DIR_PATH, fileName), content);
+    this.logger.debug({ fileName }, 'File written');
   }
 
   async unlinkMessageFiles(fileNames: string[]) {
-    return await Promise.all(
+    await Promise.all(
       fileNames.map((name) =>
         unlink(resolve(this.MESSAGE_FILE_DIR_PATH, name)),
       ),
     );
+
+    this.logger.debug({ fileNames }, 'Files deleted');
   }
 
   async writeUserAvatar(fileName: string, content: Buffer) {
-    return writeFile(resolve(this.USER_AVATAR_DIR_PATH, fileName), content);
+    await writeFile(resolve(this.USER_AVATAR_DIR_PATH, fileName), content);
+    this.logger.debug({ fileName }, 'User avatar written');
   }
 
   async unlinkUserAvatar(fileName: string) {
-    return unlink(resolve(this.USER_AVATAR_DIR_PATH, fileName));
+    await unlink(resolve(this.USER_AVATAR_DIR_PATH, fileName));
+    this.logger.debug({ fileName }, 'User avatar deleted');
   }
 }

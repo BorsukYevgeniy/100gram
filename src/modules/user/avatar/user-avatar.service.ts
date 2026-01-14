@@ -24,6 +24,8 @@ export class UserAvatarService {
       await this.fileStorage.writeUserAvatar(newAvatarName, file.buffer);
       const newUser = await this.userRepo.updateAvatar(userId, newAvatarName);
 
+      this.logger.info({ userId, newAvatarName }, 'Updated avatar');
+
       if (avatar && avatar !== 'DEFAULT_USER_AVATAR.png') {
         await this.fileStorage.unlinkUserAvatar(avatar);
       }
@@ -39,10 +41,15 @@ export class UserAvatarService {
     const user = await this.userRepo.findById(userId);
 
     if (user.avatar === 'DEFAULT_USER_AVATAR.png') {
+      this.logger.warn({ userId }, 'Cannot delete default avatar ');
       throw new BadRequestException('Cannot delete default avatar');
     } else {
       await this.fileStorage.unlinkUserAvatar(user.avatar);
-      return this.userRepo.updateAvatar(userId);
+      const updatedUser = await this.userRepo.updateAvatar(userId);
+
+      this.logger.info({ userId }, 'Deleted avatar');
+
+      return updatedUser;
     }
   }
 }
