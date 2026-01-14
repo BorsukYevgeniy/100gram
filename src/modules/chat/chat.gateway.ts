@@ -1,4 +1,5 @@
 import { HttpException, UsePipes, ValidationPipe } from '@nestjs/common';
+import { TokenExpiredError } from '@nestjs/jwt';
 import {
   ConnectedSocket,
   MessageBody,
@@ -151,13 +152,20 @@ export class ChatGateway {
       .find((cookie) => cookie.startsWith('access_token='))
       .split('=')[1];
 
-    const tokenPayload = await this.tokenService.verifyAccessToken(accessToken);
+    try {
+      const tokenPayload =
+        await this.tokenService.verifyAccessToken(accessToken);
 
-    if (!tokenPayload.isVerified)
-      throw new WsException('Forbidden resource. Please verify your account');
+      if (!tokenPayload.isVerified)
+        throw new WsException('Forbidden resource. Please verify your account');
 
-    client.data = tokenPayload;
+      client.data = tokenPayload;
 
-    return tokenPayload;
+      return tokenPayload;
+    } catch (e) {
+      if (e instanceof TokenExpiredError) {
+        throw new WsException('Unauthorized');
+      }
+    }
   }
 }

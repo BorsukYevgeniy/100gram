@@ -155,8 +155,15 @@ export class MessageService {
       if (e instanceof PrismaClientKnownRequestError && e.code === 'P2003') {
         this.logger.warn({ chatId }, 'Chat not found while creating message');
         throw new NotFoundException('Chat not found');
+      } else if (
+        e instanceof PrismaClientKnownRequestError &&
+        e.code === 'P2018'
+      ) {
+        this.logger.warn({ fileIds }, 'Files not found while creating message');
+        throw new NotFoundException('Files not found');
+      } else {
+        throw e;
       }
-      throw e;
     }
   }
 
@@ -207,18 +214,25 @@ export class MessageService {
   ): Promise<MessageFiles> {
     await this.validateMessageOwnership(user, messageId);
 
-    const message = await this.messageRepository.update(
-      messageId,
-      dto,
-      fileIds,
-    );
+    try {
+      const message = await this.messageRepository.update(
+        messageId,
+        dto,
+        fileIds,
+      );
 
-    this.logger.info(
-      { messageId, updatedBy: user.id, provider: 'ws' },
-      'Message updated via WS',
-    );
+      this.logger.info(
+        { messageId, updatedBy: user.id, provider: 'ws' },
+        'Message updated via WS',
+      );
 
-    return message;
+      return message;
+    } catch (e) {
+      if (e instanceof PrismaClientKnownRequestError && e.code === 'P2018') {
+        this.logger.warn({ fileIds }, 'Files not found while creating message');
+        throw new NotFoundException('Files not found');
+      }
+    }
   }
 
   async delete(
