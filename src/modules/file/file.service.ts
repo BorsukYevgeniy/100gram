@@ -32,7 +32,7 @@ export class FileService {
 
     try {
       await Promise.all(savePromises);
-      return await this.fileRepo.createFiles(fileNames, userId, messageId);
+      return this.fileRepo.createFiles(fileNames, userId, messageId);
     } catch (e) {
       await this.fileStorage.unlinkMessageFiles(fileNames);
     }

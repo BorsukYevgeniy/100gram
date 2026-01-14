@@ -36,7 +36,7 @@ export class ChatMessageController {
   ): Promise<PaginatedMessageFiles> {
     await this.chatService.validateChatParticipation(user, chatId);
 
-    return await this.messageService.getMessagesInChat(chatId, paginationDto);
+    return this.messageService.getMessagesInChat(chatId, paginationDto);
   }
 
   @Post()
@@ -47,11 +47,6 @@ export class ChatMessageController {
     @Body() createMessageDto: CreateMessageDto,
     @UploadedFiles() files: Express.Multer.File[],
   ): Promise<Message> {
-    return await this.messageService.create(
-      user.id,
-      chatId,
-      createMessageDto,
-      files,
-    );
+    return this.messageService.create(user.id, chatId, createMessageDto, files);
   }
 }

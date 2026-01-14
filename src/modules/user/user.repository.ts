@@ -8,39 +8,49 @@ import { UserNoCredVCode } from './types/user.types';
 export class UserRepository {
   constructor(private readonly prisma: PrismaService) {}
 
-  async delete(userId: number): Promise<User> {
-    return await this.prisma.user.delete({
+  async delete(userId: number): Promise<UserNoCredVCode> {
+    return this.prisma.user.delete({
       where: { id: userId },
+      omit: {
+        email: true,
+        verificationCode: true,
+        password: true,
+      },
     });
   }
 
   async create(dto: CreateUserDto): Promise<User> {
-    return await this.prisma.user.create({ data: dto });
+    return this.prisma.user.create({ data: dto });
   }
 
   async createGoogleUser(dto: CreateUserDto): Promise<User> {
-    return await this.prisma.user.create({
+    return this.prisma.user.create({
       data: { ...dto, isVerified: true, verifiedAt: new Date() },
     });
   }
 
   async findByEmail(email: string): Promise<User | null> {
-    return await this.prisma.user.findUnique({ where: { email } });
+    return this.prisma.user.findUnique({ where: { email } });
   }
 
   async findById(id: number): Promise<User | null> {
-    return await this.prisma.user.findUnique({ where: { id } });
+    return this.prisma.user.findUnique({ where: { id } });
   }
 
-  async assingAdmin(id: number): Promise<User> {
-    return await this.prisma.user.update({
+  async assingAdmin(id: number): Promise<UserNoCredVCode> {
+    return this.prisma.user.update({
       where: { id },
       data: { role: Role.ADMIN },
+      omit: {
+        email: true,
+        verificationCode: true,
+        password: true,
+      },
     });
   }
 
-  async getChatsWhereUserIsOwner(userId: number) {
-    return await this.prisma.user.findUnique({
+  async findChatsWhereUserIsOwner(userId: number) {
+    return this.prisma.user.findUnique({
       where: { id: userId },
       select: {
         chatsOwned: { select: { id: true, ownerId: true, chatType: true } },
@@ -48,12 +58,12 @@ export class UserRepository {
     });
   }
 
-  async getUserByVerificationCode(verificationCode: string) {
-    return await this.prisma.user.findUnique({ where: { verificationCode } });
+  async getUserByVerificationCode(verificationCode: string): Promise<User> {
+    return this.prisma.user.findUnique({ where: { verificationCode } });
   }
 
-  async verify(verificationCode: string) {
-    return await this.prisma.user.update({
+  async verify(verificationCode: string): Promise<UserNoCredVCode> {
+    return this.prisma.user.update({
       where: { verificationCode },
       data: { isVerified: true, verifiedAt: new Date() },
       omit: {
@@ -68,7 +78,7 @@ export class UserRepository {
     const deletingDate = new Date();
     deletingDate.setDate(deletingDate.getDate() - 3);
 
-    return await this.prisma.user.deleteMany({
+    return this.prisma.user.deleteMany({
       where: {
         isVerified: false,
         createdAt: {

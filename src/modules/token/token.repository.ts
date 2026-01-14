@@ -6,26 +6,26 @@ export class TokenRepository {
   constructor(private readonly prisma: PrismaService) {}
 
   async getUserToken(userId: number) {
-    return await this.prisma.token.findMany({
+    return this.prisma.token.findMany({
       where: { userId },
     });
   }
 
   async create(userId: number, token: string, expiresAt: Date) {
-    return await this.prisma.token.create({
+    return this.prisma.token.create({
       data: { expiresAt, userId, token },
     });
   }
 
   async update(oldToken: string, newToken: string, newExpiresAt: Date) {
-    return await this.prisma.token.update({
+    return this.prisma.token.update({
       where: { token: oldToken },
       data: { token: newToken, expiresAt: newExpiresAt },
     });
   }
 
   async delete(token: string) {
-    return await this.prisma.token.delete({
+    return this.prisma.token.delete({
       where: {
         token,
       },
@@ -33,7 +33,7 @@ export class TokenRepository {
   }
 
   async deleteAllUserToken(userId: number) {
-    return await this.prisma.token.deleteMany({
+    return this.prisma.token.deleteMany({
       where: {
         userId,
       },
@@ -41,7 +41,7 @@ export class TokenRepository {
   }
 
   async deleteExpiredTokens() {
-    return await this.prisma.token.deleteMany({
+    return this.prisma.token.deleteMany({
       where: { expiresAt: { lt: new Date() } },
     });
   }

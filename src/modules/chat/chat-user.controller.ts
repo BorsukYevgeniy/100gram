@@ -25,7 +25,7 @@ export class ChatUserController {
     @Param('chatId') chatId: number,
     @Query() paginationDto: PaginationDto,
   ): Promise<PaginatedUserNoCredVCode> {
-    return await this.chatService.getUsersInChat(user, chatId, paginationDto);
+    return this.chatService.getUsersInChat(user, chatId, paginationDto);
   }
 
   @Post(':userId')
@@ -33,7 +33,7 @@ export class ChatUserController {
     @Param('chatId') chatId: number,
     @Param('userId') userId: number,
   ) {
-    return await this.chatService.addUserToChat(chatId, userId);
+    return this.chatService.addUserToChat(chatId, userId);
   }
 
   @Delete(':userId')
@@ -41,6 +41,6 @@ export class ChatUserController {
     @Param('chatId') chatId: number,
     @Param('userId') userId: number,
   ) {
-    return await this.chatService.deleteUserFromChat(chatId, userId);
+    return this.chatService.deleteUserFromChat(chatId, userId);
   }
 }

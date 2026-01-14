@@ -40,7 +40,7 @@ export class AuthController {
   ): Promise<void> {
     const tokens = await this.authService.loginById(req.user.id);
 
-    await this.setTokenCookie(res, tokens);
+    this.setTokenCookie(res, tokens);
   }
 
   @Post('register')
@@ -54,7 +54,7 @@ export class AuthController {
   async login(@Body() dto: LoginDto, @Res() res: Response) {
     const tokens = await this.authService.login(dto);
 
-    await this.setTokenCookie(res, tokens);
+    this.setTokenCookie(res, tokens);
   }
 
   @Post('logout')
@@ -65,7 +65,7 @@ export class AuthController {
     @Res() res: Response,
   ): Promise<void> {
     await this.authService.logout(req.cookies.refresh_token, user.id);
-    await this.clearTokenCookie(res);
+    this.clearTokenCookie(res);
   }
 
   @Post('logout-all')
@@ -75,14 +75,14 @@ export class AuthController {
     @Res() res: Response,
   ): Promise<void> {
     await this.authService.logoutAll(user.id);
-    await this.clearTokenCookie(res);
+    this.clearTokenCookie(res);
   }
 
   @Post('verify/:verificationCode')
   async verify(
     @Param('verificationCode', ParseUUIDPipe) verificationCode: string,
   ): Promise<UserNoCredVCode> {
-    return await this.authService.verifyUser(verificationCode);
+    return this.authService.verifyUser(verificationCode);
   }
 
   @Post('refresh')
@@ -95,16 +95,16 @@ export class AuthController {
 
     const tokens = await this.authService.refresh(refreshTokenCookie);
 
-    await this.setTokenCookie(res, tokens);
+    this.setTokenCookie(res, tokens);
   }
 
   @Post('resend-email')
   @UseGuards(AuthGuard, ThrottlerGuard)
   async resendVerificationMail(@User() user: AccessTokenPayload) {
-    return await this.authService.resendVerificationMail(user);
+    return this.authService.resendVerificationMail(user);
   }
 
-  private async setTokenCookie(
+  private setTokenCookie(
     res: Response,
     tokens: TokenPair,
     status: 200 | 201 = 200,
@@ -125,7 +125,7 @@ export class AuthController {
       .end();
   }
 
-  private async clearTokenCookie(res: Response) {
+  private clearTokenCookie(res: Response) {
     res.clearCookie('access_token');
     res.clearCookie('refresh_token').status(200).end();
   }

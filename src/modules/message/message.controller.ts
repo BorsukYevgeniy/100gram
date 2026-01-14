@@ -27,7 +27,7 @@ export class MessageController {
     @User() user: AccessTokenPayload,
     @Param('id') messageId: number,
   ): Promise<Message> {
-    return await this.messageService.findById(user, messageId);
+    return this.messageService.findById(user, messageId);
   }
 
   @Patch(':id')
@@ -38,12 +38,7 @@ export class MessageController {
     @Body() updateMessageDto: UpdateMessageDto,
     @UploadedFiles() files: Express.Multer.File[],
   ): Promise<Message> {
-    return await this.messageService.update(
-      user,
-      messageId,
-      updateMessageDto,
-      files,
-    );
+    return this.messageService.update(user, messageId, updateMessageDto, files);
   }
 
   @Delete(':id')
@@ -51,6 +46,6 @@ export class MessageController {
     @User() user: AccessTokenPayload,
     @Param('id') messageId: number,
   ): Promise<Message> {
-    return await this.messageService.delete(user, messageId);
+    return this.messageService.delete(user, messageId);
   }
 }

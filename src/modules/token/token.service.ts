@@ -83,9 +83,7 @@ export class TokenService {
   }
 
   async getUserTokens(userId: number): Promise<Token[]> {
-    const tokens = await this.tokenRepository.getUserToken(userId);
-
-    return tokens;
+    return this.tokenRepository.getUserToken(userId);
   }
 
   async generateTokens(

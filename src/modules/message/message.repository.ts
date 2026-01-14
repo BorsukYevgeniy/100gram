@@ -13,7 +13,7 @@ export class MessageRepository {
     take: number,
     cursor: number,
   ): Promise<MessageFiles[]> {
-    return await this.prisma.message.findMany({
+    return this.prisma.message.findMany({
       where: {
         chatId,
         ...(cursor && { id: { lt: cursor } }),
@@ -32,7 +32,7 @@ export class MessageRepository {
     dto: CreateMessageDto,
     fileIds: number[] = [],
   ): Promise<MessageFiles> {
-    return await this.prisma.message.create({
+    return this.prisma.message.create({
       data: {
         ...dto,
         userId,
@@ -46,7 +46,7 @@ export class MessageRepository {
   }
 
   async findById(id: number): Promise<MessageFiles> {
-    return await this.prisma.message.findUnique({
+    return this.prisma.message.findUnique({
       where: { id },
       include: { files: true },
     });
@@ -57,7 +57,7 @@ export class MessageRepository {
     dto: UpdateMessageDto,
     fileIds: number[],
   ): Promise<MessageFiles> {
-    return await this.prisma.message.update({
+    return this.prisma.message.update({
       where: { id },
       data: {
         text: dto.text,
@@ -70,7 +70,7 @@ export class MessageRepository {
   }
 
   async delete(id: number): Promise<MessageFiles> {
-    return await this.prisma.message.delete({
+    return this.prisma.message.delete({
       where: { id },
       include: { files: true },
     });

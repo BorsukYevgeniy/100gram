@@ -8,6 +8,6 @@ export class TokenScheduler {
 
   @Cron('0 0 */7 * *')
   async deleteExpiredTokens() {
-    return await this.tokenService.deleteExpiredTokens();
+    return this.tokenService.deleteExpiredTokens();
   }
 }

@@ -18,7 +18,7 @@ export class UserService {
     this.logger.setContext(UserService.name);
   }
 
-  async create(dto: CreateUserDto) {
+  async create(dto: CreateUserDto): Promise<User> {
     const user = await this.userRepository.create(dto);
 
     this.logger.info('User created', { userId: user.id, provider: 'local' });
@@ -26,20 +26,20 @@ export class UserService {
     return user;
   }
 
-  async createGoogleUser(dto: CreateUserDto) {
+  async createGoogleUser(dto: CreateUserDto): Promise<User> {
     const user = await this.userRepository.createGoogleUser(dto);
 
     this.logger.info('User created', { userId: user.id, provider: 'google' });
     return user;
   }
 
-  async findByEmail(email: string) {
+  async findByEmail(email: string): Promise<User> {
     const user = await this.userRepository.findByEmail(email);
 
     return user;
   }
 
-  async findById(id: number) {
+  async findById(id: number): Promise<User> {
     const user: User | null = await this.userRepository.findById(id);
 
     if (!user) {
@@ -52,7 +52,7 @@ export class UserService {
     return user;
   }
 
-  async assignAdmin(id: number) {
+  async assignAdmin(id: number): Promise<UserNoCredVCode> {
     try {
       const admin = await this.userRepository.assingAdmin(id);
 
@@ -72,9 +72,12 @@ export class UserService {
     }
   }
 
-  async delete(user: AccessTokenPayload, userId: number) {
+  async delete(
+    user: AccessTokenPayload,
+    userId: number,
+  ): Promise<UserNoCredVCode> {
     const { chatsOwned } =
-      await this.userRepository.getChatsWhereUserIsOwner(userId);
+      await this.userRepository.findChatsWhereUserIsOwner(userId);
 
     if (!chatsOwned || chatsOwned.length === 0) {
       const user = await this.userRepository.delete(userId);
@@ -97,7 +100,7 @@ export class UserService {
     return deletedUser;
   }
 
-  async getUserByVerificationCode(verificationCode: string) {
+  async getUserByVerificationCode(verificationCode: string): Promise<User> {
     const user =
       await this.userRepository.getUserByVerificationCode(verificationCode);
 
@@ -111,7 +114,7 @@ export class UserService {
     return user;
   }
 
-  async deleteUnverifiedUsers() {
+  async deleteUnverifiedUsers(): Promise<number> {
     const { count } = await this.userRepository.deleteUnverifiedUsers();
 
     this.logger.info('Deleted unverified users', { count });

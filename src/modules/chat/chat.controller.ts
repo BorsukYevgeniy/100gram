@@ -26,7 +26,7 @@ export class ChatController {
     @User() user: AccessTokenPayload,
     @Body() dto: CreatePrivateChatDto,
   ) {
-    return await this.chatService.createPrivateChat(user.id, dto);
+    return this.chatService.createPrivateChat(user.id, dto);
   }
 
   @Post('group')
@@ -34,12 +34,12 @@ export class ChatController {
     @User() user: AccessTokenPayload,
     @Body() dto: CreateGroupChatDto,
   ) {
-    return await this.chatService.createGroupChat(user.id, dto);
+    return this.chatService.createGroupChat(user.id, dto);
   }
 
   @Get(':id')
   async findOne(@User() user: AccessTokenPayload, @Param('id') id: number) {
-    return await this.chatService.findById(user, id);
+    return this.chatService.findById(user, id);
   }
 
   @Patch(':chatId/owner/:ownerId')
@@ -47,7 +47,7 @@ export class ChatController {
     @Param('chatId') chatId: number,
     @Param('ownerId') ownerId: number,
   ) {
-    return await this.chatService.updateOwner(chatId, ownerId);
+    return this.chatService.updateOwner(chatId, ownerId);
   }
 
   @Patch(':chatId')
@@ -55,11 +55,11 @@ export class ChatController {
     @Param('chatId') chatId: number,
     @Body() updateChatDto: UpdateGroupChatDto,
   ) {
-    return await this.chatService.updateGroupChat(chatId, updateChatDto);
+    return this.chatService.updateGroupChat(chatId, updateChatDto);
   }
 
   @Delete(':id')
   async delete(@User() user: AccessTokenPayload, @Param('id') id: number) {
-    return await this.chatService.delete(user, id);
+    return this.chatService.delete(user, id);
   }
 }
