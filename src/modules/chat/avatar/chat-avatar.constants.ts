@@ -1,0 +1,1 @@
+export const DEFAULT_CHAT_AVATAR_NAME: string = 'DEFAULT_CHAT_AVATAR.png';

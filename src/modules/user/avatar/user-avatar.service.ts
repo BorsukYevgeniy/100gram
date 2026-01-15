@@ -5,8 +5,8 @@ import { UserRepository } from '../user.repository';
 
 import { randomUUID } from 'crypto';
 import { extname } from 'path';
+import { Avatar } from '../../../common/types/avatar.types';
 import { DEFAULT_AVATAR_NAME } from './avatar.constants';
-import { Avatar } from './avatar.types';
 
 @Injectable()
 export class UserAvatarService {
@@ -29,7 +29,7 @@ export class UserAvatarService {
       await this.fileStorage.writeUserAvatar(newAvatarName, file.buffer);
       await this.userRepo.updateAvatar(userId, newAvatarName);
 
-      this.logger.info({ userId, newAvatarName }, 'Updated avatar');
+      this.logger.info({ userId, newAvatarName }, 'Updated user avatar');
 
       if (avatar && avatar !== DEFAULT_AVATAR_NAME) {
         await this.fileStorage.unlinkUserAvatar(avatar);
@@ -46,13 +46,13 @@ export class UserAvatarService {
     const user = await this.userRepo.findById(userId);
 
     if (user.avatar === DEFAULT_AVATAR_NAME) {
-      this.logger.warn({ userId }, 'Cannot delete default avatar ');
-      throw new BadRequestException('Cannot delete default avatar');
+      this.logger.warn({ userId }, 'Cannot delete default user avatar');
+      throw new BadRequestException('Cannot delete default user avatar');
     } else {
       await this.fileStorage.unlinkUserAvatar(user.avatar);
       await this.userRepo.updateAvatar(userId);
 
-      this.logger.info({ userId }, 'Deleted avatar');
+      this.logger.info({ userId }, 'Deleted user avatar');
 
       return { avatarUrl: `/avatars/users/${DEFAULT_AVATAR_NAME}` };
     }

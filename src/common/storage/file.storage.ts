@@ -7,6 +7,7 @@ import { resolve } from 'path';
 export class FileStorage implements OnModuleInit {
   private readonly MESSAGE_FILE_DIR_PATH: string;
   private readonly USER_AVATAR_DIR_PATH: string;
+  private readonly CHAT_AVATAR_DIR_PATH: string;
 
   constructor(private readonly logger: PinoLogger) {
     this.MESSAGE_FILE_DIR_PATH = resolve(
@@ -17,6 +18,11 @@ export class FileStorage implements OnModuleInit {
     this.USER_AVATAR_DIR_PATH = resolve(
       __dirname,
       '../../../../files/avatars/users',
+    );
+
+    this.CHAT_AVATAR_DIR_PATH = resolve(
+      __dirname,
+      '../../../../files/avatars/chats',
     );
 
     this.logger.setContext(FileStorage.name);
@@ -66,6 +72,16 @@ export class FileStorage implements OnModuleInit {
   }
 
   async unlinkUserAvatar(fileName: string) {
+    await unlink(resolve(this.USER_AVATAR_DIR_PATH, fileName));
+    this.logger.debug({ fileName }, 'User avatar deleted');
+  }
+
+  async writeChatAvatar(fileName: string, content: Buffer) {
+    await writeFile(resolve(this.USER_AVATAR_DIR_PATH, fileName), content);
+    this.logger.debug({ fileName }, 'User avatar written');
+  }
+
+  async unlinkChatAvatar(fileName: string) {
     await unlink(resolve(this.USER_AVATAR_DIR_PATH, fileName));
     this.logger.debug({ fileName }, 'User avatar deleted');
   }

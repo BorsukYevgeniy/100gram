@@ -55,6 +55,7 @@ model ChatToUser {
 
 model Chat {
   id          Int     @id @default(autoincrement())
+  avatar      String?
   title       String?
   description String?
 
@@ -65,7 +66,7 @@ model Chat {
   ownerId Int?
   owner   User? @relation(fields: [ownerId], references: [id])
 
-  // Private chats dont have owner, title and description
+  // Private chats dont have owner, avatar, title and description
 }
 
 model Token {
