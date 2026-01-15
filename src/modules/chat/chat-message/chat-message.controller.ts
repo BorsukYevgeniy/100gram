@@ -9,23 +9,23 @@ import {
   UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
-import { Message } from '../../../generated/prisma/client';
-import { User } from '../../common/decorators/routes/user.decorator';
-import { PaginationDto } from '../../common/dto/pagination.dto';
-import { MessageFilesInterceptor } from '../../common/interceptor/message-files.interceptor';
-import { AccessTokenPayload } from '../../common/types';
-import { VerifiedUserGuard } from '../auth/guards/verified-user.guard';
-import { CreateMessageDto } from '../message/dto/create-message.dto';
-import { MessageService } from '../message/message.service';
-import { PaginatedMessageFiles } from '../message/types/message.types';
-import { ChatService } from './chat.service';
+import { Message } from '../../../../generated/prisma/client';
+import { User } from '../../../common/decorators/routes/user.decorator';
+import { PaginationDto } from '../../../common/dto/pagination.dto';
+import { MessageFilesInterceptor } from '../../../common/interceptor/message-files.interceptor';
+import { AccessTokenPayload } from '../../../common/types';
+import { VerifiedUserGuard } from '../../auth/guards/verified-user.guard';
+import { CreateMessageDto } from '../../message/dto/create-message.dto';
+import { MessageService } from '../../message/message.service';
+import { PaginatedMessageFiles } from '../../message/types/message.types';
+import { ChatValidationService } from '../validation/chat-validation.service';
 
 @Controller('chats/:chatId/messages')
 @UseGuards(VerifiedUserGuard)
 export class ChatMessageController {
   constructor(
     private readonly messageService: MessageService,
-    private readonly chatService: ChatService,
+    private readonly chatValidation: ChatValidationService,
   ) {}
 
   @Get()
@@ -34,7 +34,7 @@ export class ChatMessageController {
     @Param('chatId') chatId: number,
     @Query() paginationDto: PaginationDto,
   ): Promise<PaginatedMessageFiles> {
-    await this.chatService.validateChatParticipation(user, chatId);
+    await this.chatValidation.validateChatParticipation(user, chatId);
 
     return this.messageService.getMessagesInChat(chatId, paginationDto);
   }

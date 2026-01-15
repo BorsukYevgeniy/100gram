@@ -15,7 +15,7 @@ import { WsDeleteMessageDto } from '../message/dto/ws-delete-message.dto';
 import { WsUpdateMessageDto } from '../message/dto/ws-update-message.dto';
 import { MessageService } from '../message/message.service';
 import { TokenService } from '../token/token.service';
-import { ChatService } from './chat.service';
+import { ChatValidationService } from './validation/chat-validation.service';
 
 @UsePipes(
   new ValidationPipe({
@@ -44,7 +44,7 @@ import { ChatService } from './chat.service';
 })
 export class ChatGateway {
   constructor(
-    private readonly chatService: ChatService,
+    private readonly chatValidator: ChatValidationService,
     private readonly messageService: MessageService,
     private readonly tokenService: TokenService,
   ) {}
@@ -60,7 +60,7 @@ export class ChatGateway {
     const user = await this.getUserFromWs(client);
 
     try {
-      await this.chatService.validateChatParticipation(user, payload.chatId);
+      await this.chatValidator.validateChatParticipation(user, payload.chatId);
       client.join(`chat-${payload.chatId}`);
     } catch (e) {
       if (e instanceof HttpException) throw new WsException(e.message);
@@ -136,7 +136,7 @@ export class ChatGateway {
     @ConnectedSocket() client: Socket,
   ) {
     const user = await this.getUserFromWs(client);
-    await this.chatService.validateChatParticipation(user, chatId);
+    await this.chatValidator.validateChatParticipation(user, chatId);
 
     client.leave(`chat-${chatId}`);
   }

@@ -6,9 +6,9 @@ import { PrismaModule } from '../prisma/prisma.module';
 import { TokenModule } from '../token/token.module';
 import { UserAvatarController } from './avatar/user-avatar.controller';
 import { UserAvatarService } from './avatar/user-avatar.service';
+import { UserCleanupService } from './user-cleanup.service';
 import { UserController } from './user.controller';
 import { UserRepository } from './user.repository';
-import { UserScheduler } from './user.scheduler';
 import { UserService } from './user.service';
 
 @Module({
@@ -20,7 +20,12 @@ import { UserService } from './user.service';
     FileStorageModule,
   ],
   controllers: [UserAvatarController, UserController],
-  providers: [UserScheduler, UserService, UserAvatarService, UserRepository],
+  providers: [
+    UserCleanupService,
+    UserService,
+    UserAvatarService,
+    UserRepository,
+  ],
   exports: [UserService],
 })
 export class UserModule {}

@@ -1,108 +1,26 @@
 import {
   BadRequestException,
-  ForbiddenException,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
 import { PrismaClientKnownRequestError } from '@prisma/client/runtime/client';
 import { PinoLogger } from 'nestjs-pino';
-import { Chat, ChatType, Role } from '../../../generated/prisma/client';
-import { PaginationDto } from '../../common/dto/pagination.dto';
+import { Chat, ChatType } from '../../../generated/prisma/client';
 import { AccessTokenPayload } from '../../common/types';
-import { PaginatedUserNoCredVCode } from '../user/types/user.types';
 import { ChatRepository } from './chat.repository';
 import { CreateGroupChatDto } from './dto/create-group-chat.dto';
 import { CreatePrivateChatDto } from './dto/create-private-chat.dto';
 import { UpdateGroupChatDto } from './dto/update-group-chat.dto';
+import { ChatValidationService } from './validation/chat-validation.service';
 
 @Injectable()
 export class ChatService {
   constructor(
     private readonly chatRepo: ChatRepository,
+    private readonly chatValidator: ChatValidationService,
     private readonly logger: PinoLogger,
   ) {
     this.logger.setContext(ChatService.name);
-  }
-
-  private async validateOwner(user: AccessTokenPayload, chatId: number) {
-    this.logger.debug({ userId: user.id, chatId }, 'Validating chat owner');
-
-    const chat = await this.chatRepo.getById(chatId);
-
-    if (!chat) {
-      this.logger.warn({ chatId }, 'Chat not found');
-      throw new NotFoundException('Chat not found');
-    }
-
-    if (chat.ownerId !== user.id && user.role !== Role.ADMIN) {
-      this.logger.warn({ userId: user.id, chatId }, 'User is not chat owner');
-      throw new ForbiddenException();
-    }
-  }
-
-  private async validateChatType(chatId: number, expectedType: ChatType) {
-    this.logger.debug({ chatId, expectedType }, 'Validating chat type');
-
-    const chat = await this.chatRepo.getById(chatId);
-
-    if (!chat) {
-      this.logger.warn({ chatId }, 'Chat not found');
-      throw new NotFoundException('Chat not found');
-    }
-
-    if (chat.chatType !== expectedType) {
-      this.logger.warn(
-        { chatId, expectedType, actualType: chat.chatType },
-        'Chat has invalid type',
-      );
-      throw new BadRequestException('Chat is not of type ${expectedType}');
-    }
-  }
-
-  async validateChatParticipation(
-    user: AccessTokenPayload,
-    chatId: number,
-  ): Promise<void> {
-    this.logger.debug(
-      { userId: user.id, chatId },
-      'Validating chat participation',
-    );
-
-    const chat = await this.chatRepo.getById(chatId);
-
-    if (!chat) {
-      this.logger.warn({ chatId }, 'Chat not found');
-      throw new NotFoundException('Chat not found');
-    }
-
-    if (user.role === Role.ADMIN) {
-      this.logger.debug(
-        { userId: user.id, chatId },
-        'Admin bypassed participation check',
-      );
-      return;
-    }
-
-    const usersInChat = await this.chatRepo.getUserIdsInChat(chatId);
-    const isParticipant = usersInChat.some(({ user }) => user.id === user.id);
-
-    if (!isParticipant) {
-      this.logger.warn(
-        { userId: user.id, chatId },
-        'User is not chat participant',
-      );
-      throw new ForbiddenException('User is not a participant of the chat');
-    }
-  }
-
-  private async checkChatParticipation(
-    userId: number,
-    chatId: number,
-  ): Promise<boolean> {
-    this.logger.debug({ userId, chatId }, 'Checking chat participation');
-
-    const usersInChat = await this.chatRepo.getUserIdsInChat(chatId);
-    return usersInChat.some(({ user }) => user.id === userId);
   }
 
   async createPrivateChat(
@@ -158,7 +76,7 @@ export class ChatService {
   }
 
   async findById(user: AccessTokenPayload, chatId: number): Promise<Chat> {
-    await this.validateChatParticipation(user, chatId);
+    await this.chatValidator.validateChatParticipation(user, chatId);
 
     const chat: Chat | null = await this.chatRepo.getById(chatId);
 
@@ -189,7 +107,7 @@ export class ChatService {
   }
 
   async delete(user: AccessTokenPayload, chatId: number): Promise<Chat> {
-    await this.validateOwner(user, chatId);
+    await this.chatValidator.validateOwner(user, chatId);
 
     try {
       const chat = await this.chatRepo.delete(chatId);
@@ -206,111 +124,8 @@ export class ChatService {
     }
   }
 
-  async addUserToChat(chatId: number, userId: number) {
-    await this.validateChatType(chatId, ChatType.GROUP);
-
-    const isParticipant = await this.checkChatParticipation(userId, chatId);
-
-    if (isParticipant) {
-      this.logger.warn({ chatId, userId }, 'User already in chat');
-      throw new BadRequestException(
-        'User already is a participant of the chat',
-      );
-    }
-
-    const chatUser = await this.chatRepo.addUserToChat(chatId, userId);
-
-    this.logger.info({ chatId, userId }, 'User added to chat');
-
-    return chatUser;
-  }
-
-  async deleteUserFromChat(chatId: number, userId: number) {
-    const chat = await this.chatRepo.getById(chatId);
-
-    if (!chat) {
-      this.logger.warn("Chat doesn't exists", { chatId });
-      throw new NotFoundException('Chat not found');
-    }
-
-    const isParticipant = await this.checkChatParticipation(userId, chatId);
-
-    if (!isParticipant) {
-      this.logger.warn('User is not participant of the chat ', {
-        userId,
-        chatId,
-      });
-      throw new ForbiddenException('User is not a participant of the chat');
-    }
-
-    if (chat.chatType === ChatType.PRIVATE) {
-      const chat = await this.chatRepo.delete(chatId);
-
-      this.logger.info('Deleted chat', { chatId });
-      return chat;
-    } else if (chat.ownerId !== userId) {
-      const chatUser = await this.chatRepo.deleteUserFromChat(chatId, userId);
-
-      this.logger.info('Deleted user from chat', { userId, chatId });
-      return chatUser;
-    } else {
-      const { userId: newOwnerId } = await this.chatRepo.findNewOwner(
-        chatId,
-        userId,
-      );
-
-      if (newOwnerId) {
-        const ownerAndChatUser = await this.chatRepo.updateOwnerAndDeleteUser(
-          chatId,
-          newOwnerId,
-          userId,
-        );
-
-        this.logger.info('Updated owner in chat and deleted user from chat', {
-          newOwnerId,
-          chatId,
-          userId,
-        });
-        return ownerAndChatUser;
-      }
-
-      const chat = await this.chatRepo.delete(chatId);
-
-      this.logger.info('Deleted chat successfully', { chatId });
-      return chat;
-    }
-  }
-
-  async getUsersInChat(
-    user: AccessTokenPayload,
-    chatId: number,
-    paginationDto: PaginationDto,
-  ): Promise<PaginatedUserNoCredVCode> {
-    await this.validateChatParticipation(user, chatId);
-
-    const { limit, cursor } = paginationDto;
-
-    const users = await this.chatRepo.getUsersInChat(chatId, limit, cursor);
-
-    const formattedUsers = users.map(({ user }) => user);
-
-    const nextCursor =
-      formattedUsers.length === limit
-        ? formattedUsers[formattedUsers.length - 1].id
-        : null;
-
-    const hasMore = nextCursor !== null;
-
-    return {
-      users: formattedUsers,
-      nextCursor,
-      limit,
-      hasMore,
-    };
-  }
-
   async updateOwner(chatId: number, newOwnerId: number): Promise<Chat> {
-    await this.validateChatType(chatId, ChatType.GROUP);
+    await this.chatValidator.validateChatType(chatId, ChatType.GROUP);
 
     const owner = await this.chatRepo.updateOwner(chatId, newOwnerId);
 

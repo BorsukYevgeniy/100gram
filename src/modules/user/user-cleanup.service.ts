@@ -3,7 +3,7 @@ import { Cron } from '@nestjs/schedule';
 import { UserService } from './user.service';
 
 @Injectable()
-export class UserScheduler {
+export class UserCleanupService {
   constructor(private readonly userService: UserService) {}
 
   @Cron('0 0 */3 * *')
