@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { Role, User } from '../../../generated/prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
+import { DEFAULT_AVATAR_NAME } from './avatar/avatar.constants';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UserNoCredVCode } from './types/user.types';
 
@@ -95,7 +96,7 @@ export class UserRepository {
     return this.prisma.user.update({
       where: { id: userId },
       data: {
-        avatar: avatar ? avatar : 'DEFAULT_USER_AVATAR.png',
+        avatar: avatar ? avatar : DEFAULT_AVATAR_NAME,
       },
       omit: {
         email: true,

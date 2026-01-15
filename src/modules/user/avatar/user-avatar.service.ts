@@ -5,6 +5,8 @@ import { UserRepository } from '../user.repository';
 
 import { randomUUID } from 'crypto';
 import { extname } from 'path';
+import { DEFAULT_AVATAR_NAME } from './avatar.constants';
+import { Avatar } from './avatar.types';
 
 @Injectable()
 export class UserAvatarService {
@@ -16,21 +18,24 @@ export class UserAvatarService {
     this.logger.setContext(UserAvatarService.name);
   }
 
-  async updateAvatar(userId: number, file: Express.Multer.File) {
+  async updateAvatar(
+    userId: number,
+    file: Express.Multer.File,
+  ): Promise<Avatar> {
     const { avatar } = await this.userRepo.findById(userId);
 
     const newAvatarName = randomUUID().concat(extname(file.originalname));
     try {
       await this.fileStorage.writeUserAvatar(newAvatarName, file.buffer);
-      const newUser = await this.userRepo.updateAvatar(userId, newAvatarName);
+      await this.userRepo.updateAvatar(userId, newAvatarName);
 
       this.logger.info({ userId, newAvatarName }, 'Updated avatar');
 
-      if (avatar && avatar !== 'DEFAULT_USER_AVATAR.png') {
+      if (avatar && avatar !== DEFAULT_AVATAR_NAME) {
         await this.fileStorage.unlinkUserAvatar(avatar);
       }
 
-      return newUser;
+      return { avatarUrl: '/avatars/users/'.concat(newAvatarName) };
     } catch (e) {
       await this.fileStorage.unlinkUserAvatar(newAvatarName);
       throw e;
@@ -40,16 +45,16 @@ export class UserAvatarService {
   async deleteAvatar(userId: number) {
     const user = await this.userRepo.findById(userId);
 
-    if (user.avatar === 'DEFAULT_USER_AVATAR.png') {
+    if (user.avatar === DEFAULT_AVATAR_NAME) {
       this.logger.warn({ userId }, 'Cannot delete default avatar ');
       throw new BadRequestException('Cannot delete default avatar');
     } else {
       await this.fileStorage.unlinkUserAvatar(user.avatar);
-      const updatedUser = await this.userRepo.updateAvatar(userId);
+      await this.userRepo.updateAvatar(userId);
 
       this.logger.info({ userId }, 'Deleted avatar');
 
-      return updatedUser;
+      return { avatarUrl: `/avatars/users/${DEFAULT_AVATAR_NAME}` };
     }
   }
 }
