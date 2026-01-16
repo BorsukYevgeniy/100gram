@@ -78,14 +78,7 @@ export class ChatService {
   async findById(user: AccessTokenPayload, chatId: number): Promise<Chat> {
     await this.chatValidator.validateChatParticipation(user, chatId);
 
-    const chat: Chat | null = await this.chatRepo.getById(chatId);
-
-    if (!chat) {
-      this.logger.warn({ chatId }, 'Chat not found');
-      throw new NotFoundException('Chat not found');
-    }
-
-    return chat;
+    return this.chatRepo.getById(chatId);
   }
 
   async updateGroupChat(id: number, dto: UpdateGroupChatDto): Promise<Chat> {

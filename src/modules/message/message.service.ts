@@ -171,11 +171,7 @@ export class MessageService {
     user: AccessTokenPayload,
     messageId: number,
   ): Promise<MessageFiles> {
-    const message = await this.validateMessageOwnership(user, messageId);
-
-    this.logger.debug({ messageId }, 'Fetched message');
-
-    return message;
+    return this.validateMessageOwnership(user, messageId);
   }
 
   async update(
