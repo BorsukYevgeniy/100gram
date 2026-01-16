@@ -34,9 +34,7 @@ export class UserService {
   }
 
   async findByEmail(email: string): Promise<User> {
-    const user = await this.userRepository.findByEmail(email);
-
-    return user;
+    return this.userRepository.findByEmail(email);
   }
 
   async findById(id: number): Promise<User> {
@@ -80,15 +78,18 @@ export class UserService {
       await this.userRepository.findChatsWhereUserIsOwner(userId);
 
     if (!chatsOwned || chatsOwned.length === 0) {
+      // Delete user if he dont have chats where he is owner
       const user = await this.userRepository.delete(userId);
 
       this.logger.info('User deleted', { userId: user.id });
       return user;
     }
 
+    // Find new owner for every chat where user is owner
     for (const chat of chatsOwned) {
       const newOwnerId = await this.chatService.getNewOwnerId(chat.id, user.id);
 
+      // If owner found update owner in chat else delete chat
       if (newOwnerId) {
         await this.chatService.updateOwner(chat.id, newOwnerId);
       } else await this.chatService.delete(user, chat.id);
@@ -101,10 +102,7 @@ export class UserService {
   }
 
   async getUserByVerificationCode(verificationCode: string): Promise<User> {
-    const user =
-      await this.userRepository.getUserByVerificationCode(verificationCode);
-
-    return user;
+    return this.userRepository.getUserByVerificationCode(verificationCode);
   }
 
   async verify(verificationLink: string): Promise<UserNoCredVCode> {
