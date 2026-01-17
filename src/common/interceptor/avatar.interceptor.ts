@@ -9,7 +9,10 @@ export const AvatarInterceptor = FileInterceptor('avatar', {
   },
 
   fileFilter(req, file, callback) {
-    if (['png', 'jpg', 'jpeg', 'svg'].includes(extname(file.originalname))) {
+    console.log(extname(file.originalname));
+    if (
+      ['.png', '.jpg', '.jpeg', '.svg'].includes(extname(file.originalname))
+    ) {
       callback(null, true);
     } else {
       callback(new BadRequestException('Invalid file extension'), false);
