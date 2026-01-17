@@ -7,7 +7,7 @@ import {
 import { PinoLogger } from 'nestjs-pino';
 import { ChatType, Role } from '../../../../generated/prisma/enums';
 import { AccessTokenPayload } from '../../../common/types';
-import { ChatRepository } from '../chat.repository';
+import { ChatRepository } from '../repository/chat.repository';
 
 @Injectable()
 export class ChatValidationService {

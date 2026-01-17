@@ -8,7 +8,7 @@ import { ChatType } from '../../../../generated/prisma/enums';
 import { PaginationDto } from '../../../common/dto/pagination.dto';
 import { AccessTokenPayload } from '../../../common/types';
 import { PaginatedUserNoCredVCode } from '../../user/types/user.types';
-import { ChatRepository } from '../chat.repository';
+import { ChatRepository } from '../repository/chat.repository';
 import { ChatValidationService } from '../validation/chat-validation.service';
 
 export class ChatUserService {

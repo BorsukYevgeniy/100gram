@@ -1,10 +1,10 @@
 import { Injectable } from '@nestjs/common';
-import { Chat, ChatToUser } from '../../../generated/prisma/client';
-import { ChatType } from '../../../generated/prisma/enums';
-import { PrismaService } from '../prisma/prisma.service';
-import { DEFAULT_CHAT_AVATAR_NAME } from './avatar/chat-avatar.constants';
-import { CreateGroupChatDto } from './dto/create-group-chat.dto';
-import { UpdateGroupChatDto } from './dto/update-group-chat.dto';
+import { Chat, ChatToUser } from '../../../../generated/prisma/client';
+import { ChatType } from '../../../../generated/prisma/enums';
+import { PrismaService } from '../../prisma/prisma.service';
+import { DEFAULT_CHAT_AVATAR_NAME } from '../avatar/chat-avatar.constants';
+import { CreateGroupChatDto } from '../dto/create-group-chat.dto';
+import { UpdateGroupChatDto } from '../dto/update-group-chat.dto';
 
 @Injectable()
 export class ChatRepository {

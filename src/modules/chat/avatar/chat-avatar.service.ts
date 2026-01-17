@@ -6,7 +6,7 @@ import { ChatType } from '../../../../generated/prisma/enums';
 import { FileStorage } from '../../../common/storage/file.storage';
 import { AccessTokenPayload } from '../../../common/types';
 import { Avatar } from '../../../common/types/avatar.types';
-import { ChatRepository } from '../chat.repository';
+import { ChatRepository } from '../repository/chat.repository';
 import { ChatValidationService } from '../validation/chat-validation.service';
 import { DEFAULT_CHAT_AVATAR_NAME } from './chat-avatar.constants';
 

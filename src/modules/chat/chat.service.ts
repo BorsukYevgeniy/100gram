@@ -7,10 +7,10 @@ import { PrismaClientKnownRequestError } from '@prisma/client/runtime/client';
 import { PinoLogger } from 'nestjs-pino';
 import { Chat, ChatType } from '../../../generated/prisma/client';
 import { AccessTokenPayload } from '../../common/types';
-import { ChatRepository } from './chat.repository';
 import { CreateGroupChatDto } from './dto/create-group-chat.dto';
 import { CreatePrivateChatDto } from './dto/create-private-chat.dto';
 import { UpdateGroupChatDto } from './dto/update-group-chat.dto';
+import { ChatRepository } from './repository/chat.repository';
 import { ChatValidationService } from './validation/chat-validation.service';
 
 @Injectable()

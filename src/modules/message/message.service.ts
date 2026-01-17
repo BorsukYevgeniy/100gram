@@ -11,7 +11,7 @@ import { AccessTokenPayload } from '../../common/types';
 import { FileService } from '../file/file.service';
 import { CreateMessageDto } from './dto/create-message.dto';
 import { UpdateMessageDto } from './dto/update-message.dto';
-import { MessageRepository } from './message.repository';
+import { MessageRepository } from './repository/message.repository';
 import { MessageFiles, PaginatedMessageFiles } from './types/message.types';
 
 @Injectable()

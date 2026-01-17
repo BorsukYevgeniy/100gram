@@ -1,7 +1,6 @@
 import { Module } from '@nestjs/common';
 import { FileStorageModule } from '../../common/storage/storage.module';
 import { MessageModule } from '../message/message.module';
-import { PrismaModule } from '../prisma/prisma.module';
 import { TokenModule } from '../token/token.module';
 import { ChatAvatarController } from './avatar/chat-avatar.controller';
 import { ChatAvatarService } from './avatar/chat-avatar.service';
@@ -10,26 +9,25 @@ import { ChatUserController } from './chat-user/chat-user.controller';
 import { ChatUserService } from './chat-user/chat-user.service';
 import { ChatController } from './chat.controller';
 import { ChatGateway } from './chat.gateway';
-import { ChatRepository } from './chat.repository';
 import { ChatService } from './chat.service';
-import { ChatValidationService } from './validation/chat-validation.service';
+import { ChatRepositoryModule } from './repository/chat-repository.module';
+import { ChatValidationModule } from './validation/chat-validation.module';
 
 @Module({
-  imports: [PrismaModule, TokenModule, FileStorageModule, MessageModule],
+  imports: [
+    ChatValidationModule,
+    ChatRepositoryModule,
+    TokenModule,
+    FileStorageModule,
+    MessageModule,
+  ],
   controllers: [
     ChatMessageController,
     ChatUserController,
     ChatAvatarController,
     ChatController,
   ],
-  providers: [
-    ChatGateway,
-    ChatService,
-    ChatAvatarService,
-    ChatUserService,
-    ChatValidationService,
-    ChatRepository,
-  ],
+  providers: [ChatGateway, ChatService, ChatAvatarService, ChatUserService],
   exports: [ChatService],
 })
 export class ChatModule {}
