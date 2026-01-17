@@ -22,18 +22,12 @@ export class UserAvatarService {
     userId: number,
     file: Express.Multer.File,
   ): Promise<Avatar> {
-    const { avatar } = await this.userRepo.findById(userId);
-
     const newAvatarName = randomUUID().concat(extname(file.originalname));
     try {
       await this.fileStorage.writeUserAvatar(newAvatarName, file.buffer);
       await this.userRepo.updateAvatar(userId, newAvatarName);
 
       this.logger.info({ userId, newAvatarName }, 'Updated user avatar');
-
-      if (avatar && avatar !== DEFAULT_AVATAR_NAME) {
-        await this.fileStorage.unlinkUserAvatar(avatar);
-      }
 
       return { avatarUrl: '/avatars/users/'.concat(newAvatarName) };
     } catch (e) {

@@ -109,18 +109,18 @@ export class FileStorage implements OnModuleInit {
 
   async writeChatAvatar(fileName: string, content: Buffer) {
     try {
-      await writeFile(resolve(this.USER_AVATAR_DIR_PATH, fileName), content);
+      await writeFile(resolve(this.CHAT_AVATAR_DIR_PATH, fileName), content);
       this.logger.debug({ fileName }, 'Chat avatar written');
     } catch (e) {
       this.logger.error({ fileName }, 'Cannot write chat avatar');
-      await unlink(resolve(this.USER_AVATAR_DIR_PATH, fileName));
+      await unlink(resolve(this.CHAT_AVATAR_DIR_PATH, fileName));
       throw e;
     }
   }
 
   async unlinkChatAvatar(fileName: string) {
     try {
-      await unlink(resolve(this.USER_AVATAR_DIR_PATH, fileName));
+      await unlink(resolve(this.CHAT_AVATAR_DIR_PATH, fileName));
       this.logger.debug({ fileName }, 'Chat avatar deleted');
     } catch (e) {
       this.logger.error({ fileName }, 'Cannot delete chat avatar');

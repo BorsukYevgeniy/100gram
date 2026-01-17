@@ -12,7 +12,7 @@ export class ConfigService {
   get PINO_CONFIG(): PinoOptions {
     return {
       pinoHttp: {
-        level: 'info',
+        level: 'debug',
         autoLogging: false,
 
         redact: [

@@ -29,18 +29,12 @@ export class ChatAvatarService {
     await this.chatValidator.validateChatType(chatId, ChatType.GROUP);
     await this.chatValidator.validateOwner(user, chatId);
 
-    const { avatar } = await this.chatRepo.getById(chatId);
-
     const newAvatarName = randomUUID().concat(extname(file.originalname));
     try {
       await this.fileStorage.writeChatAvatar(newAvatarName, file.buffer);
       await this.chatRepo.updateAvatar(chatId, newAvatarName);
 
       this.logger.info({ chatId, newAvatarName }, 'Updated chat avatar');
-
-      if (avatar && avatar !== DEFAULT_CHAT_AVATAR_NAME) {
-        await this.fileStorage.unlinkChatAvatar(avatar);
-      }
 
       return { avatarUrl: '/avatars/chats/'.concat(newAvatarName) };
     } catch (e) {
