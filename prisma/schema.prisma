@@ -55,7 +55,7 @@ model ChatToUser {
 
 model Chat {
   id          Int     @id @default(autoincrement())
-  avatar      String?
+  avatar      String  @default("DEFAULT_CHAT_AVATAR.png")
   title       String?
   description String?
 

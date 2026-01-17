@@ -1,2 +1,2 @@
 -- AlterTable
-ALTER TABLE "Chat" ADD COLUMN     "avatar" TEXT;
+ALTER TABLE "Chat" ADD COLUMN     "avatar" TEXT NOT NULL DEFAULT 'DEFAULT_CHAT_AVATAR.png';
