@@ -9,7 +9,6 @@ export const AvatarInterceptor = FileInterceptor('avatar', {
   },
 
   fileFilter(req, file, callback) {
-    console.log(extname(file.originalname));
     if (
       ['.png', '.jpg', '.jpeg', '.svg'].includes(extname(file.originalname))
     ) {

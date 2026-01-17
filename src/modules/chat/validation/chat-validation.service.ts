@@ -1,6 +1,7 @@
 import {
   BadRequestException,
   ForbiddenException,
+  Injectable,
   NotFoundException,
 } from '@nestjs/common';
 import { PinoLogger } from 'nestjs-pino';
@@ -8,6 +9,7 @@ import { ChatType, Role } from '../../../../generated/prisma/enums';
 import { AccessTokenPayload } from '../../../common/types';
 import { ChatRepository } from '../chat.repository';
 
+@Injectable()
 export class ChatValidationService {
   constructor(
     private readonly chatRepo: ChatRepository,
