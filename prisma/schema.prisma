@@ -10,7 +10,7 @@ datasource db {
 model User {
   id          Int          @id @default(autoincrement())
   email       String       @unique
-  nickname    String       @unique
+  nickname    String       
   password    String
   avatar      String       @default("DEFAULT_USER_AVATAR.png")
   createdAt   DateTime     @default(now())
