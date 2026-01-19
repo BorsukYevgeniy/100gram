@@ -6,7 +6,7 @@ import { UserRepository } from '../user.repository';
 import { randomUUID } from 'crypto';
 import { extname } from 'path';
 import { Avatar } from '../../../common/types/avatar.types';
-import { DEFAULT_AVATAR_NAME } from './avatar.constants';
+import { DEFAULT_AVATAR_NAME } from './user-avatar.constants';
 
 @Injectable()
 export class UserAvatarService {

@@ -1,9 +1,9 @@
 import { Injectable } from '@nestjs/common';
 import { Role, User } from '../../../generated/prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
-import { DEFAULT_AVATAR_NAME } from './avatar/avatar.constants';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UserNoCredVCode } from './types/user.types';
+import { DEFAULT_AVATAR_NAME } from './user-avatar/user-avatar.constants';
 
 @Injectable()
 export class UserRepository {
