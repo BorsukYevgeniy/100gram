@@ -1,0 +1,25 @@
+model User {
+  id          Int          @id @default(autoincrement())
+  email       String       @unique
+  nickname    String
+  password    String
+  avatar      String       @default("DEFAULT_USER_AVATAR.png")
+  createdAt   DateTime     @default(now())
+  role        Role         @default(USER)
+  messages    Message[]
+  chatToUsers ChatToUser[]
+  tokens      Token[]
+  // Chats where the user is the owner
+  chatsOwned  Chat[]
+
+  isVerified       Boolean             @default(false)
+  verifiedAt       DateTime?
+  verificationCode String              @unique @default(uuid())
+  files            File[]
+  reactions        ReactionToMessage[]
+}
+
+enum Role {
+  ADMIN
+  USER
+}

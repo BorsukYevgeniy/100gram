@@ -1,0 +1,12 @@
+model ReactionToMessage {
+  messageId Int
+  userId    Int
+
+  createdAt DateTime @default(now())
+  reaction  Reaction
+
+  message Message @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([messageId, userId])
+}

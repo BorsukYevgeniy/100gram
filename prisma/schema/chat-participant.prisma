@@ -1,0 +1,11 @@
+model ChatToUser {
+  chatId Int
+  userId Int
+
+  connectedAt DateTime @default(now())
+
+  chat Chat @relation(fields: [chatId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([chatId, userId])
+}

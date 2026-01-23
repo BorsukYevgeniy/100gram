@@ -1,0 +1,20 @@
+model Chat {
+  id          Int     @id @default(autoincrement())
+  avatar      String? @default("DEFAULT_CHAT_AVATAR.png")
+  title       String?
+  description String?
+
+  messages    Message[]
+  chatToUsers ChatToUser[]
+  chatType    ChatType
+
+  ownerId Int?
+  owner   User? @relation(fields: [ownerId], references: [id])
+
+  // Private chats dont have owner, avatar, title and description
+}
+
+enum ChatType {
+  PRIVATE
+  GROUP
+}
