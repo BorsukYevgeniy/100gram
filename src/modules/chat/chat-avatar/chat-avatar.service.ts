@@ -8,7 +8,6 @@ import { AccessTokenPayload } from '../../../common/types';
 import { Avatar } from '../../../common/types/avatar.types';
 import { ChatRepository } from '../repository/chat.repository';
 import { ChatValidationService } from '../validation/chat-validation.service';
-import { DEFAULT_CHAT_AVATAR_NAME } from './chat-avatar.constants';
 
 @Injectable()
 export class ChatAvatarService {
@@ -49,16 +48,14 @@ export class ChatAvatarService {
 
     const chat = await this.chatRepo.getById(chatId);
 
-    if (chat.avatar === DEFAULT_CHAT_AVATAR_NAME) {
+    if (!chat.avatar) {
       this.logger.warn({ chatId }, 'Cannot delete default chat avatar ');
       throw new BadRequestException('Cannot delete default chat avatar');
-    } else {
-      await this.fileStorage.unlinkChatAvatar(chat.avatar);
-      await this.chatRepo.updateAvatar(chatId);
-
-      this.logger.info({ chatId }, 'Deleted chat avatar');
-
-      return { avatarUrl: `/avatars/chats/${DEFAULT_CHAT_AVATAR_NAME}` };
     }
+
+    await this.fileStorage.unlinkChatAvatar(chat.avatar);
+    await this.chatRepo.updateAvatar(chatId);
+
+    this.logger.info({ chatId }, 'Deleted chat avatar');
   }
 }

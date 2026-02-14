@@ -8,12 +8,6 @@
 #Prisma
 generated
 
-#Message files
-files/messages
-
-files/avatars/users/*
-!files/avatars/users/DEFAULT_USER_AVATAR.png
-
-files/avatars/chats/*
-!files/avatars/chats/DEFAULT_CHAT_AVATAR.png
+#Files
+files
 

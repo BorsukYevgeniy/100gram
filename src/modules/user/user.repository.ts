@@ -3,7 +3,6 @@ import { Role, User } from '../../../generated/prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UserNoCredVCode } from './types/user.types';
-import { DEFAULT_AVATAR_NAME } from './user-avatar/user-avatar.constants';
 
 @Injectable()
 export class UserRepository {
@@ -95,9 +94,7 @@ export class UserRepository {
   ): Promise<UserNoCredVCode> {
     return this.prisma.user.update({
       where: { id: userId },
-      data: {
-        avatar: avatar ? avatar : DEFAULT_AVATAR_NAME,
-      },
+      data: { avatar },
       omit: {
         email: true,
         password: true,

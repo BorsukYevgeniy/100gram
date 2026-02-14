@@ -1,6 +1,8 @@
 import {
   Controller,
   Delete,
+  HttpCode,
+  HttpStatus,
   Param,
   Patch,
   UploadedFile,
@@ -36,6 +38,7 @@ export class UserAvatarController {
   }
 
   @Delete(':userId/avatar')
+  @HttpCode(HttpStatus.NO_CONTENT)
   @RequiredRoles([Role.ADMIN])
   @UseGuards(RolesGuard)
   async deleteUserAvatar(@Param('userId') userId: number) {

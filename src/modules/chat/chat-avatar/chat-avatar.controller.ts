@@ -1,6 +1,8 @@
 import {
   Controller,
   Delete,
+  HttpCode,
+  HttpStatus,
   Param,
   Patch,
   UploadedFile,
@@ -29,6 +31,7 @@ export class ChatAvatarController {
   }
 
   @Delete('avatar')
+  @HttpCode(HttpStatus.NO_CONTENT)
   async deleteMyAvatar(
     @Param('chatId') chatId: number,
     @User() user: AccessTokenPayload,

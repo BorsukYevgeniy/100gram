@@ -1,6 +1,6 @@
 model Chat {
   id          Int     @id @default(autoincrement())
-  avatar      String? @default("DEFAULT_CHAT_AVATAR.png")
+  avatar      String?
   title       String?
   description String?
 

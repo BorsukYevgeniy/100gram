@@ -2,7 +2,6 @@ import { Injectable } from '@nestjs/common';
 import { Chat, ChatToUser } from '../../../../generated/prisma/client';
 import { ChatType } from '../../../../generated/prisma/enums';
 import { PrismaService } from '../../prisma/prisma.service';
-import { DEFAULT_CHAT_AVATAR_NAME } from '../chat-avatar/chat-avatar.constants';
 import { CreateGroupChatDto } from '../dto/create-group-chat.dto';
 import { UpdateGroupChatDto } from '../dto/update-group-chat.dto';
 
@@ -37,7 +36,6 @@ export class ChatRepository {
   ): Promise<Chat> {
     return this.prisma.chat.create({
       data: {
-        avatar: DEFAULT_CHAT_AVATAR_NAME,
         chatType: ChatType.GROUP,
         ownerId,
         title: dto.title,
@@ -107,7 +105,7 @@ export class ChatRepository {
     return this.prisma.chat.update({
       where: { id: chatId },
       data: {
-        avatar: avatar ? avatar : DEFAULT_CHAT_AVATAR_NAME,
+        avatar,
       },
     });
   }
