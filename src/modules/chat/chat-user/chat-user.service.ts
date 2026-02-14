@@ -44,7 +44,7 @@ export class ChatUserService {
     const chat = await this.chatRepo.getById(chatId);
 
     if (!chat) {
-      this.logger.warn("Chat doesn't exists", { chatId });
+      this.logger.warn({ chatId }, "Chat doesn't exist");
       throw new NotFoundException('Chat not found');
     }
 
@@ -54,22 +54,20 @@ export class ChatUserService {
     );
 
     if (!isParticipant) {
-      this.logger.warn('User is not participant of the chat ', {
-        userId,
-        chatId,
-      });
+      this.logger.warn(
+        { userId, chatId },
+        'User is not participant of the chat',
+      );
       throw new ForbiddenException('User is not a participant of the chat');
     }
 
     if (chat.chatType === ChatType.PRIVATE) {
-      const chat = await this.chatRepo.delete(chatId);
-
-      this.logger.info('Deleted chat', { chatId });
-      return chat;
+      const deletedChat = await this.chatRepo.delete(chatId);
+      this.logger.info({ chatId }, 'Deleted private chat');
+      return deletedChat;
     } else if (chat.ownerId !== userId) {
       const chatUser = await this.chatRepo.deleteUserFromChat(chatId, userId);
-
-      this.logger.info('Deleted user from chat', { userId, chatId });
+      this.logger.info({ userId, chatId }, 'Deleted user from group chat');
       return chatUser;
     } else {
       const { userId: newOwnerId } = await this.chatRepo.findNewOwner(
@@ -83,19 +81,16 @@ export class ChatUserService {
           newOwnerId,
           userId,
         );
-
-        this.logger.info('Updated owner in chat and deleted user from chat', {
-          newOwnerId,
-          chatId,
-          userId,
-        });
+        this.logger.info(
+          { newOwnerId, chatId, userId },
+          'Updated chat owner and deleted user from chat',
+        );
         return ownerAndChatUser;
       }
 
-      const chat = await this.chatRepo.delete(chatId);
-
-      this.logger.info('Deleted chat successfully', { chatId });
-      return chat;
+      const deletedChat = await this.chatRepo.delete(chatId);
+      this.logger.info({ chatId }, 'Deleted group chat as no new owner found');
+      return deletedChat;
     }
   }
 
@@ -109,13 +104,16 @@ export class ChatUserService {
     const { limit, cursor } = paginationDto;
 
     const users = await this.chatRepo.getUsersInChat(chatId, limit, cursor);
-
     const formattedUsers = users.map(({ user }) => user);
 
     const nextCursor =
       formattedUsers.length === limit ? formattedUsers.at(-1).id : null;
-
     const hasMore = nextCursor !== null;
+
+    this.logger.info(
+      { chatId, userId: user.id, limit, nextCursor, hasMore },
+      'Fetched users in chat',
+    );
 
     return {
       users: formattedUsers,

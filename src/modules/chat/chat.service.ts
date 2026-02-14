@@ -85,11 +85,14 @@ export class ChatService {
     try {
       const chat = await this.chatRepo.updateGroupChat(id, dto);
 
-      this.logger.info('Chat updated', {
-        chatId: id,
-        title: dto.title,
-        description: dto.description,
-      });
+      this.logger.info(
+        {
+          chatId: id,
+          title: dto.title,
+          description: dto.description,
+        },
+        'Chat updated',
+      );
       return chat;
     } catch (e) {
       if (e instanceof PrismaClientKnownRequestError && e.code === 'P2025') {
@@ -122,7 +125,7 @@ export class ChatService {
 
     const owner = await this.chatRepo.updateOwner(chatId, newOwnerId);
 
-    this.logger.info('Updated owner in chat', { chatId, newOwnerId });
+    this.logger.info({ chatId, newOwnerId }, 'Updated owner in chat');
     return owner;
   }
 

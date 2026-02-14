@@ -36,9 +36,10 @@ export class AuthService {
     const user = await this.userService.findByEmail(dto.email);
 
     if (user) {
-      this.logger.warn('Attempt to register already existing user', {
-        email: dto.email,
-      });
+      this.logger.warn(
+        { email: dto.email },
+        'Attempt to register already existing user',
+      );
       throw new BadRequestException(
         'User with this credentials already exists',
       );
@@ -55,13 +56,12 @@ export class AuthService {
         password: hashedPassword,
       });
 
-    this.logger.info('User registered successfully', {
-      userId: user.id,
-      email: dto.email,
-      role: user.role,
-    });
+    this.logger.info(
+      { userId: id, email, role },
+      'User registered successfully',
+    );
 
-    this.mailService.sendVerificationMail(email, verificationCode);
+    await this.mailService.sendVerificationMail(email, verificationCode);
 
     return await this.tokenService.generateTokens(id, role, isVerified);
   }
@@ -70,25 +70,29 @@ export class AuthService {
     const user = await this.userService.findByEmail(dto.email);
 
     if (!user) {
-      this.logger.warn('Attempt to login into non-existent user', {
-        email: dto.email,
-      });
+      this.logger.warn(
+        { email: dto.email },
+        'Attempt to login into non-existent user',
+      );
       throw new BadRequestException('Invalid credentials');
     }
 
     const isPasswordValid = await compare(dto.password, user.password);
 
     if (!isPasswordValid) {
-      this.logger.warn('Password not valid', { userId: user.id });
+      this.logger.warn({ userId: user.id }, 'Password not valid');
       throw new BadRequestException('Invalid credentials');
     }
 
-    this.logger.info('User logged in successfully', {
-      userId: user.id,
-      email: user.email,
-      role: user.role,
-      isVerified: user.isVerified,
-    });
+    this.logger.info(
+      {
+        userId: user.id,
+        email: user.email,
+        role: user.role,
+        isVerified: user.isVerified,
+      },
+      'User logged in successfully',
+    );
 
     return await this.tokenService.generateTokens(
       user.id,
@@ -101,17 +105,14 @@ export class AuthService {
     const user = await this.userService.findById(userId);
 
     if (!user) {
-      this.logger.warn('Attempt to login into non-existent user', {
-        userId,
-      });
+      this.logger.warn({ userId }, 'Attempt to login into non-existent user');
       throw new BadRequestException('Invalid credentials');
     }
 
-    this.logger.info('User logged in by id successfully', {
-      userId: user.id,
-      role: user.role,
-      isVerified: user.isVerified,
-    });
+    this.logger.info(
+      { userId: user.id, role: user.role, isVerified: user.isVerified },
+      'User logged in by id successfully',
+    );
 
     return await this.tokenService.generateTokens(
       user.id,
@@ -122,12 +123,12 @@ export class AuthService {
 
   async logout(token: string, userId: number) {
     await this.tokenService.deleteToken(token);
-    this.logger.info('User logouted', { userId });
+    this.logger.info({ userId }, 'User logged out');
   }
 
   async logoutAll(userId: number) {
     await this.tokenService.deleteAllUserTokens(userId);
-    this.logger.info('User logouted', { userId });
+    this.logger.info({ userId }, 'User logged out from all devices');
   }
 
   async refresh(token: string): Promise<TokenPair> {
@@ -138,15 +139,13 @@ export class AuthService {
     const isTokenValid = userTokens.some((u) => u.token === token);
 
     if (!isTokenValid) {
-      this.logger.warn('Invalid refresh token', {
-        userId: id,
-      });
+      this.logger.warn({ userId: id }, 'Invalid refresh token');
       throw new UnauthorizedException('Invalid refresh token');
     }
 
     const { role, isVerified } = await this.userService.findById(id);
 
-    this.logger.info('Token refreshed', { userId: id, role, isVerified });
+    this.logger.info({ userId: id, role, isVerified }, 'Token refreshed');
 
     return await this.tokenService.update(id, role, isVerified, token);
   }
@@ -156,21 +155,22 @@ export class AuthService {
       await this.userService.getUserByVerificationCode(verificationCode);
 
     if (!user) {
-      this.logger.warn('Attempt to verify non-existent user');
+      this.logger.warn({}, 'Attempt to verify non-existent user');
       throw new NotFoundException('User not found');
     }
 
     if (user.isVerified) {
-      this.logger.warn('Attempt to verify already verified user', {
-        userId: user.id,
-      });
+      this.logger.warn(
+        { userId: user.id },
+        'Attempt to verify already verified user',
+      );
       throw new BadRequestException('User already verified');
     }
 
-    this.logger.info('User verified', {
-      userId: user.id,
-      isVerified: user.isVerified,
-    });
+    this.logger.info(
+      { userId: user.id, isVerified: user.isVerified },
+      'User verified',
+    );
 
     return await this.userService.verify(verificationCode);
   }
@@ -179,21 +179,23 @@ export class AuthService {
     const user = await this.userService.findByEmail(googleUser.email);
 
     if (user) {
-      this.logger.info('User validated', {
-        userId: user.id,
-        role: user.role,
-        isVerified: user.isVerified,
-      });
+      this.logger.info(
+        { userId: user.id, role: user.role, isVerified: user.isVerified },
+        'User validated via Google',
+      );
       return user;
     }
 
     const createdUser = await this.userService.createGoogleUser(googleUser);
 
-    this.logger.info('User validated', {
-      userId: createdUser.id,
-      role: createdUser.role,
-      isVerified: createdUser.isVerified,
-    });
+    this.logger.info(
+      {
+        userId: createdUser.id,
+        role: createdUser.role,
+        isVerified: createdUser.isVerified,
+      },
+      'User created and validated via Google',
+    );
 
     return createdUser;
   }

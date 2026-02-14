@@ -30,7 +30,7 @@ export class MailService {
       `,
     });
 
-    this.logger.info('Verification mail sended successfully', { to });
+    this.logger.info({ to }, 'Verification mail sended successfully');
   }
 
   async sendOtpMail(to: string, otp: number) {
@@ -45,6 +45,6 @@ export class MailService {
       `,
     });
 
-    this.logger.info('OTP mail sended successfully', { to });
+    this.logger.info({ to }, 'OTP mail sended successfully');
   }
 }

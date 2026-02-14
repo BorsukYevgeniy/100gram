@@ -17,19 +17,20 @@ export class UserService {
   ) {
     this.logger.setContext(UserService.name);
   }
-
   async create(dto: CreateUserDto): Promise<User> {
     const user = await this.userRepository.create(dto);
 
-    this.logger.info('User created', { userId: user.id, provider: 'local' });
-
+    this.logger.info({ userId: user.id, provider: 'local' }, 'User created');
     return user;
   }
 
   async createGoogleUser(dto: CreateUserDto): Promise<User> {
     const user = await this.userRepository.createGoogleUser(dto);
 
-    this.logger.info('User created', { userId: user.id, provider: 'google' });
+    this.logger.info(
+      { userId: user.id, provider: 'google' },
+      'User created via Google',
+    );
     return user;
   }
 
@@ -41,9 +42,7 @@ export class UserService {
     const user: User | null = await this.userRepository.findById(id);
 
     if (!user) {
-      this.logger.warn("User doesn't exist", {
-        userId: id,
-      });
+      this.logger.warn({ userId: id }, "User doesn't exist");
       throw new NotFoundException('User not found');
     }
 
@@ -54,16 +53,11 @@ export class UserService {
     try {
       const admin = await this.userRepository.assingAdmin(id);
 
-      this.logger.info('User assigned as admin successfully', {
-        userId: id,
-      });
-
+      this.logger.info({ userId: id }, 'User assigned as admin successfully');
       return admin;
     } catch (e) {
       if (e instanceof PrismaClientKnownRequestError && e.code === 'P2025') {
-        this.logger.warn("User doesn't exist", {
-          userId: id,
-        });
+        this.logger.warn({ userId: id }, "User doesn't exist");
         throw new NotFoundException('User not found');
       }
       throw e;
@@ -77,12 +71,14 @@ export class UserService {
     const { chatsOwned } =
       await this.userRepository.findChatsWhereUserIsOwner(userId);
 
+    // Delete user if he dont have chats where he is owner
     if (!chatsOwned || chatsOwned.length === 0) {
-      // Delete user if he dont have chats where he is owner
-      const user = await this.userRepository.delete(userId);
-
-      this.logger.info('User deleted', { userId: user.id });
-      return user;
+      const deletedUser = await this.userRepository.delete(userId);
+      this.logger.info(
+        { userId: deletedUser.id },
+        'User deleted (no owned chats)',
+      );
+      return deletedUser;
     }
 
     // Find new owner for every chat where user is owner
@@ -92,12 +88,21 @@ export class UserService {
       // If owner found update owner in chat else delete chat
       if (newOwnerId) {
         await this.chatService.updateOwner(chat.id, newOwnerId);
-      } else await this.chatService.delete(user, chat.id);
+        this.logger.info(
+          { chatId: chat.id, oldOwnerId: user.id, newOwnerId },
+          'Updated chat owner before deleting user',
+        );
+      } else {
+        await this.chatService.delete(user, chat.id);
+        this.logger.info(
+          { chatId: chat.id, oldOwnerId: user.id },
+          'Deleted chat as no new owner found before deleting user',
+        );
+      }
     }
 
     const deletedUser = await this.userRepository.delete(userId);
-
-    this.logger.info('User deleted', { userId: user.id });
+    this.logger.info({ userId: deletedUser.id }, 'User deleted');
     return deletedUser;
   }
 
@@ -108,14 +113,14 @@ export class UserService {
   async verify(verificationLink: string): Promise<UserNoCredVCode> {
     const user = await this.userRepository.verify(verificationLink);
 
-    this.logger.info('User verified', { userId: user.id });
+    this.logger.info({ userId: user.id }, 'User verified successfully');
     return user;
   }
 
   async deleteUnverifiedUsers(): Promise<number> {
     const { count } = await this.userRepository.deleteUnverifiedUsers();
 
-    this.logger.info('Deleted unverified users', { count });
+    this.logger.info({ count }, 'Deleted unverified users');
     return count;
   }
 
