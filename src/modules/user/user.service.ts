@@ -118,4 +118,19 @@ export class UserService {
     this.logger.info('Deleted unverified users', { count });
     return count;
   }
+
+  async addOtpToUser(userId: number, otpHash: string, otpExpiresAt: Date) {
+    await this.userRepository.addOtpToUser(userId, otpHash, otpExpiresAt);
+    this.logger.info({ userId }, 'OTP added to user');
+  }
+
+  async incrementOtpAttempts(userId: number) {
+    await this.userRepository.incrementOtpAttempts(userId);
+    this.logger.info({ userId }, 'Incremented OTP attempts');
+  }
+
+  async resetPasswordWithOtp(userId: number, newPassword: string) {
+    await this.userRepository.updatePassword(userId, newPassword);
+    this.logger.info({ userId }, 'Password reseted');
+  }
 }

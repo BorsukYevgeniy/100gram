@@ -1,22 +1,28 @@
 model User {
-  id          Int          @id @default(autoincrement())
-  email       String       @unique
-  nickname    String
-  password    String
-  avatar      String?
-  createdAt   DateTime     @default(now()) @db.Timestamptz()
-  role        Role         @default(USER)
+  id        Int      @id @default(autoincrement())
+  email     String   @unique
+  nickname  String
+  password  String
+  avatar    String?
+  createdAt DateTime @default(now()) @db.Timestamptz()
+
+  role Role @default(USER)
+
+  otpHash      String?   @unique
+  otpExpiresAt DateTime? @db.Timestamptz()
+  otpAttempts  Int?      @default(0)
+
+  isVerified       Boolean   @default(false)
+  verifiedAt       DateTime? @db.Timestamptz
+  verificationCode String    @unique @default(uuid())
+
   messages    Message[]
   chatToUsers ChatToUser[]
   tokens      Token[]
   // Chats where the user is the owner
-
-  chatsOwned       Chat[]
-  isVerified       Boolean             @default(false)
-  verifiedAt       DateTime?           @db.Timestamptz
-  verificationCode String              @unique @default(uuid())
-  files            File[]
-  reactions        ReactionToMessage[]
+  chatsOwned  Chat[]
+  files       File[]
+  reactions   ReactionToMessage[]
 }
 
 enum Role {

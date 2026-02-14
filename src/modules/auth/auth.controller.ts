@@ -19,6 +19,7 @@ import { UserNoCredVCode } from '../user/types/user.types';
 import { AuthService } from './auth.service';
 import { Public } from './decorator/public.decorator';
 import { LoginDto } from './dto/login.dto';
+import { ResetPasswordDto } from './dto/reset-password.dto';
 import { AuthGuard } from './guards/auth.guard';
 import { GoogleGuard } from './guards/google.guard';
 
@@ -98,10 +99,27 @@ export class AuthController {
     this.setTokenCookie(res, tokens);
   }
 
-  @Post('resend-email')
+  @Post('resend-verification-email')
   @UseGuards(AuthGuard, ThrottlerGuard)
   async resendVerificationMail(@User() user: AccessTokenPayload) {
     return this.authService.resendVerificationMail(user);
+  }
+
+  @Post('send-otp-email')
+  @UseGuards(AuthGuard, ThrottlerGuard)
+  async sendOtpMail(@User() user: AccessTokenPayload) {
+    await this.authService.sendOtp(user.id);
+    return { message: 'If email exists, OTP sent' };
+  }
+
+  @Post('reset-password')
+  @UseGuards(AuthGuard)
+  async resetPassword(
+    @User() user: AccessTokenPayload,
+    @Body() dto: ResetPasswordDto,
+  ) {
+    await this.authService.resetPassword(user.id, dto);
+    return { message: 'Password reseted' };
   }
 
   private setTokenCookie(

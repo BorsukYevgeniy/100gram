@@ -8,6 +8,7 @@ import { CreateUserDto } from '../user/dto/create-user.dto';
 import { UserService } from '../user/user.service';
 
 import { compare, hash } from 'bcryptjs';
+import { randomInt } from 'crypto';
 import { PinoLogger } from 'nestjs-pino';
 import { User } from '../../../generated/prisma/browser';
 import { Role } from '../../../generated/prisma/enums';
@@ -17,6 +18,7 @@ import { MailService } from '../mail/mail.service';
 import { TokenService } from '../token/token.service';
 import { UserNoCredVCode } from '../user/types/user.types';
 import { LoginDto } from './dto/login.dto';
+import { ResetPasswordDto } from './dto/reset-password.dto';
 
 @Injectable()
 export class AuthService {
@@ -215,5 +217,60 @@ export class AuthService {
     });
 
     return await this.mailService.sendVerificationMail(email, verificationCode);
+  }
+
+  async sendOtp(userId: number) {
+    const user = await this.userService.findById(userId);
+
+    if (!user) {
+      this.logger.warn({ userId }, 'Attempt to send OTP to non-existent user');
+      return;
+    }
+
+    const otp = randomInt(100_000, 1_000_000);
+    const otpExpiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
+    const otpHash = await hash(otp.toString(), 10);
+
+    await this.userService.addOtpToUser(user.id, otpHash, otpExpiresAt);
+    return this.mailService.sendOtpMail(user.email, otp);
+  }
+
+  async resetPassword(userId: number, dto: ResetPasswordDto) {
+    const user = await this.userService.findById(userId);
+
+    if (!user) {
+      this.logger.warn(
+        { userId },
+        'Attempt to reset password for non-existent user',
+      );
+      throw new BadRequestException('Invalid or expired OTP');
+    }
+
+    if (
+      !user.otpExpiresAt ||
+      user.otpExpiresAt < new Date() ||
+      user.otpAttempts >= 5
+    ) {
+      this.logger.warn(
+        { userId },
+        'Expired OTP or too many attempts to reset password',
+      );
+      throw new BadRequestException('Invalid or expired OTP');
+    }
+
+    const isOtpValid = await compare(dto.code.toString(), user.otpHash);
+
+    if (!isOtpValid) {
+      await this.userService.incrementOtpAttempts(userId);
+      this.logger.warn({ userId }, 'Invalid OTP code');
+      throw new BadRequestException('Invalid or expired OTP');
+    }
+
+    const newPasswordHash = await hash(
+      dto.newPassword,
+      this.configService.PASSWORD_SALT,
+    );
+
+    await this.userService.resetPasswordWithOtp(userId, newPasswordHash);
   }
 }

@@ -32,4 +32,19 @@ export class MailService {
 
     this.logger.info('Verification mail sended successfully', { to });
   }
+
+  async sendOtpMail(to: string, otp: number) {
+    await this.mailerService.sendMail({
+      to,
+      subject: 'Password reseting on ' + this.configService.APP_URL,
+      html: `
+      <div>
+        <h1>Your OTP code for password reseting</h1>
+        <p>${otp}</p>
+      </div>
+      `,
+    });
+
+    this.logger.info('OTP mail sended successfully', { to });
+  }
 }

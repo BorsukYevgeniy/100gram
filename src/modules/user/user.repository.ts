@@ -102,4 +102,40 @@ export class UserRepository {
       },
     });
   }
+
+  async addOtpToUser(userId: number, otpHash: string, otpExpiresAt: Date) {
+    return this.prisma.user.update({
+      where: { id: userId },
+      data: {
+        otpHash,
+        otpExpiresAt,
+        otpAttempts: 0,
+      },
+      select: {},
+    });
+  }
+
+  async incrementOtpAttempts(userId: number) {
+    return this.prisma.user.update({
+      where: { id: userId },
+      data: {
+        otpAttempts: { increment: 1 },
+      },
+      select: {},
+    });
+  }
+
+  async updatePassword(userId: number, newPassword: string) {
+    return this.prisma.user.update({
+      where: {
+        id: userId,
+      },
+      data: {
+        password: newPassword,
+        otpHash: null,
+        otpExpiresAt: null,
+        otpAttempts: null,
+      },
+    });
+  }
 }
