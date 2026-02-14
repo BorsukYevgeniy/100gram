@@ -2,7 +2,7 @@ model ReactionToMessage {
   messageId Int
   userId    Int
 
-  createdAt DateTime @default(now())
+  createdAt DateTime @default(now()) @db.Timestamptz
   reaction  Reaction
 
   message Message @relation(fields: [messageId], references: [id], onDelete: Cascade)

@@ -1,7 +1,7 @@
 model File {
   id        Int      @id @default(autoincrement())
   name      String   @unique
-  createdAt DateTime @default(now())
+  createdAt DateTime @default(now()) @db.Timestamptz
 
   messageId Int?
   message   Message? @relation(fields: [messageId], references: [id], onDelete: SetNull)

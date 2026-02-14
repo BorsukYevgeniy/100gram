@@ -1,7 +1,7 @@
 model Message {
   id        Int      @id @default(autoincrement())
   text      String
-  createdAt DateTime @default(now())
+  createdAt DateTime @default(now()) @db.Timestamptz
 
   reactions ReactionToMessage[]
 

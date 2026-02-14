@@ -4,16 +4,16 @@ model User {
   nickname    String
   password    String
   avatar      String       @default("DEFAULT_USER_AVATAR.png")
-  createdAt   DateTime     @default(now())
+  createdAt   DateTime     @default(now()) @db.Timestamptz()
   role        Role         @default(USER)
   messages    Message[]
   chatToUsers ChatToUser[]
   tokens      Token[]
   // Chats where the user is the owner
-  chatsOwned  Chat[]
 
+  chatsOwned       Chat[]
   isVerified       Boolean             @default(false)
-  verifiedAt       DateTime?
+  verifiedAt       DateTime?           @db.Timestamptz
   verificationCode String              @unique @default(uuid())
   files            File[]
   reactions        ReactionToMessage[]

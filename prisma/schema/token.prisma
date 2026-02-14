@@ -1,7 +1,7 @@
 model Token {
   id        Int      @id @default(autoincrement())
   token     String   @unique
-  expiresAt DateTime
+  expiresAt DateTime @db.Timestamptz
 
   userId Int
   user   User @relation(fields: [userId], references: [id], onDelete: Cascade)
