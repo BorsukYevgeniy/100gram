@@ -15,7 +15,7 @@ import { Response } from 'express';
 import { User } from '../../common/decorators/routes/user.decorator';
 import { AccessTokenPayload, AuthRequest, TokenPair } from '../../common/types';
 import { CreateUserDto } from '../user/dto/create-user.dto';
-import { UserNoCredVCode } from '../user/types/user.types';
+import { UserNoCredOtpVCode } from '../user/types/user.types';
 import { AuthService } from './auth.service';
 import { Public } from './decorator/public.decorator';
 import { LoginDto } from './dto/login.dto';
@@ -82,7 +82,7 @@ export class AuthController {
   @Post('verify/:verificationCode')
   async verify(
     @Param('verificationCode', ParseUUIDPipe) verificationCode: string,
-  ): Promise<UserNoCredVCode> {
+  ): Promise<UserNoCredOtpVCode> {
     return this.authService.verifyUser(verificationCode);
   }
 

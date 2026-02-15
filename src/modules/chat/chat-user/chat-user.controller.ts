@@ -11,7 +11,7 @@ import { User } from '../../../common/decorators/routes/user.decorator';
 import { PaginationDto } from '../../../common/dto/pagination.dto';
 import { AccessTokenPayload } from '../../../common/types';
 import { VerifiedUserGuard } from '../../auth/guards/verified-user.guard';
-import { PaginatedUserNoCredVCode } from '../../user/types/user.types';
+import { PaginatedUserNoCredOtpVCode } from '../../user/types/user.types';
 
 import { ChatUserService } from './chat-user.service';
 
@@ -25,7 +25,7 @@ export class ChatUserController {
     @User() user: AccessTokenPayload,
     @Param('chatId') chatId: number,
     @Query() paginationDto: PaginationDto,
-  ): Promise<PaginatedUserNoCredVCode> {
+  ): Promise<PaginatedUserNoCredOtpVCode> {
     return this.chatUserService.getUsersInChat(user, chatId, paginationDto);
   }
 

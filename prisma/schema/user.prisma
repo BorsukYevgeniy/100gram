@@ -1,10 +1,11 @@
 model User {
-  id        Int      @id @default(autoincrement())
-  email     String   @unique
-  nickname  String
-  password  String
-  avatar    String?
-  createdAt DateTime @default(now()) @db.Timestamptz()
+  id          Int      @id @default(autoincrement())
+  email       String   @unique
+  nickname    String
+  description String?
+  password    String
+  avatar      String?
+  createdAt   DateTime @default(now()) @db.Timestamptz()
 
   role Role @default(USER)
 

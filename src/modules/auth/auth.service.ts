@@ -16,7 +16,7 @@ import { AccessTokenPayload, TokenPair } from '../../common/types';
 import { ConfigService } from '../config/config.service';
 import { MailService } from '../mail/mail.service';
 import { TokenService } from '../token/token.service';
-import { UserNoCredVCode } from '../user/types/user.types';
+import { UserNoCredOtpVCode } from '../user/types/user.types';
 import { LoginDto } from './dto/login.dto';
 import { ResetPasswordDto } from './dto/reset-password.dto';
 
@@ -102,7 +102,7 @@ export class AuthService {
   }
 
   async loginById(userId: number): Promise<TokenPair> {
-    const user = await this.userService.findById(userId);
+    const user = await this.userService.findFullUserById(userId);
 
     if (!user) {
       this.logger.warn({ userId }, 'Attempt to login into non-existent user');
@@ -143,14 +143,14 @@ export class AuthService {
       throw new UnauthorizedException('Invalid refresh token');
     }
 
-    const { role, isVerified } = await this.userService.findById(id);
+    const { role, isVerified } = await this.userService.findFullUserById(id);
 
     this.logger.info({ userId: id, role, isVerified }, 'Token refreshed');
 
     return await this.tokenService.update(id, role, isVerified, token);
   }
 
-  async verifyUser(verificationCode: string): Promise<UserNoCredVCode> {
+  async verifyUser(verificationCode: string): Promise<UserNoCredOtpVCode> {
     const user: User | null =
       await this.userService.getUserByVerificationCode(verificationCode);
 
@@ -209,7 +209,7 @@ export class AuthService {
       throw new BadRequestException('User already verified');
     }
 
-    const { verificationCode, email } = await this.userService.findById(
+    const { verificationCode, email } = await this.userService.findFullUserById(
       user.id,
     );
 
@@ -222,7 +222,7 @@ export class AuthService {
   }
 
   async sendOtp(userId: number) {
-    const user = await this.userService.findById(userId);
+    const user = await this.userService.findFullUserById(userId);
 
     if (!user) {
       this.logger.warn({ userId }, 'Attempt to send OTP to non-existent user');
@@ -238,7 +238,7 @@ export class AuthService {
   }
 
   async resetPassword(userId: number, dto: ResetPasswordDto) {
-    const user = await this.userService.findById(userId);
+    const user = await this.userService.findFullUserById(userId);
 
     if (!user) {
       this.logger.warn(

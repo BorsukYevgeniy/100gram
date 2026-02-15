@@ -7,7 +7,7 @@ import { PinoLogger } from 'nestjs-pino';
 import { ChatType } from '../../../../generated/prisma/enums';
 import { PaginationDto } from '../../../common/dto/pagination.dto';
 import { AccessTokenPayload } from '../../../common/types';
-import { PaginatedUserNoCredVCode } from '../../user/types/user.types';
+import { PaginatedUserNoCredOtpVCode } from '../../user/types/user.types';
 import { ChatRepository } from '../repository/chat.repository';
 import { ChatValidationService } from '../validation/chat-validation.service';
 
@@ -98,7 +98,7 @@ export class ChatUserService {
     user: AccessTokenPayload,
     chatId: number,
     paginationDto: PaginationDto,
-  ): Promise<PaginatedUserNoCredVCode> {
+  ): Promise<PaginatedUserNoCredOtpVCode> {
     await this.chatValidator.validateChatParticipation(user, chatId);
 
     const { limit, cursor } = paginationDto;

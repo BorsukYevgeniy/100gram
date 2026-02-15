@@ -2,11 +2,19 @@ import { User } from '../../../../generated/prisma/client';
 import { Paginated } from '../../../common/types';
 
 /**
- * Represents type User without `email`, `password`, `verificationCode` fields
+ * Represents type User without `email`, `password`, `verificationCode` and OTP fields
  */
-export type UserNoCredVCode = Omit<
+export type UserNoCredOtpVCode = Omit<
   User,
-  'email' | 'verificationCode' | 'password'
+  | 'email'
+  | 'verificationCode'
+  | 'password'
+  | 'otpHash'
+  | 'otpExpiresAt'
+  | 'otpAttempts'
 >;
 
-export type PaginatedUserNoCredVCode = Paginated<'users', UserNoCredVCode>;
+export type PaginatedUserNoCredOtpVCode = Paginated<
+  'users',
+  UserNoCredOtpVCode
+>;

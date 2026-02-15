@@ -2,19 +2,22 @@ import { Injectable } from '@nestjs/common';
 import { Role, User } from '../../../generated/prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateUserDto } from './dto/create-user.dto';
-import { UserNoCredVCode } from './types/user.types';
+import { UserNoCredOtpVCode } from './types/user.types';
 
 @Injectable()
 export class UserRepository {
   constructor(private readonly prisma: PrismaService) {}
 
-  async delete(userId: number): Promise<UserNoCredVCode> {
+  async delete(userId: number): Promise<UserNoCredOtpVCode> {
     return this.prisma.user.delete({
       where: { id: userId },
       omit: {
         email: true,
         verificationCode: true,
         password: true,
+        otpHash: true,
+        otpExpiresAt: true,
+        otpAttempts: true,
       },
     });
   }
@@ -33,11 +36,25 @@ export class UserRepository {
     return this.prisma.user.findUnique({ where: { email } });
   }
 
-  async findById(id: number): Promise<User | null> {
+  async findFullUserById(id: number): Promise<User | null> {
     return this.prisma.user.findUnique({ where: { id } });
   }
 
-  async assingAdmin(id: number): Promise<UserNoCredVCode> {
+  async findById(id: number): Promise<UserNoCredOtpVCode | null> {
+    return this.prisma.user.findUnique({
+      where: { id },
+      omit: {
+        email: true,
+        password: true,
+        verificationCode: true,
+        otpHash: true,
+        otpExpiresAt: true,
+        otpAttempts: true,
+      },
+    });
+  }
+
+  async assingAdmin(id: number): Promise<UserNoCredOtpVCode> {
     return this.prisma.user.update({
       where: { id },
       data: { role: Role.ADMIN },
@@ -45,6 +62,9 @@ export class UserRepository {
         email: true,
         verificationCode: true,
         password: true,
+        otpHash: true,
+        otpExpiresAt: true,
+        otpAttempts: true,
       },
     });
   }
@@ -62,7 +82,7 @@ export class UserRepository {
     return this.prisma.user.findUnique({ where: { verificationCode } });
   }
 
-  async verify(verificationCode: string): Promise<UserNoCredVCode> {
+  async verify(verificationCode: string): Promise<UserNoCredOtpVCode> {
     return this.prisma.user.update({
       where: { verificationCode },
       data: { isVerified: true, verifiedAt: new Date() },
@@ -70,6 +90,9 @@ export class UserRepository {
         email: true,
         password: true,
         verificationCode: true,
+        otpHash: true,
+        otpExpiresAt: true,
+        otpAttempts: true,
       },
     });
   }
@@ -91,7 +114,7 @@ export class UserRepository {
   async updateAvatar(
     userId: number,
     avatar?: string,
-  ): Promise<UserNoCredVCode> {
+  ): Promise<UserNoCredOtpVCode> {
     return this.prisma.user.update({
       where: { id: userId },
       data: { avatar },
@@ -99,6 +122,9 @@ export class UserRepository {
         email: true,
         password: true,
         verificationCode: true,
+        otpHash: true,
+        otpExpiresAt: true,
+        otpAttempts: true,
       },
     });
   }

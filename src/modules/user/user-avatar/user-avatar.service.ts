@@ -36,7 +36,7 @@ export class UserAvatarService {
   }
 
   async deleteAvatar(userId: number) {
-    const user = await this.userRepo.findById(userId);
+    const user = await this.userRepo.findFullUserById(userId);
 
     if (!user.avatar) {
       this.logger.warn({ userId }, 'Cannot delete default user avatar');

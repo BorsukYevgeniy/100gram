@@ -5,7 +5,7 @@ import { User } from '../../../generated/prisma/client';
 import { AccessTokenPayload } from '../../common/types';
 import { ChatService } from '../chat/chat.service';
 import { CreateUserDto } from './dto/create-user.dto';
-import { UserNoCredVCode } from './types/user.types';
+import { UserNoCredOtpVCode } from './types/user.types';
 import { UserRepository } from './user.repository';
 
 @Injectable()
@@ -38,8 +38,8 @@ export class UserService {
     return this.userRepository.findByEmail(email);
   }
 
-  async findById(id: number): Promise<User> {
-    const user: User | null = await this.userRepository.findById(id);
+  async findFullUserById(id: number): Promise<User> {
+    const user: User | null = await this.userRepository.findFullUserById(id);
 
     if (!user) {
       this.logger.warn({ userId: id }, "User doesn't exist");
@@ -49,7 +49,18 @@ export class UserService {
     return user;
   }
 
-  async assignAdmin(id: number): Promise<UserNoCredVCode> {
+  async findById(id: number): Promise<UserNoCredOtpVCode> {
+    const user = await this.userRepository.findById(id);
+
+    if (!user) {
+      this.logger.warn({ userId: id }, "User doesn't exist");
+      throw new NotFoundException('User not found');
+    }
+
+    return user;
+  }
+
+  async assignAdmin(id: number): Promise<UserNoCredOtpVCode> {
     try {
       const admin = await this.userRepository.assingAdmin(id);
 
@@ -67,7 +78,7 @@ export class UserService {
   async delete(
     user: AccessTokenPayload,
     userId: number,
-  ): Promise<UserNoCredVCode> {
+  ): Promise<UserNoCredOtpVCode> {
     const { chatsOwned } =
       await this.userRepository.findChatsWhereUserIsOwner(userId);
 
@@ -110,7 +121,7 @@ export class UserService {
     return this.userRepository.getUserByVerificationCode(verificationCode);
   }
 
-  async verify(verificationLink: string): Promise<UserNoCredVCode> {
+  async verify(verificationLink: string): Promise<UserNoCredOtpVCode> {
     const user = await this.userRepository.verify(verificationLink);
 
     this.logger.info({ userId: user.id }, 'User verified successfully');
