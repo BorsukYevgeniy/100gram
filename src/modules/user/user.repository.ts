@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { Role, User } from '../../../generated/prisma/client';
+import { Provider } from '../../../generated/prisma/enums';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UserNoCredOtpVCode } from './types/user.types';
@@ -28,7 +29,12 @@ export class UserRepository {
 
   async createGoogleUser(dto: CreateUserDto): Promise<User> {
     return this.prisma.user.create({
-      data: { ...dto, isVerified: true, verifiedAt: new Date() },
+      data: {
+        ...dto,
+        isVerified: true,
+        verifiedAt: new Date(),
+        provider: Provider.GOOGLE,
+      },
     });
   }
 

@@ -11,7 +11,7 @@ import { compare, hash } from 'bcryptjs';
 import { randomInt } from 'crypto';
 import { PinoLogger } from 'nestjs-pino';
 import { User } from '../../../generated/prisma/browser';
-import { Role } from '../../../generated/prisma/enums';
+import { Provider, Role } from '../../../generated/prisma/enums';
 import { AccessTokenPayload, TokenPair } from '../../common/types';
 import { ConfigService } from '../config/config.service';
 import { MailService } from '../mail/mail.service';
@@ -229,6 +229,11 @@ export class AuthService {
       return;
     }
 
+    if (user.provider !== Provider.LOCAL) {
+      this.logger.warn({ userId }, 'Attempt to send OTP to non-local user');
+      return;
+    }
+
     const otp = randomInt(100_000, 1_000_000);
     const otpExpiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
     const otpHash = await hash(otp.toString(), 10);
@@ -246,6 +251,14 @@ export class AuthService {
         'Attempt to reset password for non-existent user',
       );
       throw new BadRequestException('Invalid or expired OTP');
+    }
+
+    if (user.provider !== Provider.LOCAL) {
+      this.logger.warn(
+        { userId },
+        'Attempt to reset password to non-local user',
+      );
+      return;
     }
 
     if (

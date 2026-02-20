@@ -12,6 +12,7 @@ export type UserNoCredOtpVCode = Omit<
   | 'otpHash'
   | 'otpExpiresAt'
   | 'otpAttempts'
+  | 'provider'
 >;
 
 export type PaginatedUserNoCredOtpVCode = Paginated<
