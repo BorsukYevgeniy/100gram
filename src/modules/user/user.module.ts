@@ -4,6 +4,7 @@ import { FileStorageModule } from '../../common/storage/storage.module';
 import { ChatModule } from '../chat/chat.module';
 import { PrismaModule } from '../prisma/prisma.module';
 import { TokenModule } from '../token/token.module';
+import { BlockedUserModule } from './blocked-user/blocked-user.module';
 import { UserAvatarController } from './user-avatar/user-avatar.controller';
 import { UserAvatarService } from './user-avatar/user-avatar.service';
 import { UserCleanupService } from './user-cleanup.service';
@@ -18,6 +19,7 @@ import { UserService } from './user.service';
     TokenModule,
     ChatModule,
     FileStorageModule,
+    BlockedUserModule,
   ],
   controllers: [UserAvatarController, UserController],
   providers: [

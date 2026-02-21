@@ -25,6 +25,9 @@ model User {
   chatsOwned  Chat[]
   files       File[]
   reactions   ReactionToMessage[]
+
+  blockedUsers BlockedUser[] @relation("Blocker")
+  blockedBy    BlockedUser[] @relation("Blocked")
 }
 
 enum Role {

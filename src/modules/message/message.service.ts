@@ -5,10 +5,12 @@ import {
 } from '@nestjs/common';
 import { PrismaClientKnownRequestError } from '@prisma/client/runtime/client';
 import { PinoLogger } from 'nestjs-pino';
-import { Role } from '../../../generated/prisma/client';
+import { ChatType, Role } from '../../../generated/prisma/client';
 import { PaginationDto } from '../../common/dto/pagination.dto';
 import { AccessTokenPayload } from '../../common/types';
+import { ChatRepository } from '../chat/repository/chat.repository';
 import { FileService } from '../file/file.service';
+import { BlockedUserService } from '../user/blocked-user/blocked-user.service';
 import { CreateMessageDto } from './dto/create-message.dto';
 import { UpdateMessageDto } from './dto/update-message.dto';
 import { MessageRepository } from './repository/message.repository';
@@ -18,7 +20,9 @@ import { MessageFiles, PaginatedMessageFiles } from './types/message.types';
 export class MessageService {
   constructor(
     private readonly messageRepository: MessageRepository,
+    private readonly chatRepo: ChatRepository,
     private readonly fileService: FileService,
+    private readonly blockedUserService: BlockedUserService,
     private readonly logger: PinoLogger,
   ) {
     this.logger.setContext(MessageService.name);
@@ -51,6 +55,25 @@ export class MessageService {
     }
 
     return message;
+  }
+
+  private async checkBlock(userId: number, chatId: number) {
+    const { chatType } = await this.chatRepo.getById(chatId);
+
+    if (chatType !== ChatType.PRIVATE) return;
+
+    const users = await this.chatRepo.getUserIdsInChat(chatId);
+
+    const otherUserId = users.find(({ user }) => user.id !== userId).user.id;
+
+    const isBlocked = await this.blockedUserService.isBlocked(
+      userId,
+      otherUserId,
+    );
+
+    if (isBlocked) {
+      throw new ForbiddenException('You are blocked by this user');
+    }
   }
 
   async getMessagesInChat(
@@ -92,6 +115,8 @@ export class MessageService {
     dto: CreateMessageDto,
     files: Express.Multer.File[],
   ): Promise<MessageFiles> {
+    await this.checkBlock(userId, chatId);
+
     try {
       const createdFiles = await this.fileService.createFiles(files, userId);
 
@@ -131,6 +156,8 @@ export class MessageService {
     dto: CreateMessageDto,
     fileIds: number[],
   ): Promise<MessageFiles> {
+    await this.checkBlock(userId, chatId);
+
     try {
       const message = await this.messageRepository.create(
         userId,
