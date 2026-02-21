@@ -6,7 +6,7 @@
 */
 -- AlterTable
 ALTER TABLE "User" ADD COLUMN     "otpHash" TEXT,
-ADD COLUMN     "otpAttempts" INTEGER DEFAULT 0,
+ADD COLUMN     "otpAttempts" INTEGER,
 ADD COLUMN     "otpExpiresAt" TIMESTAMPTZ;
 
 -- CreateIndex

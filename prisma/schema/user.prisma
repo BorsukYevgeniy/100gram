@@ -12,7 +12,7 @@ model User {
 
   otpHash      String?   @unique
   otpExpiresAt DateTime? @db.Timestamptz()
-  otpAttempts  Int?      @default(0)
+  otpAttempts  Int?      
 
   isVerified       Boolean   @default(false)
   verifiedAt       DateTime? @db.Timestamptz
