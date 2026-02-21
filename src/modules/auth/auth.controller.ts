@@ -2,6 +2,8 @@ import {
   Body,
   Controller,
   Get,
+  HttpCode,
+  HttpStatus,
   Param,
   ParseUUIDPipe,
   Post,
@@ -48,7 +50,7 @@ export class AuthController {
   async register(@Body() dto: CreateUserDto, @Res() res: Response) {
     const tokens = await this.authService.register(dto);
 
-    await this.setTokenCookie(res, tokens, 201);
+    this.setTokenCookie(res, tokens, 201);
   }
 
   @Post('login')
@@ -60,6 +62,7 @@ export class AuthController {
 
   @Post('logout')
   @UseGuards(AuthGuard)
+  @HttpCode(HttpStatus.OK)
   async logout(
     @CurrentUser() user: AccessTokenPayload,
     @Req() req: AuthRequest,
@@ -71,6 +74,7 @@ export class AuthController {
 
   @Post('logout-all')
   @UseGuards(AuthGuard)
+  @HttpCode(HttpStatus.OK)
   async logoutAll(
     @CurrentUser() user: AccessTokenPayload,
     @Res() res: Response,
@@ -80,6 +84,7 @@ export class AuthController {
   }
 
   @Post('verify/:verificationCode')
+  @HttpCode(HttpStatus.OK)
   async verify(
     @Param('verificationCode', ParseUUIDPipe) verificationCode: string,
   ): Promise<UserNoCredOtpVCode> {
@@ -88,6 +93,7 @@ export class AuthController {
 
   @Post('refresh')
   @UseGuards(AuthGuard)
+  @HttpCode(HttpStatus.OK)
   async refresh(@Req() req: AuthRequest, @Res() res: Response): Promise<void> {
     const refreshTokenCookie = req.cookies.refresh_token;
 
@@ -101,12 +107,14 @@ export class AuthController {
 
   @Post('resend-verification-email')
   @UseGuards(AuthGuard, ThrottlerGuard)
+  @HttpCode(HttpStatus.OK)
   async resendVerificationMail(@CurrentUser() user: AccessTokenPayload) {
     return this.authService.resendVerificationMail(user);
   }
 
   @Post('send-otp-email')
   @UseGuards(AuthGuard, ThrottlerGuard)
+  @HttpCode(HttpStatus.OK)
   async sendOtpMail(@CurrentUser() user: AccessTokenPayload) {
     await this.authService.sendOtp(user.id);
     return { message: 'If email exists, OTP sent' };
@@ -114,6 +122,7 @@ export class AuthController {
 
   @Post('reset-password')
   @UseGuards(AuthGuard)
+  @HttpCode(HttpStatus.OK)
   async resetPassword(
     @CurrentUser() user: AccessTokenPayload,
     @Body() dto: ResetPasswordDto,

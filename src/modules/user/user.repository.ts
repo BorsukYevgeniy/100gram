@@ -143,7 +143,6 @@ export class UserRepository {
         otpExpiresAt,
         otpAttempts: 0,
       },
-      select: {},
     });
   }
 
@@ -153,7 +152,6 @@ export class UserRepository {
       data: {
         otpAttempts: { increment: 1 },
       },
-      select: {},
     });
   }
 
