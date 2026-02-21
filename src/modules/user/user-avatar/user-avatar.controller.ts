@@ -10,7 +10,7 @@ import {
   UseInterceptors,
 } from '@nestjs/common';
 import { Role } from '../../../../generated/prisma/enums';
-import { User } from '../../../common/decorators/routes/user.decorator';
+import { CurrentUser } from '../../../common/decorators/routes/user.decorator';
 import { AvatarInterceptor } from '../../../common/interceptor/avatar.interceptor';
 import { AccessTokenPayload } from '../../../common/types';
 import { RequiredRoles } from '../../auth/decorator/required-roles.decorator';
@@ -26,14 +26,14 @@ export class UserAvatarController {
   @Patch('me/avatar')
   @UseInterceptors(AvatarInterceptor)
   async updateMyAvatar(
-    @User() user: AccessTokenPayload,
+    @CurrentUser() user: AccessTokenPayload,
     @UploadedFile() file: Express.Multer.File,
   ) {
     return this.userAvatarService.updateAvatar(user.id, file);
   }
 
   @Delete('me/avatar')
-  async deleteMyAvatar(@User() user: AccessTokenPayload) {
+  async deleteMyAvatar(@CurrentUser() user: AccessTokenPayload) {
     return this.userAvatarService.deleteAvatar(user.id);
   }
 

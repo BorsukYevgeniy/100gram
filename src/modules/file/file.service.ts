@@ -19,7 +19,7 @@ export class FileService {
     userId: number,
     messageId?: number,
   ): Promise<File[]> {
-    if (files.length === 0) return [];
+    if (!files || files.length === 0) return [];
 
     const fileNames = [];
 

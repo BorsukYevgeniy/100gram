@@ -12,7 +12,7 @@ import {
 } from '@nestjs/common';
 import { ThrottlerGuard } from '@nestjs/throttler';
 import { Response } from 'express';
-import { User } from '../../common/decorators/routes/user.decorator';
+import { CurrentUser } from '../../common/decorators/routes/user.decorator';
 import { AccessTokenPayload, AuthRequest, TokenPair } from '../../common/types';
 import { CreateUserDto } from '../user/dto/create-user.dto';
 import { UserNoCredOtpVCode } from '../user/types/user.types';
@@ -61,7 +61,7 @@ export class AuthController {
   @Post('logout')
   @UseGuards(AuthGuard)
   async logout(
-    @User() user: AccessTokenPayload,
+    @CurrentUser() user: AccessTokenPayload,
     @Req() req: AuthRequest,
     @Res() res: Response,
   ): Promise<void> {
@@ -72,7 +72,7 @@ export class AuthController {
   @Post('logout-all')
   @UseGuards(AuthGuard)
   async logoutAll(
-    @User() user: AccessTokenPayload,
+    @CurrentUser() user: AccessTokenPayload,
     @Res() res: Response,
   ): Promise<void> {
     await this.authService.logoutAll(user.id);
@@ -101,13 +101,13 @@ export class AuthController {
 
   @Post('resend-verification-email')
   @UseGuards(AuthGuard, ThrottlerGuard)
-  async resendVerificationMail(@User() user: AccessTokenPayload) {
+  async resendVerificationMail(@CurrentUser() user: AccessTokenPayload) {
     return this.authService.resendVerificationMail(user);
   }
 
   @Post('send-otp-email')
   @UseGuards(AuthGuard, ThrottlerGuard)
-  async sendOtpMail(@User() user: AccessTokenPayload) {
+  async sendOtpMail(@CurrentUser() user: AccessTokenPayload) {
     await this.authService.sendOtp(user.id);
     return { message: 'If email exists, OTP sent' };
   }
@@ -115,7 +115,7 @@ export class AuthController {
   @Post('reset-password')
   @UseGuards(AuthGuard)
   async resetPassword(
-    @User() user: AccessTokenPayload,
+    @CurrentUser() user: AccessTokenPayload,
     @Body() dto: ResetPasswordDto,
   ) {
     await this.authService.resetPassword(user.id, dto);

@@ -7,7 +7,7 @@ import {
   Query,
   UseGuards,
 } from '@nestjs/common';
-import { User } from '../../../common/decorators/routes/user.decorator';
+import { CurrentUser } from '../../../common/decorators/routes/user.decorator';
 import { PaginationDto } from '../../../common/dto/pagination.dto';
 import { AccessTokenPayload } from '../../../common/types';
 import { VerifiedUserGuard } from '../../auth/guards/verified-user.guard';
@@ -22,7 +22,7 @@ export class ChatUserController {
 
   @Get()
   async getUsersInChat(
-    @User() user: AccessTokenPayload,
+    @CurrentUser() user: AccessTokenPayload,
     @Param('chatId') chatId: number,
     @Query() paginationDto: PaginationDto,
   ): Promise<PaginatedUserNoCredOtpVCode> {

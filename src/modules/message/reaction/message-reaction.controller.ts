@@ -7,7 +7,7 @@ import {
   Post,
   UseGuards,
 } from '@nestjs/common';
-import { User } from '../../../common/decorators/routes/user.decorator';
+import { CurrentUser } from '../../../common/decorators/routes/user.decorator';
 import { AccessTokenPayload } from '../../../common/types';
 import { VerifiedUserGuard } from '../../auth/guards/verified-user.guard';
 import { AddReactionDto } from '../../reaction/dto/add-reaction.dto';
@@ -21,7 +21,7 @@ export class MessageReactionController {
 
   @Post()
   async addReaction(
-    @User() user: AccessTokenPayload,
+    @CurrentUser() user: AccessTokenPayload,
     @Param('messageId') messageId: number,
     @Body() dto: AddReactionDto,
   ) {
@@ -30,7 +30,7 @@ export class MessageReactionController {
 
   @Patch()
   async updateReaction(
-    @User() user: AccessTokenPayload,
+    @CurrentUser() user: AccessTokenPayload,
     @Param('messageId') messageId: number,
     @Body() dto: UpdateReactionDto,
   ) {
@@ -39,7 +39,7 @@ export class MessageReactionController {
 
   @Delete()
   async removeReaction(
-    @User() user: AccessTokenPayload,
+    @CurrentUser() user: AccessTokenPayload,
     @Param('messageId') messageId: number,
   ) {
     return this.reactionService.removeReaction(user.id, messageId);

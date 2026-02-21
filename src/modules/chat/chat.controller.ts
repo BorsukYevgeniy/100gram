@@ -8,7 +8,7 @@ import {
   Post,
   UseGuards,
 } from '@nestjs/common';
-import { User } from '../../common/decorators/routes/user.decorator';
+import { CurrentUser } from '../../common/decorators/routes/user.decorator';
 import { AccessTokenPayload } from '../../common/types';
 import { VerifiedUserGuard } from '../auth/guards/verified-user.guard';
 import { ChatService } from './chat.service';
@@ -23,7 +23,7 @@ export class ChatController {
 
   @Post('private')
   async createPrivateChat(
-    @User() user: AccessTokenPayload,
+    @CurrentUser() user: AccessTokenPayload,
     @Body() dto: CreatePrivateChatDto,
   ) {
     return this.chatService.createPrivateChat(user.id, dto);
@@ -31,14 +31,17 @@ export class ChatController {
 
   @Post('group')
   async createGroupChat(
-    @User() user: AccessTokenPayload,
+    @CurrentUser() user: AccessTokenPayload,
     @Body() dto: CreateGroupChatDto,
   ) {
     return this.chatService.createGroupChat(user.id, dto);
   }
 
   @Get(':id')
-  async findOne(@User() user: AccessTokenPayload, @Param('id') id: number) {
+  async findOne(
+    @CurrentUser() user: AccessTokenPayload,
+    @Param('id') id: number,
+  ) {
     return this.chatService.findById(user, id);
   }
 
@@ -59,7 +62,10 @@ export class ChatController {
   }
 
   @Delete(':id')
-  async delete(@User() user: AccessTokenPayload, @Param('id') id: number) {
+  async delete(
+    @CurrentUser() user: AccessTokenPayload,
+    @Param('id') id: number,
+  ) {
     return this.chatService.delete(user, id);
   }
 }

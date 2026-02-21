@@ -14,10 +14,7 @@ import { AuthGuard } from '../auth/guards/auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { UserService } from './user.service';
 
-import {
-  User,
-  User as UserFromReq,
-} from '../../common/decorators/routes/user.decorator';
+import { CurrentUser } from '../../common/decorators/routes/user.decorator';
 import { UserNoCredOtpVCode } from './types/user.types';
 
 @Controller('users')
@@ -32,7 +29,9 @@ export class UserController {
 
   @UseGuards(AuthGuard)
   @Get('me')
-  async getMe(@User() user: AccessTokenPayload): Promise<UserNoCredOtpVCode> {
+  async getMe(
+    @CurrentUser() user: AccessTokenPayload,
+  ): Promise<UserNoCredOtpVCode> {
     return this.userService.findById(user.id);
   }
 
@@ -46,7 +45,7 @@ export class UserController {
   @UseGuards(AuthGuard)
   @Delete('me')
   async deleteMe(
-    @UserFromReq() user: AccessTokenPayload,
+    @CurrentUser() user: AccessTokenPayload,
   ): Promise<UserNoCredOtpVCode> {
     return this.userService.delete(user, user.id);
   }
@@ -55,7 +54,7 @@ export class UserController {
   @UseGuards(RolesGuard)
   @Delete(':id')
   async deleteUserById(
-    @UserFromReq() user: AccessTokenPayload,
+    @CurrentUser() user: AccessTokenPayload,
     @Param('id', ParseIntPipe) id: number,
   ): Promise<UserNoCredOtpVCode> {
     return this.userService.delete(user, id);

@@ -10,7 +10,7 @@ import {
   UseInterceptors,
 } from '@nestjs/common';
 import { Message } from '../../../generated/prisma/client';
-import { User } from '../../common/decorators/routes/user.decorator';
+import { CurrentUser } from '../../common/decorators/routes/user.decorator';
 import { MessageFilesInterceptor } from '../../common/interceptor/message-files.interceptor';
 import { AccessTokenPayload } from '../../common/types';
 import { VerifiedUserGuard } from '../auth/guards/verified-user.guard';
@@ -24,7 +24,7 @@ export class MessageController {
 
   @Get(':id')
   async findOne(
-    @User() user: AccessTokenPayload,
+    @CurrentUser() user: AccessTokenPayload,
     @Param('id') messageId: number,
   ): Promise<Message> {
     return this.messageService.findById(user, messageId);
@@ -33,7 +33,7 @@ export class MessageController {
   @Patch(':id')
   @UseInterceptors(MessageFilesInterceptor)
   async update(
-    @User() user: AccessTokenPayload,
+    @CurrentUser() user: AccessTokenPayload,
     @Param('id') messageId: number,
     @Body() updateMessageDto: UpdateMessageDto,
     @UploadedFiles() files: Express.Multer.File[],
@@ -43,7 +43,7 @@ export class MessageController {
 
   @Delete(':id')
   async delete(
-    @User() user: AccessTokenPayload,
+    @CurrentUser() user: AccessTokenPayload,
     @Param('id') messageId: number,
   ): Promise<Message> {
     return this.messageService.delete(user, messageId);

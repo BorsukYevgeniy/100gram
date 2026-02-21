@@ -10,7 +10,7 @@ import {
   UseInterceptors,
 } from '@nestjs/common';
 import { Message } from '../../../../generated/prisma/client';
-import { User } from '../../../common/decorators/routes/user.decorator';
+import { CurrentUser } from '../../../common/decorators/routes/user.decorator';
 import { PaginationDto } from '../../../common/dto/pagination.dto';
 import { MessageFilesInterceptor } from '../../../common/interceptor/message-files.interceptor';
 import { AccessTokenPayload } from '../../../common/types';
@@ -30,7 +30,7 @@ export class ChatMessageController {
 
   @Get()
   async getAllMessagesInChat(
-    @User() user: AccessTokenPayload,
+    @CurrentUser() user: AccessTokenPayload,
     @Param('chatId') chatId: number,
     @Query() paginationDto: PaginationDto,
   ): Promise<PaginatedMessageFiles> {
@@ -42,7 +42,7 @@ export class ChatMessageController {
   @Post()
   @UseInterceptors(MessageFilesInterceptor)
   async create(
-    @User() user: AccessTokenPayload,
+    @CurrentUser() user: AccessTokenPayload,
     @Param('chatId') chatId: number,
     @Body() createMessageDto: CreateMessageDto,
     @UploadedFiles() files: Express.Multer.File[],
