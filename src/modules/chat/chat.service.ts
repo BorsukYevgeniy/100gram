@@ -131,6 +131,21 @@ export class ChatService {
       throw new NotFoundException('Chat not found');
     }
 
+    const isParticipant = await this.chatValidator.checkChatParticipation(
+      user.id,
+      chat.id,
+    );
+
+    if (isParticipant) {
+      this.logger.warn(
+        { chatId: chat.id, userId: user.id },
+        'User already in chat',
+      );
+      throw new BadRequestException(
+        'User already is a participant of the chat',
+      );
+    }
+
     const chatUser = await this.chatRepo.addUserToChat(chat.id, user.id);
 
     this.logger.info(
