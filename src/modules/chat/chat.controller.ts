@@ -37,6 +37,22 @@ export class ChatController {
     return this.chatService.createGroupChat(user.id, dto);
   }
 
+  @Post('invite/:inviteLink')
+  async addChatByInviteLink(
+    @CurrentUser() user: AccessTokenPayload,
+    @Param('inviteLink') inviteLink: string,
+  ) {
+    return this.chatService.addUserByInviteLink(user, inviteLink);
+  }
+
+  @Patch(':chatId/invite-link')
+  async updateInviteLink(
+    @CurrentUser() user: AccessTokenPayload,
+    @Param('chatId') chatId: number,
+  ) {
+    return this.chatService.updateInviteLink(user, chatId);
+  }
+
   @Get(':id')
   async findOne(
     @CurrentUser() user: AccessTokenPayload,

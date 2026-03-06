@@ -6,15 +6,27 @@ model Chat {
 
   messages    Message[]
   chatToUsers ChatToUser[]
-  chatType    ChatType
+
+  chatType   ChatType
+  visibility Visibility @default(PRIVATE)
+
+  inviteLink String? @unique
 
   ownerId Int?
   owner   User? @relation(fields: [ownerId], references: [id])
 
-  // Private chats dont have owner, avatar, title and description
+  /**
+   * Private chats dont have owner, avatar, title and description.
+   * He's visibility is private by default and cant be changed.
+   */
 }
 
 enum ChatType {
   PRIVATE
   GROUP
+}
+
+enum Visibility {
+  PUBLIC
+  PRIVATE
 }

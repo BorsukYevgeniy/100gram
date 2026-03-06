@@ -5,13 +5,15 @@ import {
 } from '@nestjs/common';
 import { PrismaClientKnownRequestError } from '@prisma/client/runtime/client';
 import { PinoLogger } from 'nestjs-pino';
-import { Chat, ChatType } from '../../../generated/prisma/client';
+import { Chat, ChatType, Visibility } from '../../../generated/prisma/client';
 import { AccessTokenPayload } from '../../common/types';
 import { CreateGroupChatDto } from './dto/create-group-chat.dto';
 import { CreatePrivateChatDto } from './dto/create-private-chat.dto';
 import { UpdateGroupChatDto } from './dto/update-group-chat.dto';
 import { ChatRepository } from './repository/chat.repository';
 import { ChatValidationService } from './validation/chat-validation.service';
+
+import { randomBytes } from 'crypto';
 
 @Injectable()
 export class ChatService {
@@ -21,6 +23,10 @@ export class ChatService {
     private readonly logger: PinoLogger,
   ) {
     this.logger.setContext(ChatService.name);
+  }
+
+  private async generateInviteLink(): Promise<string> {
+    return randomBytes(16).toString('hex');
   }
 
   async createPrivateChat(
@@ -58,10 +64,24 @@ export class ChatService {
     dto: CreateGroupChatDto,
   ): Promise<Chat> {
     try {
-      const chat = await this.chatRepo.createGroupChat(ownerId, dto);
+      let inviteLink =
+        dto.visibility === Visibility.PRIVATE
+          ? await this.generateInviteLink()
+          : undefined;
+
+      const chat = await this.chatRepo.createGroupChat(
+        ownerId,
+        dto,
+        inviteLink,
+      );
 
       this.logger.info(
-        { chatId: chat.id, ownerId, users: dto.userIds },
+        {
+          chatId: chat.id,
+          ownerId,
+          users: dto.userIds,
+          Visibility: dto.visibility,
+        },
         'Group chat created',
       );
 
@@ -70,9 +90,64 @@ export class ChatService {
       if (e instanceof PrismaClientKnownRequestError && e.code === 'P2003') {
         this.logger.warn({ users: dto.userIds }, 'One of users not found');
         throw new NotFoundException('User not found');
+      } else if (
+        e instanceof PrismaClientKnownRequestError &&
+        e.code === 'P2002'
+      ) {
+        const newInviteLink = await this.generateInviteLink();
+        this.logger.warn(
+          { chatId: undefined, ownerId, attemptInviteLink: newInviteLink },
+          'Invite link collision detected, retrying with new token',
+        );
+
+        const chat = await this.chatRepo.createGroupChat(
+          ownerId,
+          dto,
+          newInviteLink,
+        );
+
+        this.logger.info(
+          {
+            chatId: chat.id,
+            ownerId,
+            users: dto.userIds,
+            visibility: dto.visibility,
+            inviteLink: newInviteLink,
+          },
+          'Group chat created successfully after resolving invite link collision',
+        );
+
+        return chat;
       }
       throw e;
     }
+  }
+
+  async addUserByInviteLink(user: AccessTokenPayload, inviteLink: string) {
+    const chat = await this.chatRepo.getByInviteLink(inviteLink);
+
+    if (!chat) {
+      this.logger.warn({ inviteLink }, 'Chat with invite link not found');
+      throw new NotFoundException('Chat not found');
+    }
+
+    const chatUser = await this.chatRepo.addUserToChat(chat.id, user.id);
+
+    this.logger.info(
+      { chatId: chat.id, userId: user.id },
+      'User added to chat via invite link',
+    );
+
+    return chatUser;
+  }
+
+  async updateInviteLink(user: AccessTokenPayload, chatId: number) {
+    await this.chatValidator.validateOwner(user, chatId);
+
+    return this.chatRepo.updateInviteLink(
+      chatId,
+      await this.generateInviteLink(),
+    );
   }
 
   async findById(user: AccessTokenPayload, chatId: number): Promise<Chat> {
