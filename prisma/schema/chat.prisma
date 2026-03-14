@@ -10,7 +10,8 @@ model Chat {
   chatType   ChatType
   visibility Visibility @default(PRIVATE)
 
-  inviteLink String? @unique
+  membersCount Int     @default(1)
+  inviteToken  String? @unique
 
   ownerId Int?
   owner   User? @relation(fields: [ownerId], references: [id])
@@ -24,6 +25,7 @@ model Chat {
 enum ChatType {
   PRIVATE
   GROUP
+  CHANNEL
 }
 
 enum Visibility {

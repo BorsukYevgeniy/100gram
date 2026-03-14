@@ -9,7 +9,7 @@ import {
   UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
-import { Message } from '../../../../generated/prisma/client';
+import { ChatType, Message } from '../../../../generated/prisma/client';
 import { CurrentUser } from '../../../common/decorators/routes/user.decorator';
 import { PaginationDto } from '../../../common/dto/pagination.dto';
 import { MessageFilesInterceptor } from '../../../common/interceptor/message-files.interceptor';
@@ -47,6 +47,14 @@ export class ChatMessageController {
     @Body() createMessageDto: CreateMessageDto,
     @UploadedFiles() files: Express.Multer.File[],
   ): Promise<Message> {
+    const { chatType } = await this.chatValidation.validateChatParticipation(
+      user,
+      chatId,
+    );
+
+    if (chatType === ChatType.CHANNEL)
+      await this.chatValidation.validateOwner(user, chatId);
+
     return this.messageService.create(user.id, chatId, createMessageDto, files);
   }
 }

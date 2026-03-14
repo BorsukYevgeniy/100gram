@@ -5,6 +5,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { PinoLogger } from 'nestjs-pino';
+import { Chat } from '../../../../generated/prisma/browser';
 import { ChatType, Role } from '../../../../generated/prisma/enums';
 import { AccessTokenPayload } from '../../../common/types';
 import { ChatRepository } from '../repository/chat.repository';
@@ -54,7 +55,7 @@ export class ChatValidationService {
   async validateChatParticipation(
     user: AccessTokenPayload,
     chatId: number,
-  ): Promise<void> {
+  ): Promise<Chat> {
     this.logger.debug(
       { userId: user.id, chatId },
       'Validating chat participation',
@@ -72,7 +73,7 @@ export class ChatValidationService {
         { userId: user.id, chatId },
         'Admin bypassed participation check',
       );
-      return;
+      return chat;
     }
 
     const usersInChat = await this.chatRepo.getUserIdsInChat(chatId);

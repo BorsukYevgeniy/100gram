@@ -25,7 +25,7 @@ export class ChatService {
     this.logger.setContext(ChatService.name);
   }
 
-  private async generateInviteLink(): Promise<string> {
+  private async generateInviteToken(): Promise<string> {
     return randomBytes(16).toString('hex');
   }
 
@@ -64,15 +64,15 @@ export class ChatService {
     dto: CreateGroupChatDto,
   ): Promise<Chat> {
     try {
-      let inviteLink =
+      let inviteToken =
         dto.visibility === Visibility.PRIVATE
-          ? await this.generateInviteLink()
+          ? await this.generateInviteToken()
           : undefined;
 
       const chat = await this.chatRepo.createGroupChat(
         ownerId,
         dto,
-        inviteLink,
+        inviteToken,
       );
 
       this.logger.info(
@@ -94,16 +94,16 @@ export class ChatService {
         e instanceof PrismaClientKnownRequestError &&
         e.code === 'P2002'
       ) {
-        const newInviteLink = await this.generateInviteLink();
+        const newInviteToken = await this.generateInviteToken();
         this.logger.warn(
-          { chatId: undefined, ownerId, attemptInviteLink: newInviteLink },
-          'Invite link collision detected, retrying with new token',
+          { chatId: undefined, ownerId, attemptInviteToken: newInviteToken },
+          'Invite token collision detected, retrying with new token',
         );
 
         const chat = await this.chatRepo.createGroupChat(
           ownerId,
           dto,
-          newInviteLink,
+          newInviteToken,
         );
 
         this.logger.info(
@@ -112,9 +112,9 @@ export class ChatService {
             ownerId,
             users: dto.userIds,
             visibility: dto.visibility,
-            inviteLink: newInviteLink,
+            inviteToken: newInviteToken,
           },
-          'Group chat created successfully after resolving invite link collision',
+          'Group chat created successfully after resolving invite token collision',
         );
 
         return chat;
@@ -123,11 +123,11 @@ export class ChatService {
     }
   }
 
-  async addUserByInviteLink(user: AccessTokenPayload, inviteLink: string) {
-    const chat = await this.chatRepo.getByInviteLink(inviteLink);
+  async addUserByInviteToken(user: AccessTokenPayload, inviteToken: string) {
+    const chat = await this.chatRepo.getByinviteToken(inviteToken);
 
     if (!chat) {
-      this.logger.warn({ inviteLink }, 'Chat with invite link not found');
+      this.logger.warn({ inviteToken }, 'Chat with invite token not found');
       throw new NotFoundException('Chat not found');
     }
 
@@ -150,18 +150,18 @@ export class ChatService {
 
     this.logger.info(
       { chatId: chat.id, userId: user.id },
-      'User added to chat via invite link',
+      'User added to chat via invite token',
     );
 
     return chatUser;
   }
 
-  async updateInviteLink(user: AccessTokenPayload, chatId: number) {
+  async updateInviteToken(user: AccessTokenPayload, chatId: number) {
     await this.chatValidator.validateOwner(user, chatId);
 
-    return this.chatRepo.updateInviteLink(
+    return this.chatRepo.updateInviteToken(
       chatId,
-      await this.generateInviteLink(),
+      await this.generateInviteToken(),
     );
   }
 

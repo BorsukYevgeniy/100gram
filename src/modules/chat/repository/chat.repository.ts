@@ -33,7 +33,7 @@ export class ChatRepository {
   async createGroupChat(
     ownerId: number,
     dto: CreateGroupChatDto,
-    inviteLink?: string,
+    inviteToken?: string,
   ): Promise<Chat> {
     return this.prisma.chat.create({
       data: {
@@ -42,7 +42,8 @@ export class ChatRepository {
         title: dto.title,
         description: dto.description,
         visibility: dto.visibility,
-        inviteLink,
+        inviteToken,
+
         chatToUsers: {
           create: dto.userIds.map((id) => ({ userId: id })),
         },
@@ -50,10 +51,10 @@ export class ChatRepository {
     });
   }
 
-  async updateInviteLink(chatId: number, inviteLink: string) {
+  async updateInviteToken(chatId: number, inviteToken: string) {
     return this.prisma.chat.update({
       where: { id: chatId },
-      data: { inviteLink },
+      data: { inviteToken },
     });
   }
 
@@ -70,9 +71,9 @@ export class ChatRepository {
     });
   }
 
-  async getByInviteLink(inviteLink: string): Promise<Chat> {
+  async getByinviteToken(inviteToken: string): Promise<Chat> {
     return this.prisma.chat.findUnique({
-      where: { inviteLink },
+      where: { inviteToken },
     });
   }
 
