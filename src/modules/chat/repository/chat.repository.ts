@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { Chat, ChatToUser } from '../../../../generated/prisma/client';
-import { ChatType } from '../../../../generated/prisma/enums';
+import { ChatRole, ChatType } from '../../../../generated/prisma/enums';
 import { PrismaService } from '../../prisma/prisma.service';
 import { CreateGroupChatDto } from '../dto/create-group-chat.dto';
 import { UpdateGroupChatDto } from '../dto/update-group-chat.dto';
@@ -181,6 +181,19 @@ export class ChatRepository {
           select: { id: true },
         },
       },
+    });
+  }
+
+  async getChatUser(chatId: number, userId: number) {
+    return this.prisma.chatToUser.findUnique({
+      where: { chatId_userId: { chatId, userId } },
+    });
+  }
+
+  async updateChatRole(chatId: number, userId: number, role: ChatRole) {
+    return this.prisma.chatToUser.update({
+      where: { chatId_userId: { chatId, userId } },
+      data: { role },
     });
   }
 }

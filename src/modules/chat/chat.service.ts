@@ -14,6 +14,7 @@ import { ChatRepository } from './repository/chat.repository';
 import { ChatValidationService } from './validation/chat-validation.service';
 
 import { randomBytes } from 'crypto';
+import { UpdateRoleDto } from './dto/role/update-role.dto';
 
 @Injectable()
 export class ChatService {
@@ -223,5 +224,23 @@ export class ChatService {
     const { userId } = await this.chatRepo.findNewOwner(chatId, currentOnwerId);
 
     return userId;
+  }
+
+  async updateUserChatRole(
+    currentUser: AccessTokenPayload,
+    chatId: number,
+    userId: number,
+    { role }: UpdateRoleDto,
+  ) {
+    await this.chatValidator.validateOwner(currentUser, chatId);
+
+    const chatUser = await this.chatRepo.updateChatRole(userId, chatId, role);
+
+    this.logger.info(
+      { chatId, userId, newRole: role },
+      'Updated user role in chat',
+    );
+
+    return chatUser;
   }
 }

@@ -14,6 +14,7 @@ import { VerifiedUserGuard } from '../auth/guards/verified-user.guard';
 import { ChatService } from './chat.service';
 import { CreateGroupChatDto } from './dto/create-group-chat.dto';
 import { CreatePrivateChatDto } from './dto/create-private-chat.dto';
+import { UpdateRoleDto } from './dto/role/update-role.dto';
 import { UpdateGroupChatDto } from './dto/update-group-chat.dto';
 
 @Controller('chats')
@@ -59,6 +60,21 @@ export class ChatController {
     @Param('id') id: number,
   ) {
     return this.chatService.findById(user, id);
+  }
+
+  @Patch(':chatId/users/:userId/role')
+  async updateUserRole(
+    @Param('chatId') chatId: number,
+    @Param('userId') userId: number,
+    @Body() dto: UpdateRoleDto,
+    @CurrentUser() currentUser: AccessTokenPayload,
+  ) {
+    return this.chatService.updateUserChatRole(
+      currentUser,
+      chatId,
+      userId,
+      dto,
+    );
   }
 
   @Patch(':chatId/owner/:ownerId')

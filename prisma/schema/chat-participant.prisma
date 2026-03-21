@@ -2,10 +2,17 @@ model ChatToUser {
   chatId Int
   userId Int
 
+  role ChatRole @default(MEMBER)
+
   connectedAt DateTime @default(now()) @db.Timestamptz
 
   chat Chat @relation(fields: [chatId], references: [id], onDelete: Cascade)
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@id([chatId, userId])
+}
+
+enum ChatRole {
+  MODERATOR
+  MEMBER
 }

@@ -5,7 +5,7 @@ import {
 } from '@nestjs/common';
 import { PrismaClientKnownRequestError } from '@prisma/client/runtime/client';
 import { PinoLogger } from 'nestjs-pino';
-import { ChatType, Role } from '../../../generated/prisma/client';
+import { ChatType } from '../../../generated/prisma/client';
 import { PaginationDto } from '../../common/dto/pagination.dto';
 import { AccessTokenPayload } from '../../common/types';
 import { ChatRepository } from '../chat/repository/chat.repository';
@@ -15,6 +15,7 @@ import { CreateMessageDto } from './dto/create-message.dto';
 import { UpdateMessageDto } from './dto/update-message.dto';
 import { MessageRepository } from './repository/message.repository';
 import { MessageFiles, PaginatedMessageFiles } from './types/message.types';
+import { MessageValidationService } from './validation/message-validation.service';
 
 @Injectable()
 export class MessageService {
@@ -23,38 +24,10 @@ export class MessageService {
     private readonly chatRepo: ChatRepository,
     private readonly fileService: FileService,
     private readonly blockedUserService: BlockedUserService,
+    private readonly messageValidator: MessageValidationService,
     private readonly logger: PinoLogger,
   ) {
     this.logger.setContext(MessageService.name);
-  }
-
-  private async validateMessageOwnership(
-    user: AccessTokenPayload,
-    messageId: number,
-  ): Promise<MessageFiles> {
-    this.logger.debug(
-      { userId: user.id, messageId },
-      'Validating message ownership',
-    );
-
-    const message = await this.messageRepository.findById(messageId);
-
-    if (!message) {
-      this.logger.warn({ messageId }, 'Message not found');
-      throw new NotFoundException('Message not found');
-    }
-
-    if (message.userId !== user.id && user.role !== Role.ADMIN) {
-      this.logger.warn(
-        { userId: user.id, messageId },
-        'User is not message owner',
-      );
-      throw new ForbiddenException(
-        'You do not have permission to access this message',
-      );
-    }
-
-    return message;
   }
 
   private async checkBlock(userId: number, chatId: number) {
@@ -198,7 +171,7 @@ export class MessageService {
     user: AccessTokenPayload,
     messageId: number,
   ): Promise<MessageFiles> {
-    return this.validateMessageOwnership(user, messageId);
+    return this.messageValidator.validateMessageOwnership(user, messageId);
   }
 
   async update(
@@ -207,7 +180,7 @@ export class MessageService {
     dto: UpdateMessageDto,
     files: Express.Multer.File[],
   ): Promise<MessageFiles> {
-    await this.validateMessageOwnership(user, messageId);
+    await this.messageValidator.validateMessageOwnership(user, messageId);
 
     const createdFiles = await this.fileService.createFiles(
       files,
@@ -235,7 +208,7 @@ export class MessageService {
     dto: UpdateMessageDto,
     fileIds: number[],
   ): Promise<MessageFiles> {
-    await this.validateMessageOwnership(user, messageId);
+    await this.messageValidator.validateMessageOwnership(user, messageId);
 
     try {
       const message = await this.messageRepository.update(
@@ -262,7 +235,7 @@ export class MessageService {
     user: AccessTokenPayload,
     messageId: number,
   ): Promise<MessageFiles> {
-    await this.validateMessageOwnership(user, messageId);
+    await this.messageValidator.canDelete(user, messageId);
 
     const message = await this.messageRepository.delete(messageId);
 

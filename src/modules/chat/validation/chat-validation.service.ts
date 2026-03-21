@@ -48,7 +48,7 @@ export class ChatValidationService {
         { chatId, expectedType, actualType: chat.chatType },
         'Chat has invalid type',
       );
-      throw new BadRequestException('Chat is not of type ${expectedType}');
+      throw new BadRequestException(`Chat is not of type ${expectedType}`);
     }
   }
 
