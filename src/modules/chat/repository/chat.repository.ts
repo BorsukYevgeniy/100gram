@@ -53,14 +53,14 @@ export class ChatRepository {
 
   async updateInviteToken(chatId: number, inviteToken: string) {
     return this.prisma.chat.update({
-      where: { id: chatId },
+      where: { id: chatId, chatType: ChatType.GROUP },
       data: { inviteToken },
     });
   }
 
   async updateGroupChat(id: number, dto: UpdateGroupChatDto): Promise<Chat> {
     return this.prisma.chat.update({
-      where: { id },
+      where: { id, chatType: ChatType.GROUP },
       data: dto,
     });
   }
@@ -73,7 +73,7 @@ export class ChatRepository {
 
   async getByinviteToken(inviteToken: string): Promise<Chat> {
     return this.prisma.chat.findUnique({
-      where: { inviteToken },
+      where: { inviteToken, chatType: ChatType.GROUP },
     });
   }
 
@@ -85,7 +85,7 @@ export class ChatRepository {
 
   async updateOwner(chatId: number, newOnwerId: number): Promise<Chat> {
     return this.prisma.chat.update({
-      where: { id: chatId },
+      where: { id: chatId, chatType: ChatType.GROUP },
       data: { ownerId: newOnwerId },
     });
   }
@@ -100,7 +100,7 @@ export class ChatRepository {
         where: { chatId_userId: { chatId, userId } },
       }),
       this.prisma.chat.update({
-        where: { id: chatId },
+        where: { id: chatId, chatType: ChatType.GROUP },
         data: { ownerId: newOwnerId },
       }),
     ]);
@@ -120,7 +120,7 @@ export class ChatRepository {
 
   async updateAvatar(chatId: number, avatar?: string) {
     return this.prisma.chat.update({
-      where: { id: chatId },
+      where: { id: chatId, chatType: ChatType.GROUP },
       data: {
         avatar,
       },
@@ -151,6 +151,10 @@ export class ChatRepository {
             email: true,
             password: true,
             verificationCode: true,
+            otpAttempts: true,
+            otpHash: true,
+            otpExpiresAt: true,
+            provider: true,
           },
         },
       },

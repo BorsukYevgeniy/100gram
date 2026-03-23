@@ -8,6 +8,7 @@ import { MessageController } from './message.controller';
 import { MessageService } from './message.service';
 import { MessageReactionController } from './reaction/message-reaction.controller';
 import { MessageRepositoryModule } from './repository/message-repository.module';
+import { MessageValidationModule } from './validation/message-validation.module';
 
 @Module({
   imports: [
@@ -17,6 +18,7 @@ import { MessageRepositoryModule } from './repository/message-repository.module'
     TokenModule,
     FileModule,
     ReactionModule,
+    MessageValidationModule,
   ],
   controllers: [MessageReactionController, MessageController],
   providers: [MessageService],

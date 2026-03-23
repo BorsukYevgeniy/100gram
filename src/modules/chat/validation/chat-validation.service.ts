@@ -74,6 +74,12 @@ export class ChatValidationService {
         'Admin bypassed participation check',
       );
       return chat;
+    } else if (user.id === chat.ownerId) {
+      this.logger.debug(
+        { userId: user.id, chatId },
+        'Owner bypassed participation check',
+      );
+      return chat;
     }
 
     const usersInChat = await this.chatRepo.getUserIdsInChat(chatId);

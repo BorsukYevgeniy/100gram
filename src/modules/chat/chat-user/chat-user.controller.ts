@@ -1,8 +1,10 @@
 import {
+  Body,
   Controller,
   Delete,
   Get,
   Param,
+  Patch,
   Post,
   Query,
   UseGuards,
@@ -13,6 +15,7 @@ import { AccessTokenPayload } from '../../../common/types';
 import { VerifiedUserGuard } from '../../auth/guards/verified-user.guard';
 import { PaginatedUserNoCredOtpVCode } from '../../user/types/user.types';
 
+import { UpdateRoleDto } from '../dto/role/update-role.dto';
 import { ChatUserService } from './chat-user.service';
 
 @Controller('chats/:chatId/users')
@@ -43,5 +46,20 @@ export class ChatUserController {
     @Param('userId') userId: number,
   ) {
     return this.chatUserService.deleteUserFromChat(chatId, userId);
+  }
+
+  @Patch(':userId/role')
+  async updateUserRole(
+    @Param('chatId') chatId: number,
+    @Param('userId') userId: number,
+    @Body() dto: UpdateRoleDto,
+    @CurrentUser() currentUser: AccessTokenPayload,
+  ) {
+    return this.chatUserService.updateUserChatRole(
+      currentUser,
+      chatId,
+      userId,
+      dto,
+    );
   }
 }

@@ -1,16 +1,20 @@
 import {
   BadRequestException,
   ForbiddenException,
+  Injectable,
   NotFoundException,
 } from '@nestjs/common';
+import { PrismaClientKnownRequestError } from '@prisma/client/runtime/client';
 import { PinoLogger } from 'nestjs-pino';
 import { ChatType } from '../../../../generated/prisma/enums';
 import { PaginationDto } from '../../../common/dto/pagination.dto';
 import { AccessTokenPayload } from '../../../common/types';
 import { PaginatedUserNoCredOtpVCode } from '../../user/types/user.types';
+import { UpdateRoleDto } from '../dto/role/update-role.dto';
 import { ChatRepository } from '../repository/chat.repository';
 import { ChatValidationService } from '../validation/chat-validation.service';
 
+@Injectable()
 export class ChatUserService {
   constructor(
     private readonly chatRepo: ChatRepository,
@@ -121,5 +125,31 @@ export class ChatUserService {
       limit,
       hasMore,
     };
+  }
+
+  async updateUserChatRole(
+    currentUser: AccessTokenPayload,
+    chatId: number,
+    userId: number,
+    { role }: UpdateRoleDto,
+  ) {
+    await this.chatValidator.validateOwner(currentUser, chatId);
+
+    try {
+      const chatUser = await this.chatRepo.updateChatRole(chatId, userId, role);
+
+      this.logger.info(
+        { chatId, userId, newRole: role },
+        'Updated user role in chat',
+      );
+
+      return chatUser;
+    } catch (e) {
+      if (e instanceof PrismaClientKnownRequestError && e.code === 'P2003') {
+        this.logger.warn({ chatId, userId }, 'User or chat not found');
+        throw new NotFoundException('User or chat not found');
+      }
+      throw e;
+    }
   }
 }
