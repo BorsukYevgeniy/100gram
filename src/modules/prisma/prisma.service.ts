@@ -34,7 +34,8 @@ export class PrismaService
         this.logger.fatal('Error connecting to database: ' + e.message);
       } else {
         this.logger.fatal(
-          'Unexpected error connecting to database: ' + e.stack,
+          'Unexpected error connecting to database: ' +
+            (e as PrismaClientInitializationError).stack,
         );
       }
       throw e;
