@@ -12,6 +12,8 @@ import { UserModule } from './modules/user/user.module';
 
 import { ServeStaticModule } from '@nestjs/serve-static';
 import { join } from 'path';
+import { RedisModule } from './modules/redis/redis.module';
+import { CacheModule } from './modules/cache/cache.module';
 
 @Module({
   imports: [
@@ -30,6 +32,8 @@ import { join } from 'path';
       useFactory: (configService: ConfigService) => configService.PINO_CONFIG,
     }),
     FileModule,
+    RedisModule,
+    CacheModule,
   ],
 })
 export class AppModule {}

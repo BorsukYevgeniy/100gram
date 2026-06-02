@@ -103,4 +103,11 @@ export class ConfigService {
   get PASSWORD_SALT(): number {
     return Number(this.configService.getOrThrow<number>('PASSWORD_SALT'));
   }
+
+  get REDIS_CONFIG() {
+    return {
+      host: this.configService.getOrThrow<string>('REDIS_HOST'),
+      port: this.configService.getOrThrow<number>('REDIS_PORT'),
+    };
+  }
 }

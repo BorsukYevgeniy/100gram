@@ -8,6 +8,7 @@ import { PinoLogger } from 'nestjs-pino';
 import { ChatType } from '../../../generated/prisma/client';
 import { PaginationDto } from '../../common/dto/pagination.dto';
 import { AccessTokenPayload } from '../../common/types';
+import { CacheService } from '../cache/cache.service';
 import { ChatRepository } from '../chat/repository/chat.repository';
 import { FileService } from '../file/file.service';
 import { BlockedUserService } from '../user/blocked-user/blocked-user.service';
@@ -26,6 +27,7 @@ export class MessageService {
     private readonly blockedUserService: BlockedUserService,
     private readonly messageValidator: MessageValidationService,
     private readonly logger: PinoLogger,
+    private readonly cache: CacheService,
   ) {
     this.logger.setContext(MessageService.name);
   }
@@ -55,6 +57,20 @@ export class MessageService {
   ): Promise<PaginatedMessageFiles> {
     const { cursor, limit } = paginationDto;
 
+    const chatMessageVersion = await this.cache.getChatMessageVersion(chatId);
+    const cacheData = await this.cache.get<PaginatedMessageFiles>(
+      this.cache.buildChatMessageLKey(
+        chatId,
+        chatMessageVersion,
+        paginationDto,
+      ),
+    );
+
+    if (cacheData) {
+      this.logger.debug({ chatId }, 'Messages in chat fetched from cache');
+      return cacheData;
+    }
+
     const messages = await this.messageRepository.findMessagesInChat(
       chatId,
       limit,
@@ -74,12 +90,24 @@ export class MessageService {
     const nextCursor = messages.length === limit ? messages.at(-1).id : null;
     const hasMore = messages.length === limit;
 
-    return {
+    const result = {
       messages,
       limit,
       nextCursor,
       hasMore,
     };
+
+    await this.cache.set(
+      this.cache.buildChatMessageLKey(
+        chatId,
+        chatMessageVersion,
+        paginationDto,
+      ),
+      result,
+      60,
+    );
+
+    return result;
   }
 
   async create(
@@ -112,6 +140,8 @@ export class MessageService {
         },
         'Message created via REST API',
       );
+
+      await this.cache.incrChatMessageVersion(chatId);
 
       return message;
     } catch (e) {
@@ -149,7 +179,7 @@ export class MessageService {
         },
         'Message created via WS',
       );
-
+      await this.cache.incrChatMessageVersion(chatId);
       return message;
     } catch (e) {
       if (e instanceof PrismaClientKnownRequestError && e.code === 'P2003') {
@@ -198,7 +228,7 @@ export class MessageService {
       { messageId, updatedBy: user.id, provider: 'http' },
       'Message updated via REST API',
     );
-
+    await this.cache.incrChatMessageVersion(message.chatId);
     return message;
   }
 
@@ -222,6 +252,7 @@ export class MessageService {
         'Message updated via WS',
       );
 
+      await this.cache.incrChatMessageVersion(message.chatId);
       return message;
     } catch (e) {
       if (e instanceof PrismaClientKnownRequestError && e.code === 'P2018') {
@@ -241,6 +272,7 @@ export class MessageService {
 
     this.logger.info({ messageId, deletedBy: user.id }, 'Message deleted');
 
+    await this.cache.incrChatMessageVersion(message.chatId);
     return message;
   }
 }

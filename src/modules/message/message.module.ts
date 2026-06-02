@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { CacheModule } from '../cache/cache.module';
 import { ChatRepositoryModule } from '../chat/repository/chat-repository.module';
 import { FileModule } from '../file/file.module';
 import { ReactionModule } from '../reaction/reaction.module';
@@ -19,6 +20,7 @@ import { MessageValidationModule } from './validation/message-validation.module'
     FileModule,
     ReactionModule,
     MessageValidationModule,
+    CacheModule,
   ],
   controllers: [MessageReactionController, MessageController],
   providers: [MessageService],

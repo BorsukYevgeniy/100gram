@@ -25,4 +25,7 @@ export const validationSchema = J.object({
 
   THROTTLE_TTL: J.number().positive().required(),
   THROTTLE_LIMIT: J.number().positive().required(),
+
+  REDIS_PORT: J.number().port().required(),
+  REDIS_HOST: J.string().hostname().required(),
 });
