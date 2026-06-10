@@ -31,11 +31,15 @@ export class CacheService {
     return await this.redisClient.expire(versionKey, 60);
   }
 
-  buildChatMessageLKey(
+  buildChatMessageKey(
     chatId: number,
     version: number,
     { cursor, limit }: PaginationDto,
   ): string {
     return `chat:${chatId}:messages:v${version}:cursor:${cursor ?? 'start'}:limit:${limit}`;
+  }
+
+  buildMyChatsKey(userId: number, paginationDto: PaginationDto) {
+    return `chats:user:${userId}:cursor:${paginationDto.cursor ?? 'start'}:limit:${paginationDto.limit}`;
   }
 }

@@ -11,5 +11,7 @@ model Message {
   user   User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   chatId Int
-  chat   Chat @relation(fields: [chatId], references: [id], onDelete: Cascade)
+  chat   Chat @relation("ChatMessages", fields: [chatId], references: [id], onDelete: Cascade)
+
+  lastOfChat Chat? @relation("LastMessage")
 }

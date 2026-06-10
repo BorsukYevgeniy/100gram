@@ -59,11 +59,7 @@ export class MessageService {
 
     const chatMessageVersion = await this.cache.getChatMessageVersion(chatId);
     const cacheData = await this.cache.get<PaginatedMessageFiles>(
-      this.cache.buildChatMessageLKey(
-        chatId,
-        chatMessageVersion,
-        paginationDto,
-      ),
+      this.cache.buildChatMessageKey(chatId, chatMessageVersion, paginationDto),
     );
 
     if (cacheData) {
@@ -98,11 +94,7 @@ export class MessageService {
     };
 
     await this.cache.set(
-      this.cache.buildChatMessageLKey(
-        chatId,
-        chatMessageVersion,
-        paginationDto,
-      ),
+      this.cache.buildChatMessageKey(chatId, chatMessageVersion, paginationDto),
       result,
       60,
     );

@@ -4,7 +4,11 @@ model Chat {
   title       String?
   description String?
 
-  messages    Message[]
+  messages Message[] @relation("ChatMessages")
+
+  lastMessageId Int?     @unique
+  lastMessage   Message? @relation("LastMessage", fields: [lastMessageId], references: [id])
+
   chatToUsers ChatToUser[]
 
   chatType   ChatType

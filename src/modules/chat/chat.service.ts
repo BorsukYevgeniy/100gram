@@ -14,12 +14,16 @@ import { ChatRepository } from './repository/chat.repository';
 import { ChatValidationService } from './validation/chat-validation.service';
 
 import { randomBytes } from 'crypto';
+import { PaginationDto } from '../../common/dto/pagination.dto';
+import { CacheService } from '../cache/cache.service';
+import { PaginatedMyChats } from './types/chat.types';
 
 @Injectable()
 export class ChatService {
   constructor(
     private readonly chatRepo: ChatRepository,
     private readonly chatValidator: ChatValidationService,
+    private readonly cache: CacheService,
     private readonly logger: PinoLogger,
   ) {
     this.logger.setContext(ChatService.name);
@@ -223,5 +227,37 @@ export class ChatService {
     const { userId } = await this.chatRepo.findNewOwner(chatId, currentOnwerId);
 
     return userId;
+  }
+
+  async getMyChats(
+    userId: number,
+    { limit, cursor }: PaginationDto,
+  ): Promise<PaginatedMyChats> {
+    const cacheData = await this.cache.get<PaginatedMyChats>(
+      this.cache.buildMyChatsKey(userId, { limit, cursor }),
+    );
+
+    if (cacheData) {
+      this.logger.debug(
+        { userId, limit, cursor },
+        'My chats fetched from cache',
+      );
+      return cacheData;
+    }
+
+    const chats = await this.chatRepo.getMyChats(userId, limit, cursor);
+
+    const nextCursor = chats.length === limit ? chats.at(-1).id : null;
+    const hasMore = chats.length === limit;
+
+    const result = { limit, hasMore, nextCursor, chats };
+
+    await this.cache.set(
+      this.cache.buildMyChatsKey(userId, { limit, cursor }),
+      result,
+      10,
+    );
+
+    return result;
   }
 }

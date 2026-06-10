@@ -6,9 +6,11 @@ import {
   Param,
   Patch,
   Post,
+  Query,
   UseGuards,
 } from '@nestjs/common';
 import { CurrentUser } from '../../common/decorators/routes/user.decorator';
+import { PaginationDto } from '../../common/dto/pagination.dto';
 import { AccessTokenPayload } from '../../common/types';
 import { VerifiedUserGuard } from '../auth/guards/verified-user.guard';
 import { ChatService } from './chat.service';
@@ -20,6 +22,14 @@ import { UpdateGroupChatDto } from './dto/update-group-chat.dto';
 @UseGuards(VerifiedUserGuard)
 export class ChatController {
   constructor(private readonly chatService: ChatService) {}
+
+  @Get('me')
+  async getMyChats(
+    @CurrentUser() user: AccessTokenPayload,
+    @Query() paginationDto: PaginationDto,
+  ) {
+    return this.chatService.getMyChats(user.id, paginationDto);
+  }
 
   @Post('private')
   async createPrivateChat(

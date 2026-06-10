@@ -11,3 +11,5 @@ generated
 #Files
 files
 
+# VSCode
+.vscode

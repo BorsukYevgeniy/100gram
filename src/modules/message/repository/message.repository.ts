@@ -32,16 +32,25 @@ export class MessageRepository {
     dto: CreateMessageDto,
     fileIds: number[] = [],
   ): Promise<MessageFiles> {
-    return this.prisma.message.create({
-      data: {
-        ...dto,
-        userId,
-        chatId,
-        files: {
-          connect: fileIds.map((id) => ({ id })),
+    return this.prisma.$transaction(async (p) => {
+      const msg = await p.message.create({
+        data: {
+          ...dto,
+          userId,
+          chatId,
+          files: {
+            connect: fileIds.map((id) => ({ id })),
+          },
         },
-      },
-      include: { files: true },
+        include: { files: true },
+      });
+
+      await p.chat.update({
+        where: { id: chatId },
+        data: { lastMessage: { connect: { id: msg.id } } },
+      });
+
+      return msg;
     });
   }
 

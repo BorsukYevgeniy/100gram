@@ -4,6 +4,7 @@ import { ChatRole, ChatType } from '../../../../generated/prisma/enums';
 import { PrismaService } from '../../prisma/prisma.service';
 import { CreateGroupChatDto } from '../dto/create-group-chat.dto';
 import { UpdateGroupChatDto } from '../dto/update-group-chat.dto';
+import { MyChat } from '../types/chat.types';
 
 @Injectable()
 export class ChatRepository {
@@ -198,6 +199,35 @@ export class ChatRepository {
     return this.prisma.chatToUser.update({
       where: { chatId_userId: { chatId, userId } },
       data: { role },
+    });
+  }
+
+  async getMyChats(
+    userId: number,
+    take: number,
+    lastMessageIdCursor?: number,
+  ): Promise<MyChat[]> {
+    return this.prisma.chat.findMany({
+      where: {
+        chatToUsers: {
+          some: { userId },
+        },
+
+        ...(lastMessageIdCursor && {
+          cursor: { lastMessageId: lastMessageIdCursor },
+        }),
+
+        orderBy: { lastMessageId: 'desc' },
+
+        take,
+      },
+
+      select: {
+        id: true,
+        title: true,
+        avatar: true,
+        lastMessage: { select: { text: true, createdAt: true } },
+      },
     });
   }
 }
