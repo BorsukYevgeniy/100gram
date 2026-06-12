@@ -12,6 +12,15 @@ import {
   UnauthorizedException,
   UseGuards,
 } from '@nestjs/common';
+import {
+  ApiBadRequestResponse,
+  ApiCreatedResponse,
+  ApiNotFoundResponse,
+  ApiOkResponse,
+  ApiOperation,
+  ApiTags,
+  ApiUnauthorizedResponse,
+} from '@nestjs/swagger';
 import { ThrottlerGuard } from '@nestjs/throttler';
 import { Response } from 'express';
 import { CurrentUser } from '../../common/decorators/routes/user.decorator';
@@ -25,15 +34,37 @@ import { ResetPasswordDto } from './dto/reset-password.dto';
 import { AuthGuard } from './guards/auth.guard';
 import { GoogleGuard } from './guards/google.guard';
 
+@ApiTags('Auth')
 @Controller('auth')
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
+  @ApiOperation({
+    summary: 'Google OAuth login',
+    description: 'Redirects user to Google authentication page',
+  })
+  @ApiOkResponse({
+    description: 'Redirect to Google OAuth consent screen',
+  })
   @Public()
   @Get('google/login')
   @UseGuards(GoogleGuard)
   async googleLogin(): Promise<void> {}
 
+  @ApiOperation({
+    summary: 'Google OAuth callback',
+    description:
+      'Handles Google redirect callback, creates user session and sets auth cookies',
+  })
+  @ApiOkResponse({
+    description: 'User authenticated successfully, cookies set',
+  })
+  @ApiUnauthorizedResponse({
+    description: 'Invalid Google token or authentication failed',
+  })
+  @ApiBadRequestResponse({
+    description: 'Invalid callback request',
+  })
   @Public()
   @Get('google/callback')
   @UseGuards(GoogleGuard)
@@ -46,6 +77,12 @@ export class AuthController {
     this.setTokenCookie(res, tokens);
   }
 
+  @ApiOperation({
+    summary: 'Register new user',
+    description: 'Creates a new user and returns auth tokens via cookies',
+  })
+  @ApiCreatedResponse({ description: 'User registered successfully' })
+  @ApiBadRequestResponse({ description: 'Invalid input data' })
   @Post('register')
   async register(@Body() dto: CreateUserDto, @Res() res: Response) {
     const tokens = await this.authService.register(dto);
@@ -53,6 +90,12 @@ export class AuthController {
     this.setTokenCookie(res, tokens, 201);
   }
 
+  @ApiOperation({
+    summary: 'Login user',
+    description: 'Authenticates user and sets auth cookies',
+  })
+  @ApiOkResponse({ description: 'User logged in successfully' })
+  @ApiUnauthorizedResponse({ description: 'Invalid credentials' })
   @Post('login')
   async login(@Body() dto: LoginDto, @Res() res: Response) {
     const tokens = await this.authService.login(dto);
@@ -60,6 +103,12 @@ export class AuthController {
     this.setTokenCookie(res, tokens);
   }
 
+  @ApiOperation({
+    summary: 'Logout user',
+    description: 'Logs out current session and clears cookies',
+  })
+  @ApiOkResponse({ description: 'Logged out successfully' })
+  @ApiUnauthorizedResponse({ description: 'Unauthorized' })
   @Post('logout')
   @UseGuards(AuthGuard)
   @HttpCode(HttpStatus.OK)
@@ -72,6 +121,12 @@ export class AuthController {
     this.clearTokenCookie(res);
   }
 
+  @ApiOperation({
+    summary: 'Logout from all devices',
+    description: 'Invalidates all user sessions',
+  })
+  @ApiOkResponse({ description: 'Logged out from all devices successfully' })
+  @ApiUnauthorizedResponse({ description: 'Unauthorized' })
   @Post('logout-all')
   @UseGuards(AuthGuard)
   @HttpCode(HttpStatus.OK)
@@ -83,6 +138,14 @@ export class AuthController {
     this.clearTokenCookie(res);
   }
 
+  @ApiOperation({
+    summary: 'Verify user',
+    description: 'Verifies user account using verification code',
+  })
+  @ApiOkResponse({
+    description: 'User verified successfully',
+  })
+  @ApiNotFoundResponse({ description: 'Invalid verification code' })
   @Post('verify/:verificationCode')
   @HttpCode(HttpStatus.OK)
   async verify(
@@ -91,6 +154,12 @@ export class AuthController {
     return this.authService.verifyUser(verificationCode);
   }
 
+  @ApiOperation({
+    summary: 'Refresh access token',
+    description: 'Generates new tokens using refresh token cookie',
+  })
+  @ApiOkResponse({ description: 'Tokens refreshed successfully' })
+  @ApiUnauthorizedResponse({ description: 'Refresh token missing or invalid' })
   @Post('refresh')
   @UseGuards(AuthGuard)
   @HttpCode(HttpStatus.OK)
@@ -105,6 +174,12 @@ export class AuthController {
     this.setTokenCookie(res, tokens);
   }
 
+  @ApiOperation({
+    summary: 'Resend verification email',
+    description: 'Sends new verification email to authenticated user',
+  })
+  @ApiOkResponse({ description: 'Verification email sent' })
+  @ApiUnauthorizedResponse({ description: 'Unauthorized' })
   @Post('resend-verification-email')
   @UseGuards(AuthGuard, ThrottlerGuard)
   @HttpCode(HttpStatus.OK)
@@ -112,6 +187,12 @@ export class AuthController {
     return this.authService.resendVerificationMail(user);
   }
 
+  @ApiOperation({
+    summary: 'Send OTP email',
+    description: 'Sends OTP code to user email for verification',
+  })
+  @ApiOkResponse({ description: 'OTP sent (if email exists)' })
+  @ApiUnauthorizedResponse({ description: 'Unauthorized' })
   @Post('send-otp-email')
   @UseGuards(AuthGuard, ThrottlerGuard)
   @HttpCode(HttpStatus.OK)
@@ -120,6 +201,12 @@ export class AuthController {
     return { message: 'If email exists, OTP sent' };
   }
 
+  @ApiOperation({
+    summary: 'Reset password',
+    description: 'Allows authenticated user to reset password',
+  })
+  @ApiOkResponse({ description: 'Password reset successfully' })
+  @ApiUnauthorizedResponse({ description: 'Unauthorized' })
   @Post('reset-password')
   @UseGuards(AuthGuard)
   @HttpCode(HttpStatus.OK)
