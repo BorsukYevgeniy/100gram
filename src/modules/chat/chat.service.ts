@@ -176,6 +176,7 @@ export class ChatService {
   }
 
   async updateGroupChat(id: number, dto: UpdateGroupChatDto): Promise<Chat> {
+    await this.chatValidator.validateChatType(id, ChatType.GROUP);
     try {
       const chat = await this.chatRepo.updateGroupChat(id, dto);
 

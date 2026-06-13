@@ -38,6 +38,12 @@ import { ChatAvatarService } from './chat-avatar.service';
 })
 @ApiCookieAuth('access_token')
 @ApiCookieAuth('refresh_token')
+@ApiUnauthorizedResponse({
+  description: 'You must be authorized to access this resource',
+})
+@ApiForbiddenResponse({
+  description: 'You must be a verified user to access this resource',
+})
 @Controller('chats/:chatId')
 @UseGuards(VerifiedUserGuard)
 export class ChatAvatarController {
@@ -64,7 +70,6 @@ export class ChatAvatarController {
   @ApiOkResponse({ description: 'Avatar updated successfully' })
   @ApiBadRequestResponse({ description: 'Invalid file type or size' })
   @ApiNotFoundResponse({ description: 'Chat not found' })
-  @ApiUnauthorizedResponse({ description: 'Unauthorized' })
   @Patch('avatar')
   @UseInterceptors(AvatarInterceptor)
   async updateMyAvatar(
@@ -81,7 +86,6 @@ export class ChatAvatarController {
   })
   @ApiNoContentResponse({ description: 'Avatar deleted successfully' })
   @ApiNotFoundResponse({ description: 'Chat not found' })
-  @ApiUnauthorizedResponse({ description: 'Unauthorized' })
   @ApiForbiddenResponse({
     description: 'You are not admin or owner of this chat',
   })

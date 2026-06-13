@@ -24,6 +24,7 @@ import { BlockedUserService } from './blocked-user.service';
 @ApiTags('Blocked User')
 @ApiCookieAuth('access_token')
 @ApiCookieAuth('refresh_token')
+@ApiUnauthorizedResponse({ description: 'Unauthorized' })
 @Controller('users')
 @UseGuards(AuthGuard)
 export class BlockedUserController {
@@ -35,7 +36,6 @@ export class BlockedUserController {
   })
   @ApiOkResponse({ description: 'Blocked users fetched successfully' })
   @ApiNotFoundResponse({ description: 'User not found' })
-  @ApiUnauthorizedResponse({ description: 'Unauthorized' })
   @Get('me/blocked')
   async getMyBlockedUsers(@CurrentUser() user: AccessTokenPayload) {
     return this.blockedUserService.getMyBlockedUsers(user.id);
@@ -47,7 +47,6 @@ export class BlockedUserController {
   })
   @ApiCreatedResponse({ description: 'User blocked successfully' })
   @ApiNotFoundResponse({ description: 'User not found' })
-  @ApiUnauthorizedResponse({ description: 'Unauthorized' })
   @ApiParam({
     name: 'blockedId',
     type: Number,
@@ -68,7 +67,6 @@ export class BlockedUserController {
   })
   @ApiOkResponse({ description: 'Blocked users fetched successfully' })
   @ApiNotFoundResponse({ description: 'User not found' })
-  @ApiUnauthorizedResponse({ description: 'Unauthorized' })
   @ApiParam({
     name: 'blockedId',
     type: Number,

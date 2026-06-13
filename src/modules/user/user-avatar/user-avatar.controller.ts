@@ -35,6 +35,10 @@ import { UserAvatarService } from './user-avatar.service';
 @ApiTags('User Avatar')
 @ApiCookieAuth('access_token')
 @ApiCookieAuth('refresh_token')
+@ApiUnauthorizedResponse({ description: 'Unauthorized' })
+@ApiForbiddenResponse({
+  description: 'You must be a verified user to access this resource',
+})
 @Controller('users')
 @UseGuards(VerifiedUserGuard)
 export class UserAvatarController {
@@ -61,7 +65,6 @@ export class UserAvatarController {
   @ApiOkResponse({ description: 'Avatar updated successfully' })
   @ApiBadRequestResponse({ description: 'Invalid file type or size' })
   @ApiNotFoundResponse({ description: 'User not found' })
-  @ApiUnauthorizedResponse({ description: 'Unauthorized' })
   @Patch('me/avatar')
   @UseInterceptors(AvatarInterceptor)
   async updateMyAvatar(
@@ -77,7 +80,6 @@ export class UserAvatarController {
   })
   @ApiNoContentResponse({ description: 'Avatar deleted successfully' })
   @ApiNotFoundResponse({ description: 'User not found' })
-  @ApiUnauthorizedResponse({ description: 'Unauthorized' })
   @Delete('me/avatar')
   @HttpCode(HttpStatus.NO_CONTENT)
   async deleteMyAvatar(@CurrentUser() user: AccessTokenPayload) {
@@ -90,8 +92,6 @@ export class UserAvatarController {
   })
   @ApiNoContentResponse({ description: 'Avatar deleted successfully' })
   @ApiNotFoundResponse({ description: 'User not found' })
-  @ApiUnauthorizedResponse({ description: 'Unauthorized' })
-  @ApiForbiddenResponse({ description: 'Forbidden resource' })
   @ApiParam({
     name: 'userId',
     type: Number,

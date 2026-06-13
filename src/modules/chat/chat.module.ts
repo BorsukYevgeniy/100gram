@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { FileStorageModule } from '../../common/storage/storage.module';
+import { CacheModule } from '../cache/cache.module';
 import { MessageModule } from '../message/message.module';
 import { TokenModule } from '../token/token.module';
 import { ChatAvatarController } from './chat-avatar/chat-avatar.controller';
@@ -20,6 +21,7 @@ import { ChatValidationModule } from './validation/chat-validation.module';
     TokenModule,
     FileStorageModule,
     MessageModule,
+    CacheModule,
   ],
   controllers: [
     ChatMessageController,

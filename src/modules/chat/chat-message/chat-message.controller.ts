@@ -41,6 +41,12 @@ import { ChatValidationService } from '../validation/chat-validation.service';
 })
 @ApiCookieAuth('access_token')
 @ApiCookieAuth('refresh_token')
+@ApiUnauthorizedResponse({
+  description: 'You must be authorized to access this resource',
+})
+@ApiForbiddenResponse({
+  description: 'You must be a verified user to access this resource',
+})
 @Controller('chats/:chatId/messages')
 @UseGuards(VerifiedUserGuard)
 export class ChatMessageController {
@@ -55,7 +61,6 @@ export class ChatMessageController {
   })
   @ApiOkResponse({ description: 'Fetched messages in chat' })
   @ApiNotFoundResponse({ description: 'Chat not found' })
-  @ApiUnauthorizedResponse({ description: 'Unauthorized' })
   @ApiQuery({
     description: 'Pagination data',
     type: PaginationDto,
@@ -78,7 +83,6 @@ export class ChatMessageController {
   })
   @ApiCreatedResponse({ description: 'Message created successfully' })
   @ApiNotFoundResponse({ description: 'Chat not found' })
-  @ApiUnauthorizedResponse({ description: 'Unauthorized' })
   @ApiForbiddenResponse({
     description: 'You must be a participant of chat or owner of the channel',
   })

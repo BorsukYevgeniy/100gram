@@ -1,4 +1,4 @@
-import { OmitType, PartialType } from '@nestjs/mapped-types';
+import { OmitType, PartialType } from '@nestjs/swagger';
 import { CreateGroupChatDto } from './create-group-chat.dto';
 
 export class UpdateGroupChatDto extends PartialType(

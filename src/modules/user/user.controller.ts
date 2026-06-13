@@ -30,6 +30,7 @@ import {
 @ApiTags('User')
 @ApiCookieAuth('access_token')
 @ApiCookieAuth('refresh_token')
+@ApiUnauthorizedResponse({ description: 'Unauthorized' })
 @Controller('users')
 export class UserController {
   constructor(private readonly userService: UserService) {}
@@ -40,7 +41,6 @@ export class UserController {
   })
   @ApiOkResponse({ description: 'User fetched successfully' })
   @ApiNotFoundResponse({ description: 'User not found' })
-  @ApiUnauthorizedResponse({ description: 'Unauthorized' })
   @ApiParam({
     name: 'userId',
     type: Number,
@@ -73,7 +73,6 @@ export class UserController {
   })
   @ApiOkResponse({ description: 'Admin assigned successfully' })
   @ApiNotFoundResponse({ description: 'User not found' })
-  @ApiUnauthorizedResponse({ description: 'Unauthorized' })
   @ApiForbiddenResponse({ description: 'Forbidden resourse' })
   @ApiParam({
     name: 'userId',
@@ -94,7 +93,6 @@ export class UserController {
   })
   @ApiOkResponse({ description: 'My account deleted successfully' })
   @ApiNotFoundResponse({ description: 'User not found' })
-  @ApiUnauthorizedResponse({ description: 'Unauthorized' })
   @UseGuards(AuthGuard)
   @Delete('me')
   async deleteMe(
@@ -109,7 +107,6 @@ export class UserController {
   })
   @ApiOkResponse({ description: 'User deleted successfully' })
   @ApiNotFoundResponse({ description: 'User not found' })
-  @ApiUnauthorizedResponse({ description: 'Unauthorized' })
   @ApiForbiddenResponse({ description: 'Forbidden resourse' })
   @ApiParam({
     name: 'userId',
