@@ -16,49 +16,21 @@ import { UserService } from './user.service';
 import { CurrentUser } from '../../common/decorators/routes/user.decorator';
 import { UserNoCredOtpVCode } from './types/user.types';
 
-import {
-  ApiCookieAuth,
-  ApiForbiddenResponse,
-  ApiNotFoundResponse,
-  ApiOkResponse,
-  ApiOperation,
-  ApiParam,
-  ApiTags,
-  ApiUnauthorizedResponse,
-} from '@nestjs/swagger';
+import { ApiUserControllerDocs, ApiUserRoutesDocs } from './docs';
 
-@ApiTags('User')
-@ApiCookieAuth('access_token')
-@ApiCookieAuth('refresh_token')
-@ApiUnauthorizedResponse({ description: 'Unauthorized' })
+@ApiUserControllerDocs()
 @Controller('users')
 export class UserController {
   constructor(private readonly userService: UserService) {}
 
-  @ApiOperation({
-    summary: 'Get user by ID',
-    description: 'Returns user by provided userId',
-  })
-  @ApiOkResponse({ description: 'User fetched successfully' })
-  @ApiNotFoundResponse({ description: 'User not found' })
-  @ApiParam({
-    name: 'userId',
-    type: Number,
-    description: 'The ID of the user',
-    required: true,
-  })
+  @ApiUserRoutesDocs.GetById()
   @UseGuards(AuthGuard)
   @Get(':userId')
   async getById(@Param('userId') userId: number): Promise<UserNoCredOtpVCode> {
     return this.userService.findById(userId);
   }
 
-  @ApiOperation({
-    summary: 'Get current user profile',
-    description: 'Returns authenticated user profile',
-  })
-  @ApiOkResponse({ description: 'My account fetched successfully' })
-  @ApiNotFoundResponse({ description: 'User not found' })
+  @ApiUserRoutesDocs.GetMe()
   @UseGuards(AuthGuard)
   @Get('me')
   async getMe(
@@ -67,19 +39,7 @@ export class UserController {
     return this.userService.findById(user.id);
   }
 
-  @ApiOperation({
-    summary: 'Assign admin role',
-    description: 'Grants admin role to a user (admin only)',
-  })
-  @ApiOkResponse({ description: 'Admin assigned successfully' })
-  @ApiNotFoundResponse({ description: 'User not found' })
-  @ApiForbiddenResponse({ description: 'Forbidden resourse' })
-  @ApiParam({
-    name: 'userId',
-    type: Number,
-    description: 'The ID of the user',
-    required: true,
-  })
+  @ApiUserRoutesDocs.AssignAdmin()
   @RequiredRoles([Role.ADMIN])
   @UseGuards(RolesGuard)
   @Patch('assign-admin/:id')
@@ -87,12 +47,7 @@ export class UserController {
     return this.userService.assignAdmin(id);
   }
 
-  @ApiOperation({
-    summary: 'Delete current user',
-    description: 'Deletes authenticated user account',
-  })
-  @ApiOkResponse({ description: 'My account deleted successfully' })
-  @ApiNotFoundResponse({ description: 'User not found' })
+  @ApiUserRoutesDocs.DeleteMe()
   @UseGuards(AuthGuard)
   @Delete('me')
   async deleteMe(
@@ -101,19 +56,7 @@ export class UserController {
     return this.userService.delete(user, user.id);
   }
 
-  @ApiOperation({
-    summary: 'Delete user by ID',
-    description: 'Deletes user by ID (admin only)',
-  })
-  @ApiOkResponse({ description: 'User deleted successfully' })
-  @ApiNotFoundResponse({ description: 'User not found' })
-  @ApiForbiddenResponse({ description: 'Forbidden resourse' })
-  @ApiParam({
-    name: 'userId',
-    type: Number,
-    description: 'The ID of the user',
-    required: true,
-  })
+  @ApiUserRoutesDocs.DeleteUser()
   @RequiredRoles([Role.ADMIN])
   @UseGuards(RolesGuard)
   @Delete(':id')
