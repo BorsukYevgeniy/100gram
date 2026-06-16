@@ -19,6 +19,7 @@ import {
   ApiOkResponse,
   ApiOperation,
   ApiTags,
+  ApiTooManyRequestsResponse,
   ApiUnauthorizedResponse,
 } from '@nestjs/swagger';
 import { ThrottlerGuard } from '@nestjs/throttler';
@@ -180,6 +181,9 @@ export class AuthController {
   })
   @ApiOkResponse({ description: 'Verification email sent' })
   @ApiUnauthorizedResponse({ description: 'Unauthorized' })
+  @ApiTooManyRequestsResponse({
+    description: 'Too many attempts to resend email',
+  })
   @Post('resend-verification-email')
   @UseGuards(AuthGuard, ThrottlerGuard)
   @HttpCode(HttpStatus.OK)
@@ -193,6 +197,9 @@ export class AuthController {
   })
   @ApiOkResponse({ description: 'OTP sent (if email exists)' })
   @ApiUnauthorizedResponse({ description: 'Unauthorized' })
+  @ApiTooManyRequestsResponse({
+    description: 'Too many attempts to resend email',
+  })
   @Post('send-otp-email')
   @UseGuards(AuthGuard, ThrottlerGuard)
   @HttpCode(HttpStatus.OK)

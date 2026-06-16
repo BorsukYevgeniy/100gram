@@ -53,7 +53,6 @@ export class MessageReactionController {
   })
   @ApiCreatedResponse({ description: 'Reaction added successfully' })
   @ApiBadRequestResponse({ description: 'Invalid reaction data' })
-  @ApiUnauthorizedResponse({ description: 'Unauthorized' })
   @ApiNotFoundResponse({ description: 'Message not found' })
   @ApiForbiddenResponse({
     description: 'User is not allowed to react to this message',
@@ -74,7 +73,6 @@ export class MessageReactionController {
   })
   @ApiOkResponse({ description: 'Reaction updated successfully' })
   @ApiBadRequestResponse({ description: 'Invalid reaction data' })
-  @ApiUnauthorizedResponse({ description: 'Unauthorized' })
   @ApiNotFoundResponse({
     description: 'Message or reaction not found',
   })
@@ -96,7 +94,6 @@ export class MessageReactionController {
       'Removes the authenticated user reaction from the specified message',
   })
   @ApiOkResponse({ description: 'Reaction removed successfully' })
-  @ApiUnauthorizedResponse({ description: 'Unauthorized' })
   @ApiNotFoundResponse({
     description: 'Message or reaction not found',
   })
