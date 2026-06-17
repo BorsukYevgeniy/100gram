@@ -5,7 +5,7 @@ import { File } from '../../../generated/prisma/client';
 import { FileRepository } from './file.repository';
 
 import { extname } from 'path';
-import { FileStorage } from '../../common/storage/file.storage';
+import { FileStorage } from '../../infra/file/file.storage';
 
 @Injectable()
 export class FileService {

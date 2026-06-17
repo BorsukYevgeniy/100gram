@@ -1,5 +1,5 @@
 import { Module } from '@nestjs/common';
-import { FileStorageModule } from '../../common/storage/storage.module';
+import { FileStorageModule } from '../../infra/file/storage.module';
 import { CacheModule } from '../cache/cache.module';
 import { MessageModule } from '../message/message.module';
 import { TokenModule } from '../token/token.module';

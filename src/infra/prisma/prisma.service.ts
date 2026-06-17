@@ -7,7 +7,7 @@ import {
 import { PrismaPg } from '@prisma/adapter-pg';
 import { PrismaClientInitializationError } from '@prisma/client/runtime/client';
 import { PrismaClient } from '../../../generated/prisma/client';
-import { ConfigService } from '../config/config.service';
+import { ConfigService } from '../../modules/config/config.service';
 
 @Injectable()
 export class PrismaService

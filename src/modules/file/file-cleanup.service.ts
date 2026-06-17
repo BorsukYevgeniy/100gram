@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { Cron } from '@nestjs/schedule';
-import { FileStorage } from '../../common/storage/file.storage';
+import { FileStorage } from '../../infra/file/file.storage';
 import { FileRepository } from './file.repository';
 
 @Injectable()

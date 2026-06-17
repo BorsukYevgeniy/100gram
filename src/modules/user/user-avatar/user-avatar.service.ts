@@ -1,6 +1,6 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { PinoLogger } from 'nestjs-pino';
-import { FileStorage } from '../../../common/storage/file.storage';
+import { FileStorage } from '../../../infra/file/file.storage';
 import { UserRepository } from '../user.repository';
 
 import { randomUUID } from 'crypto';

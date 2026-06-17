@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { Chat, ChatToUser } from '../../../../generated/prisma/client';
 import { ChatRole, ChatType } from '../../../../generated/prisma/enums';
-import { PrismaService } from '../../prisma/prisma.service';
+import { PrismaService } from '../../../infra/prisma/prisma.service';
 import { CreateGroupChatDto } from '../dto/create-group-chat.dto';
 import { UpdateGroupChatDto } from '../dto/update-group-chat.dto';
 import { MyChat } from '../types/chat.types';

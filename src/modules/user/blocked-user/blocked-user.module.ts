@@ -1,5 +1,5 @@
 import { Module } from '@nestjs/common';
-import { PrismaModule } from '../../prisma/prisma.module';
+import { PrismaModule } from '../../../infra/prisma/prisma.module';
 import { TokenModule } from '../../token/token.module';
 import { BlockedUserController } from './blocked-user.controller';
 import { BlockedUserRepository } from './blocked-user.repository';

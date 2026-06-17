@@ -1,7 +1,7 @@
 import { Module } from '@nestjs/common';
+import { PrismaModule } from '../../infra/prisma/prisma.module';
 import { ChatValidationModule } from '../chat/validation/chat-validation.module';
 import { MessageRepositoryModule } from '../message/repository/message-repository.module';
-import { PrismaModule } from '../prisma/prisma.module';
 import { ReactionRepository } from './reaction.repository';
 import { ReactionService } from './reaction.service';
 

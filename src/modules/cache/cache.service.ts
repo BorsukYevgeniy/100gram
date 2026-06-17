@@ -1,5 +1,5 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { REDIS_CLIENT } from '../redis/redis.constants';
+import { REDIS_CLIENT } from '../../infra/redis/redis.constants';
 
 import Redis from 'ioredis';
 import { PaginationDto } from '../../common/dto/pagination.dto';

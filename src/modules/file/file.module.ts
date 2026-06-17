@@ -1,7 +1,7 @@
 import { Module } from '@nestjs/common';
 import { ScheduleModule } from '@nestjs/schedule';
-import { FileStorageModule } from '../../common/storage/storage.module';
-import { PrismaModule } from '../prisma/prisma.module';
+import { FileStorageModule } from '../../infra/file/storage.module';
+import { PrismaModule } from '../../infra/prisma/prisma.module';
 import { TokenModule } from '../token/token.module';
 import { FileController } from './file.controller';
 import { FileRepository } from './file.repository';

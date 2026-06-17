@@ -1,8 +1,8 @@
 import { Module } from '@nestjs/common';
 import { ScheduleModule } from '@nestjs/schedule';
-import { FileStorageModule } from '../../common/storage/storage.module';
+import { FileStorageModule } from '../../infra/file/storage.module';
+import { PrismaModule } from '../../infra/prisma/prisma.module';
 import { ChatModule } from '../chat/chat.module';
-import { PrismaModule } from '../prisma/prisma.module';
 import { TokenModule } from '../token/token.module';
 import { BlockedUserModule } from './blocked-user/blocked-user.module';
 import { UserAvatarController } from './user-avatar/user-avatar.controller';

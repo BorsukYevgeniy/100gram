@@ -3,9 +3,9 @@ import { randomUUID } from 'crypto';
 import { PinoLogger } from 'nestjs-pino';
 import { extname } from 'path';
 import { ChatType } from '../../../../generated/prisma/enums';
-import { FileStorage } from '../../../common/storage/file.storage';
 import { AccessTokenPayload } from '../../../common/types';
 import { Avatar } from '../../../common/types/avatar.types';
+import { FileStorage } from '../../../infra/file/file.storage';
 import { ChatRepository } from '../repository/chat.repository';
 import { ChatValidationService } from '../validation/chat-validation.service';
 

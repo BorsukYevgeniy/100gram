@@ -1,9 +1,9 @@
 import { NestExpressApplication } from '@nestjs/platform-express';
 import { Test, TestingModule } from '@nestjs/testing';
 import * as cookieParser from 'cookie-parser';
+import { PrismaService } from '../src/infra/prisma/prisma.service';
 import { AuthModule } from '../src/modules/auth/auth.module';
 import { ChatModule } from '../src/modules/chat/chat.module';
-import { PrismaService } from '../src/modules/prisma/prisma.service';
 
 describe('ChatApiController (e2e)', () => {
   let app: NestExpressApplication;

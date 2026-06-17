@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { Role, User } from '../../../generated/prisma/client';
 import { Provider } from '../../../generated/prisma/enums';
-import { PrismaService } from '../prisma/prisma.service';
+import { PrismaService } from '../../infra/prisma/prisma.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UserNoCredOtpVCode } from './types/user.types';
 

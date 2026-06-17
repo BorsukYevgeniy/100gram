@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { BlockedUser } from '../../../../generated/prisma/browser';
-import { PrismaService } from '../../prisma/prisma.service';
+import { PrismaService } from '../../../infra/prisma/prisma.service';
 
 @Injectable()
 export class BlockedUserRepository {
