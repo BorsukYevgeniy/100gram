@@ -10,16 +10,16 @@ import { CurrentUser } from '../../common/decorators/routes/user.decorator';
 import { MessageFilesInterceptor } from '../../common/interceptor/message-files.interceptor';
 import { AccessTokenPayload } from '../../common/types';
 import { VerifiedUserGuard } from '../auth/guards/verified-user.guard';
-import { FileControllerDocs, UploadFileRouteDocs } from './docs';
+import { FileDocs } from './docs';
 import { FileService } from './file.service';
 
-@FileControllerDocs()
+@FileDocs.Controller()
 @UseGuards(VerifiedUserGuard)
 @Controller('files')
 export class FileController {
   constructor(private readonly fileService: FileService) {}
 
-  @UploadFileRouteDocs()
+  @FileDocs.UploadFile()
   @Post('upload')
   @UseInterceptors(MessageFilesInterceptor)
   async upload(
