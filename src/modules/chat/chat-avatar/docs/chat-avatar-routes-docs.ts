@@ -5,7 +5,7 @@ import {
   ApiOkResponse,
   ApiOperation,
 } from '@nestjs/swagger';
-import { ApiAvatarFileDocs } from '../../../../common/decorators/docs/avatar';
+import { ApiFileUploadDocs } from '../../../../common/decorators/docs/file';
 import { ApiChatNotFoundResponse } from '../../docs/shared/api-chat-not-found-response.decorator';
 
 export class ChatAvatarRoutes {
@@ -15,7 +15,7 @@ export class ChatAvatarRoutes {
         summary: 'Update current chat avatar',
         description: 'Upload a new avatar image for the chat',
       }),
-      ApiAvatarFileDocs(),
+      ApiFileUploadDocs('Avatar image file'),
       ApiOkResponse({ description: 'Avatar updated successfully' }),
       ApiChatNotFoundResponse(),
     );

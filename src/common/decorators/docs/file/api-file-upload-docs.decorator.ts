@@ -1,11 +1,11 @@
 import { applyDecorators } from '@nestjs/common';
 import { ApiBadRequestResponse, ApiBody, ApiConsumes } from '@nestjs/swagger';
 
-export function ApiAvatarFileDocs() {
+export function ApiFileUploadDocs(description: string) {
   return applyDecorators(
     ApiConsumes('multipart/form-data'),
     ApiBody({
-      description: 'Avatar image file',
+      description,
       schema: {
         type: 'object',
         properties: {

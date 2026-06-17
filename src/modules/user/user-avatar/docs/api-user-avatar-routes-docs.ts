@@ -6,7 +6,7 @@ import {
 } from '@nestjs/swagger';
 import { ApiAdminVerifiedForbidden } from '../../../../common/decorators/docs/auth';
 
-import { ApiAvatarFileDocs } from '../../../../common/decorators/docs/avatar';
+import { ApiFileUploadDocs } from '../../../../common/decorators/docs/file';
 import { ApiUserIdParamDocs, ApiUserNotFoundResponse } from '../../docs/shared';
 
 export class ApiUserAvatarRoutesDocs {
@@ -16,7 +16,7 @@ export class ApiUserAvatarRoutesDocs {
         summary: 'Update current user avatar',
         description: 'Upload a new avatar image for the authenticated user',
       }),
-      ApiAvatarFileDocs(),
+      ApiFileUploadDocs('Avatar image file'),
       ApiOkResponse({ description: 'Avatar updated successfully' }),
       ApiUserNotFoundResponse(),
     );
