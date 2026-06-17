@@ -9,7 +9,6 @@ import {
   ApiTooManyRequestsResponse,
   ApiUnauthorizedResponse,
 } from '@nestjs/swagger';
-import { ApiInvalidDto } from '../../../common/decorators/docs/validation';
 import { ResetPasswordDto } from '../dto/reset-password.dto';
 
 export class AuthRoutesDocs {
@@ -51,7 +50,7 @@ export class AuthRoutesDocs {
         description: 'Creates a new user and returns auth tokens via cookies',
       }),
       ApiCreatedResponse({ description: 'User registered successfully' }),
-      ApiInvalidDto(),
+      ApiBadRequestResponse({ description: 'Invalid input data' }),
     );
   }
 
