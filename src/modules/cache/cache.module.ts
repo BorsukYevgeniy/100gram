@@ -24,7 +24,7 @@ import { ConfigService } from '../config/config.service';
             );
 
             client.on('reconnecting', (ms) =>
-              logger.warn({ ms }, 'Redis reconnecting '),
+              logger.warn({ ms }, 'Redis reconnecting'),
             );
 
             client.on('close', () => logger.debug('Redis connection closed'));
