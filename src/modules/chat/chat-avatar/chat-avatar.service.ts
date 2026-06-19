@@ -5,14 +5,14 @@ import { extname } from 'path';
 import { ChatType } from '../../../../generated/prisma/enums';
 import { AccessTokenPayload } from '../../../common/types';
 import { Avatar } from '../../../common/types/avatar.types';
-import { FileStorage } from '../../../infra/file/file.storage';
 import { ChatRepository } from '../repository/chat.repository';
 import { ChatValidationService } from '../validation/chat-validation.service';
+import { ChatAvatarFileService } from './chat-avatar-file.service';
 
 @Injectable()
 export class ChatAvatarService {
   constructor(
-    private readonly fileStorage: FileStorage,
+    private readonly fileService: ChatAvatarFileService,
     private readonly logger: PinoLogger,
     private readonly chatRepo: ChatRepository,
     private readonly chatValidator: ChatValidationService,
@@ -30,14 +30,14 @@ export class ChatAvatarService {
 
     const newAvatarName = randomUUID().concat(extname(file.originalname));
     try {
-      await this.fileStorage.writeChatAvatar(newAvatarName, file.buffer);
+      await this.fileService.writeChatAvatar(newAvatarName, file.buffer);
       await this.chatRepo.updateAvatar(chatId, newAvatarName);
 
       this.logger.info({ chatId, newAvatarName }, 'Updated chat avatar');
 
       return { avatarUrl: '/avatars/chats/'.concat(newAvatarName) };
     } catch (e) {
-      await this.fileStorage.unlinkChatAvatar(newAvatarName);
+      await this.fileService.unlinkChatAvatar(newAvatarName);
       throw e;
     }
   }
@@ -53,7 +53,7 @@ export class ChatAvatarService {
       throw new BadRequestException('Cannot delete default chat avatar');
     }
 
-    await this.fileStorage.unlinkChatAvatar(chat.avatar);
+    await this.fileService.unlinkChatAvatar(chat.avatar);
     await this.chatRepo.updateAvatar(chatId);
 
     this.logger.info({ chatId }, 'Deleted chat avatar');

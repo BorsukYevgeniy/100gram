@@ -36,6 +36,7 @@ export class FileRepository {
           { userId: null },
         ],
       },
+      select: { name: true },
     });
   }
 }

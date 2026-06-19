@@ -3,6 +3,7 @@ import { FileStorageModule } from '../../infra/file/storage.module';
 import { CacheModule } from '../cache/cache.module';
 import { MessageModule } from '../message/message.module';
 import { TokenModule } from '../token/token.module';
+import { ChatAvatarFileService } from './chat-avatar/chat-avatar-file.service';
 import { ChatAvatarController } from './chat-avatar/chat-avatar.controller';
 import { ChatAvatarService } from './chat-avatar/chat-avatar.service';
 import { ChatMessageController } from './chat-message/chat-message.controller';
@@ -29,7 +30,13 @@ import { ChatValidationModule } from './validation/chat-validation.module';
     ChatAvatarController,
     ChatController,
   ],
-  providers: [ChatGateway, ChatService, ChatAvatarService, ChatUserService],
+  providers: [
+    ChatGateway,
+    ChatService,
+    ChatAvatarService,
+    ChatAvatarFileService,
+    ChatUserService,
+  ],
   exports: [ChatService],
 })
 export class ChatModule {}

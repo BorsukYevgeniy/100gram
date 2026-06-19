@@ -5,6 +5,7 @@ import { PrismaModule } from '../../infra/prisma/prisma.module';
 import { ChatModule } from '../chat/chat.module';
 import { TokenModule } from '../token/token.module';
 import { BlockedUserModule } from './blocked-user/blocked-user.module';
+import { UserAvatarFileService } from './user-avatar/user-avatar-file.service';
 import { UserAvatarController } from './user-avatar/user-avatar.controller';
 import { UserAvatarService } from './user-avatar/user-avatar.service';
 import { UserCleanupService } from './user-cleanup.service';
@@ -26,6 +27,7 @@ import { UserService } from './user.service';
     UserCleanupService,
     UserService,
     UserAvatarService,
+    UserAvatarFileService,
     UserRepository,
   ],
   exports: [UserService],

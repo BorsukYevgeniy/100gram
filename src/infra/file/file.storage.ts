@@ -1,130 +1,40 @@
-import { Injectable, OnModuleInit } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { mkdir, unlink, writeFile } from 'fs/promises';
 import { PinoLogger } from 'nestjs-pino';
 import { resolve } from 'path';
 
 @Injectable()
-export class FileStorage implements OnModuleInit {
-  private MESSAGE_FILE_DIR_PATH: string;
-  private USER_AVATAR_DIR_PATH: string;
-  private CHAT_AVATAR_DIR_PATH: string;
-
+export class LocalFileStorage {
   constructor(private readonly logger: PinoLogger) {
-    this.MESSAGE_FILE_DIR_PATH = resolve(
-      __dirname,
-      '../../../../files/messages',
-    );
-
-    this.USER_AVATAR_DIR_PATH = resolve(
-      __dirname,
-      '../../../../files/avatars/users',
-    );
-
-    this.CHAT_AVATAR_DIR_PATH = resolve(
-      __dirname,
-      '../../../../files/avatars/chats',
-    );
-
-    this.logger.setContext(FileStorage.name);
+    this.logger.setContext(LocalFileStorage.name);
   }
 
-  async onModuleInit() {
-    // Creating dirs for storing files if they didn't exist
-
-    this.logger.debug(
-      {
-        MESSAGE_FILE_DIR_PATH: this.MESSAGE_FILE_DIR_PATH,
-        USER_AVATAR_DIR_PATH: this.USER_AVATAR_DIR_PATH,
-        CHAT_AVATAR_DIR_PATH: this.CHAT_AVATAR_DIR_PATH,
-      },
-      'Creating directories for storing files',
-    );
-
+  async write(fileName: string, path: string, content: Buffer) {
     try {
-      await Promise.all([
-        mkdir(this.MESSAGE_FILE_DIR_PATH, { recursive: true }),
-        mkdir(this.USER_AVATAR_DIR_PATH, { recursive: true }),
-        mkdir(this.CHAT_AVATAR_DIR_PATH, { recursive: true }),
-      ]);
+      await writeFile(resolve(path, fileName), content);
+      this.logger.debug({ fileName, path }, 'File written');
     } catch (e) {
-      this.logger.fatal(
-        {
-          MESSAGE_FILE_DIR_PATH: this.MESSAGE_FILE_DIR_PATH,
-          USER_AVATAR_DIR_PATH: this.USER_AVATAR_DIR_PATH,
-          CHAT_AVATAR_DIR_PATH: this.CHAT_AVATAR_DIR_PATH,
-        },
-        'Cannot create directories for storing files',
-      );
-
+      this.logger.error({ fileName, path }, 'Cannot write file');
       throw e;
     }
   }
 
-  async writeMessageFile(fileName: string, content: Buffer): Promise<void> {
+  async unlink(fileName: string, path: string) {
     try {
-      await writeFile(resolve(this.MESSAGE_FILE_DIR_PATH, fileName), content);
-      this.logger.debug({ fileName }, 'File written');
+      await unlink(resolve(path, fileName));
+      this.logger.debug({ fileName }, 'File deleted');
     } catch (e) {
-      this.logger.error({ fileName }, 'Cannot write file');
-      await unlink(resolve(this.MESSAGE_FILE_DIR_PATH, fileName));
+      this.logger.error({ fileName }, 'Cannot delete file');
       throw e;
     }
   }
 
-  async unlinkMessageFiles(fileNames: string[]) {
+  async mkdir(path: string) {
     try {
-      await Promise.all(
-        fileNames.map((name) =>
-          unlink(resolve(this.MESSAGE_FILE_DIR_PATH, name)),
-        ),
-      );
-
-      this.logger.debug({ fileNames }, 'Files deleted');
+      await mkdir(path, { recursive: true });
+      this.logger.debug({ path }, 'Directory created');
     } catch (e) {
-      this.logger.error({ fileNames }, 'Cannot delete files');
-      throw e;
-    }
-  }
-
-  async writeUserAvatar(fileName: string, content: Buffer) {
-    try {
-      await writeFile(resolve(this.USER_AVATAR_DIR_PATH, fileName), content);
-      this.logger.debug({ fileName }, 'User avatar written');
-    } catch (e) {
-      this.logger.error({ fileName }, 'Cannot write user avatar');
-      await unlink(resolve(this.USER_AVATAR_DIR_PATH, fileName));
-      throw e;
-    }
-  }
-
-  async unlinkUserAvatar(fileName: string) {
-    try {
-      await unlink(resolve(this.USER_AVATAR_DIR_PATH, fileName));
-      this.logger.debug({ fileName }, 'User avatar deleted');
-    } catch (e) {
-      this.logger.error({ fileName }, 'Cannot delete user avatar');
-      throw e;
-    }
-  }
-
-  async writeChatAvatar(fileName: string, content: Buffer) {
-    try {
-      await writeFile(resolve(this.CHAT_AVATAR_DIR_PATH, fileName), content);
-      this.logger.debug({ fileName }, 'Chat avatar written');
-    } catch (e) {
-      this.logger.error({ fileName }, 'Cannot write chat avatar');
-      await unlink(resolve(this.CHAT_AVATAR_DIR_PATH, fileName));
-      throw e;
-    }
-  }
-
-  async unlinkChatAvatar(fileName: string) {
-    try {
-      await unlink(resolve(this.CHAT_AVATAR_DIR_PATH, fileName));
-      this.logger.debug({ fileName }, 'Chat avatar deleted');
-    } catch (e) {
-      this.logger.error({ fileName }, 'Cannot delete chat avatar');
-      throw e;
+      this.logger.fatal({ path }, 'Cannot create directory');
     }
   }
 }
