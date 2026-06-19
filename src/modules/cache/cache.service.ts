@@ -1,12 +1,12 @@
-import { Inject, Injectable } from '@nestjs/common';
-import { REDIS_CLIENT } from '../../infra/redis/redis.constants';
+import { Injectable } from '@nestjs/common';
 
+import { InjectRedis } from '@nestjs-modules/ioredis';
 import Redis from 'ioredis';
 import { PaginationDto } from '../../common/dto/pagination.dto';
 
 @Injectable()
 export class CacheService {
-  constructor(@Inject(REDIS_CLIENT) private readonly redisClient: Redis) {}
+  constructor(@InjectRedis() private readonly redisClient: Redis) {}
 
   async get<T>(key: string): Promise<T | null> {
     const value = await this.redisClient.get(key);

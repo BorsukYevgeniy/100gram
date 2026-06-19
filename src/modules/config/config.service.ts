@@ -1,3 +1,4 @@
+import { RedisModuleOptions } from '@nestjs-modules/ioredis';
 import { MailerOptions } from '@nestjs-modules/mailer';
 import { Injectable } from '@nestjs/common';
 import { ConfigService as NestConfigService } from '@nestjs/config';
@@ -104,10 +105,10 @@ export class ConfigService {
     return Number(this.configService.getOrThrow<number>('PASSWORD_SALT'));
   }
 
-  get REDIS_CONFIG() {
+  get REDIS_CONFIG(): RedisModuleOptions {
     return {
-      host: this.configService.getOrThrow<string>('REDIS_HOST'),
-      port: this.configService.getOrThrow<number>('REDIS_PORT'),
+      type: 'single',
+      url: this.configService.getOrThrow<string>('REDIS_URL'),
     };
   }
 }
