@@ -1,11 +1,7 @@
-import { IsInt, IsPositive } from 'class-validator';
+import { OmitType } from '@nestjs/swagger';
+import { WsUpdateMessageDto } from './ws-update-message.dto';
 
-export class WsDeleteMessageDto {
-  @IsInt()
-  @IsPositive()
-  chatId: number;
-
-  @IsInt()
-  @IsPositive()
-  messageId: number;
-}
+export class WsDeleteMessageDto extends OmitType(WsUpdateMessageDto, [
+  'fileIds',
+  'text',
+]) {}
