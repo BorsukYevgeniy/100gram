@@ -42,9 +42,11 @@ export class UserController {
   @ApiUserRoutesDocs.AssignAdmin()
   @RequiredRoles([Role.ADMIN])
   @UseGuards(RolesGuard)
-  @Patch('assign-admin/:id')
-  async assignAdmin(@Param('id') id: number): Promise<UserNoCredOtpVCode> {
-    return this.userService.assignAdmin(id);
+  @Patch('assign-admin/:userId')
+  async assignAdmin(
+    @Param('userId') userId: number,
+  ): Promise<UserNoCredOtpVCode> {
+    return this.userService.assignAdmin(userId);
   }
 
   @ApiUserRoutesDocs.DeleteMe()
@@ -59,11 +61,11 @@ export class UserController {
   @ApiUserRoutesDocs.DeleteUser()
   @RequiredRoles([Role.ADMIN])
   @UseGuards(RolesGuard)
-  @Delete(':id')
+  @Delete(':userId')
   async deleteUserById(
     @CurrentUser() user: AccessTokenPayload,
-    @Param('id') id: number,
+    @Param('userId') userId: number,
   ): Promise<UserNoCredOtpVCode> {
-    return this.userService.delete(user, id);
+    return this.userService.delete(user, userId);
   }
 }

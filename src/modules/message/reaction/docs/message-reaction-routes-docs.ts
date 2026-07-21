@@ -2,7 +2,6 @@ import { applyDecorators } from '@nestjs/common';
 import {
   ApiBadRequestResponse,
   ApiCreatedResponse,
-  ApiForbiddenResponse,
   ApiNotFoundResponse,
   ApiOkResponse,
   ApiOperation,
@@ -30,9 +29,6 @@ export class MessageReactionRoutesDocs {
       ApiCreatedResponse({ description: 'Reaction added successfully' }),
       ApiInvalidReactionDataResponse(),
       ApiMessageNotFound(),
-      ApiForbiddenResponse({
-        description: 'User is not allowed to react to this message',
-      }),
     );
   }
 
@@ -46,9 +42,6 @@ export class MessageReactionRoutesDocs {
       ApiOkResponse({ description: 'Reaction updated successfully' }),
       ApiInvalidReactionDataResponse(),
       ApiMessageOrReactionNotFoundResponse(),
-      ApiForbiddenResponse({
-        description: 'User is not allowed to update this reaction',
-      }),
     );
   }
 
@@ -60,10 +53,7 @@ export class MessageReactionRoutesDocs {
           'Removes the authenticated user reaction from the specified message',
       }),
       ApiOkResponse({ description: 'Reaction removed successfully' }),
-      ApiMessageOrReactionNotFoundResponse(),
-      ApiForbiddenResponse({
-        description: 'User is not allowed to remove this reaction',
-      }),
+      ApiMessageNotFound(),
     );
   }
 }

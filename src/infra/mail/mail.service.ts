@@ -1,7 +1,7 @@
 import { MailerService } from '@nestjs-modules/mailer';
 import { Injectable } from '@nestjs/common';
 import { PinoLogger } from 'nestjs-pino';
-import { ConfigService } from '../config/config.service';
+import { ConfigService } from '../../modules/config/config.service';
 
 @Injectable()
 export class MailService {

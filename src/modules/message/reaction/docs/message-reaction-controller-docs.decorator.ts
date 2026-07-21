@@ -1,5 +1,5 @@
 import { applyDecorators } from '@nestjs/common';
-import { ApiTags } from '@nestjs/swagger';
+import { ApiForbiddenResponse, ApiTags } from '@nestjs/swagger';
 import {
   ApiAuthCookies,
   ApiUnauthorizedResponse,
@@ -14,5 +14,8 @@ export function MessageReactionControllerDocs() {
     ApiAuthCookies(),
     ApiUnauthorizedResponse(),
     ApiVerifiedForbidden(),
+    ApiForbiddenResponse({
+      description: 'User is not allowed to react to this message',
+    }),
   );
 }

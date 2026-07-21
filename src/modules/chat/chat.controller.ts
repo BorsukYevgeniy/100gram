@@ -98,11 +98,11 @@ export class ChatController {
   }
 
   @ChatRoutesDocs.DeleteChat()
-  @Delete(':id')
+  @Delete(':chatId')
   async delete(
     @CurrentUser() user: AccessTokenPayload,
-    @Param('id') id: number,
+    @Param('chatId') chatId: number,
   ) {
-    return this.chatService.delete(user, id);
+    return this.chatService.delete(user, chatId);
   }
 }

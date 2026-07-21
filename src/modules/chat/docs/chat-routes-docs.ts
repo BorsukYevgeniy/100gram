@@ -8,6 +8,7 @@ import {
   ApiOperation,
   ApiParam,
 } from '@nestjs/swagger';
+import { ApiVerifiedForbidden } from '../../../common/decorators/docs/auth';
 import { ApiPaginationDocs } from '../../../common/decorators/docs/pagination';
 import { ApiUserNotFoundResponse } from '../../user/docs/shared';
 import { CreateGroupChatDto } from '../dto/create-group-chat.dto';
@@ -105,6 +106,7 @@ export class ChatRoutesDocs {
       ApiForbiddenResponse({
         description: 'You must be a participant of chat',
       }),
+      ApiVerifiedForbidden(),
       ApiChatNotFoundResponse(),
       ApiChatIdParamDocs(),
     );
@@ -120,6 +122,7 @@ export class ChatRoutesDocs {
       ApiChatMustBeGroupResponse(),
       ApiNotFoundResponse({ description: 'Chat or new owner not found' }),
       ApiYouMustBeOwnerResponse(),
+      ApiVerifiedForbidden(),
       ApiChatIdParamDocs(),
       ApiParam({
         name: 'ownerId',
@@ -139,6 +142,7 @@ export class ChatRoutesDocs {
       ApiOkResponse({ description: 'Chat updated successfully' }),
       ApiChatMustBeGroupResponse(),
       ApiYouMustBeOwnerResponse(),
+      ApiVerifiedForbidden(),
       ApiBody({ type: UpdateGroupChatDto }),
       ApiChatNotFoundResponse(),
       ApiChatIdParamDocs(),
@@ -153,6 +157,7 @@ export class ChatRoutesDocs {
       }),
       ApiOkResponse({ description: 'Chat deleted successfully' }),
       ApiChatNotFoundResponse(),
+      ApiVerifiedForbidden(),
       ApiYouMustBeOwnerResponse(),
       ApiChatIdParamDocs(),
     );

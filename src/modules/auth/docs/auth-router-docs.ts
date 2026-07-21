@@ -7,9 +7,16 @@ import {
   ApiOkResponse,
   ApiOperation,
   ApiTooManyRequestsResponse,
-  ApiUnauthorizedResponse,
+  ApiUnauthorizedResponse as SwaggerApiUnauthorizedResponse,
 } from '@nestjs/swagger';
+import { ApiUnauthorizedResponse } from '../../../common/decorators/docs/auth';
 import { ResetPasswordDto } from '../dto/reset-password.dto';
+
+function ApiTooManyAttemptsResendEmailResponse() {
+  return ApiTooManyRequestsResponse({
+    description: 'Too many attempts to resend email',
+  });
+}
 
 export class AuthRoutesDocs {
   static GoogleLogin() {
@@ -34,7 +41,7 @@ export class AuthRoutesDocs {
       ApiOkResponse({
         description: 'User authenticated successfully, cookies set',
       }),
-      ApiUnauthorizedResponse({
+      SwaggerApiUnauthorizedResponse({
         description: 'Invalid Google token or authentication failed',
       }),
       ApiBadRequestResponse({
@@ -61,7 +68,7 @@ export class AuthRoutesDocs {
         description: 'Authenticates user and sets auth cookies',
       }),
       ApiOkResponse({ description: 'User logged in successfully' }),
-      ApiUnauthorizedResponse({ description: 'Invalid credentials' }),
+      ApiBadRequestResponse({ description: 'Invalid credentials' }),
     );
   }
 
@@ -109,9 +116,10 @@ export class AuthRoutesDocs {
         description: 'Generates new tokens using refresh token cookie',
       }),
       ApiOkResponse({ description: 'Tokens refreshed successfully' }),
-      ApiUnauthorizedResponse({
+      SwaggerApiUnauthorizedResponse({
         description: 'Refresh token missing or invalid',
       }),
+      ApiUnauthorizedResponse(),
     );
   }
 
@@ -122,10 +130,8 @@ export class AuthRoutesDocs {
         description: 'Sends new verification email to authenticated user',
       }),
       ApiOkResponse({ description: 'Verification email sent' }),
-      ApiUnauthorizedResponse({ description: 'Unauthorized' }),
-      ApiTooManyRequestsResponse({
-        description: 'Too many attempts to resend email',
-      }),
+      ApiUnauthorizedResponse(),
+      ApiTooManyAttemptsResendEmailResponse(),
     );
   }
 
@@ -136,10 +142,8 @@ export class AuthRoutesDocs {
         description: 'Sends OTP code to user email for verification',
       }),
       ApiOkResponse({ description: 'OTP sent (if email exists)' }),
-      ApiUnauthorizedResponse({ description: 'Unauthorized' }),
-      ApiTooManyRequestsResponse({
-        description: 'Too many attempts to resend email',
-      }),
+      ApiUnauthorizedResponse(),
+      ApiTooManyAttemptsResendEmailResponse(),
     );
   }
 

@@ -1,8 +1,8 @@
 import { Module } from '@nestjs/common';
 import { ThrottlerModule } from '@nestjs/throttler';
+import { MailModule } from '../../infra/mail/mail.module';
 import { ConfigModule } from '../config/config.module';
 import { ConfigService } from '../config/config.service';
-import { MailModule } from '../mail/mail.module';
 import { TokenModule } from '../token/token.module';
 import { UserModule } from '../user/user.module';
 import { AuthController } from './auth.controller';

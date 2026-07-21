@@ -7,7 +7,7 @@ import {
 import { ApiAdminVerifiedForbidden } from '../../../../common/decorators/docs/auth';
 
 import { ApiFileUploadDocs } from '../../../../common/decorators/docs/file';
-import { ApiUserIdParamDocs, ApiUserNotFoundResponse } from '../../docs/shared';
+import { ApiUserIdParamDocs } from '../../docs/shared';
 
 export class ApiUserAvatarRoutesDocs {
   static UpdateAvatar() {
@@ -18,7 +18,6 @@ export class ApiUserAvatarRoutesDocs {
       }),
       ApiFileUploadDocs('Avatar image file'),
       ApiOkResponse({ description: 'Avatar updated successfully' }),
-      ApiUserNotFoundResponse(),
     );
   }
 
@@ -29,7 +28,6 @@ export class ApiUserAvatarRoutesDocs {
         description: 'Removes avatar of the authenticated user',
       }),
       ApiNoContentResponse({ description: 'Avatar deleted successfully' }),
-      ApiUserNotFoundResponse(),
     );
   }
 
@@ -41,7 +39,6 @@ export class ApiUserAvatarRoutesDocs {
       }),
       ApiNoContentResponse({ description: 'Avatar deleted successfully' }),
       ApiAdminVerifiedForbidden(),
-      ApiUserNotFoundResponse(),
       ApiUserIdParamDocs(),
     );
   }

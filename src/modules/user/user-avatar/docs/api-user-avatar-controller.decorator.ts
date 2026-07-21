@@ -5,6 +5,7 @@ import {
   ApiUnauthorizedResponse,
   ApiVerifiedForbidden,
 } from '../../../../common/decorators/docs/auth';
+import { ApiUserNotFoundResponse } from '../../docs/shared';
 
 export function ApiUserAvatarControllerDocs() {
   return applyDecorators(
@@ -12,5 +13,6 @@ export function ApiUserAvatarControllerDocs() {
     ApiAuthCookies(),
     ApiUnauthorizedResponse(),
     ApiVerifiedForbidden(),
+    ApiUserNotFoundResponse(),
   );
 }

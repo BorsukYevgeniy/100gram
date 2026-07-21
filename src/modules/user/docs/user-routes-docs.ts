@@ -2,7 +2,6 @@ import { applyDecorators } from '@nestjs/common';
 import { ApiOkResponse, ApiOperation } from '@nestjs/swagger';
 import { ApiAdminForbidden } from '../../../common/decorators/docs/auth/api-admin-forbidden.decorator';
 import { ApiUserIdParamDocs } from './shared/api-user-id-docs.decorator';
-import { ApiUserNotFoundResponse } from './shared/api-user-not-found-response.decorator';
 
 export class ApiUserRoutesDocs {
   static GetById() {
@@ -12,7 +11,6 @@ export class ApiUserRoutesDocs {
         description: 'Returns user by provided userId',
       }),
       ApiOkResponse({ description: 'User fetched successfully' }),
-      ApiUserNotFoundResponse(),
       ApiUserIdParamDocs(),
     );
   }
@@ -24,7 +22,6 @@ export class ApiUserRoutesDocs {
         description: 'Returns authenticated user profile',
       }),
       ApiOkResponse({ description: 'My account fetched successfully' }),
-      ApiUserNotFoundResponse(),
     );
   }
 
@@ -35,7 +32,6 @@ export class ApiUserRoutesDocs {
         description: 'Grants admin role to a user (admin only)',
       }),
       ApiOkResponse({ description: 'Admin assigned successfully' }),
-      ApiUserNotFoundResponse(),
       ApiUserIdParamDocs(),
       ApiAdminForbidden(),
     );
@@ -48,7 +44,6 @@ export class ApiUserRoutesDocs {
         description: 'Deletes authenticated user account',
       }),
       ApiOkResponse({ description: 'My account deleted successfully' }),
-      ApiUserNotFoundResponse(),
     );
   }
 
@@ -59,7 +54,6 @@ export class ApiUserRoutesDocs {
         description: 'Deletes user by ID (admin only)',
       }),
       ApiOkResponse({ description: 'User deleted successfully' }),
-      ApiUserNotFoundResponse(),
       ApiAdminForbidden(),
       ApiUserIdParamDocs(),
     );

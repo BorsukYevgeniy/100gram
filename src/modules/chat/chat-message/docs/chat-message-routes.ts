@@ -5,6 +5,7 @@ import {
   ApiOkResponse,
   ApiOperation,
 } from '@nestjs/swagger';
+import { ApiVerifiedForbidden } from '../../../../common/decorators/docs/auth';
 import { ApiPaginationDocs } from '../../../../common/decorators/docs/pagination';
 import { ApiChatNotFoundResponse } from '../../docs/shared';
 
@@ -18,6 +19,7 @@ export class ChatMessageRoutes {
       ApiOkResponse({ description: 'Fetched messages in chat' }),
       ApiChatNotFoundResponse(),
       ApiPaginationDocs(),
+      ApiVerifiedForbidden(),
     );
   }
 
@@ -34,6 +36,7 @@ export class ChatMessageRoutes {
           'You must be a participant of chat or owner of the channel',
       }),
       ApiPaginationDocs(),
+      ApiVerifiedForbidden(),
     );
   }
 }

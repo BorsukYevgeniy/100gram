@@ -3,7 +3,6 @@ import { ApiTags } from '@nestjs/swagger';
 import {
   ApiAuthCookies,
   ApiUnauthorizedResponse,
-  ApiVerifiedForbidden,
 } from '../../../../common/decorators/docs/auth';
 import { ApiChatIdParamDocs } from '../../docs/shared';
 
@@ -13,6 +12,5 @@ export function ChatMessageControllerDocs() {
     ApiChatIdParamDocs(),
     ApiAuthCookies(),
     ApiUnauthorizedResponse(),
-    ApiVerifiedForbidden(),
   );
 }

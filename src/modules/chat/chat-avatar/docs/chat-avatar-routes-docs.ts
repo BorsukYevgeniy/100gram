@@ -5,6 +5,7 @@ import {
   ApiOkResponse,
   ApiOperation,
 } from '@nestjs/swagger';
+import { ApiVerifiedForbidden } from '../../../../common/decorators/docs/auth';
 import { ApiFileUploadDocs } from '../../../../common/decorators/docs/file';
 import { ApiChatNotFoundResponse } from '../../docs/shared/api-chat-not-found-response.decorator';
 
@@ -18,6 +19,7 @@ export class ChatAvatarRoutes {
       ApiFileUploadDocs('Avatar image file'),
       ApiOkResponse({ description: 'Avatar updated successfully' }),
       ApiChatNotFoundResponse(),
+      ApiVerifiedForbidden(),
     );
   }
 
@@ -32,6 +34,7 @@ export class ChatAvatarRoutes {
         description: 'You are not owner of this chat',
       }),
       ApiChatNotFoundResponse(),
+      ApiVerifiedForbidden(),
     );
   }
 }

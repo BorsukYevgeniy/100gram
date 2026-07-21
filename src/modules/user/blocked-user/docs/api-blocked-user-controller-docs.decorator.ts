@@ -4,11 +4,13 @@ import {
   ApiAuthCookies,
   ApiUnauthorizedResponse,
 } from '../../../../common/decorators/docs/auth';
+import { ApiUserNotFoundResponse } from '../../docs/shared';
 
 export function ApiBlockedUserControllerDocs() {
   return applyDecorators(
     ApiTags('Blocked User'),
     ApiAuthCookies(),
     ApiUnauthorizedResponse(),
+    ApiUserNotFoundResponse(),
   );
 }
