@@ -1,18 +1,19 @@
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
+import { ConfigType } from '@nestjs/config';
 import { PassportStrategy } from '@nestjs/passport';
 import { PinoLogger } from 'nestjs-pino';
 import { Strategy, VerifyCallback } from 'passport-google-oauth20';
-import { ConfigService } from '../../config/config.service';
+import googleOauthConfig from '../../../config/google-oauth.config';
 import { AuthService } from '../auth.service';
 
 @Injectable()
 export class GoogleStrategy extends PassportStrategy(Strategy) {
   constructor(
-    private readonly configService: ConfigService,
+    @Inject(googleOauthConfig.KEY) config: ConfigType<typeof googleOauthConfig>,
     private readonly authService: AuthService,
     private readonly logger: PinoLogger,
   ) {
-    super(configService.GOOGLE_CONFIG);
+    super(config);
     logger.setContext(GoogleStrategy.name);
   }
 

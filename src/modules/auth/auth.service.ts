@@ -1,5 +1,6 @@
 import {
   BadRequestException,
+  Inject,
   Injectable,
   NotFoundException,
   UnauthorizedException,
@@ -7,14 +8,15 @@ import {
 import { CreateUserDto } from '../user/dto/create-user.dto';
 import { UserService } from '../user/user.service';
 
+import { ConfigType } from '@nestjs/config';
 import { compare, hash } from 'bcryptjs';
 import { randomInt } from 'crypto';
 import { PinoLogger } from 'nestjs-pino';
 import { User } from '../../../generated/prisma/browser';
 import { Provider, Role } from '../../../generated/prisma/enums';
 import { AccessTokenPayload, TokenPair } from '../../common/types';
+import authConfig from '../../config/auth.config';
 import { MailService } from '../../infra/mail/mail.service';
-import { ConfigService } from '../config/config.service';
 import { TokenService } from '../token/token.service';
 import { UserNoCredOtpVCode } from '../user/types/user.types';
 import { LoginDto } from './dto/login.dto';
@@ -23,7 +25,8 @@ import { ResetPasswordDto } from './dto/reset-password.dto';
 @Injectable()
 export class AuthService {
   constructor(
-    private readonly configService: ConfigService,
+    @Inject(authConfig.KEY)
+    private readonly config: ConfigType<typeof authConfig>,
     private readonly userService: UserService,
     private readonly tokenService: TokenService,
     private readonly mailService: MailService,
@@ -45,10 +48,7 @@ export class AuthService {
       );
     }
 
-    const hashedPassword = await hash(
-      dto.password,
-      this.configService.PASSWORD_SALT,
-    );
+    const hashedPassword = await hash(dto.password, this.config.passwordSalt);
 
     const { id, email, role, verificationCode, isVerified } =
       await this.userService.create({
@@ -283,7 +283,7 @@ export class AuthService {
 
     const newPasswordHash = await hash(
       dto.newPassword,
-      this.configService.PASSWORD_SALT,
+      this.config.passwordSalt,
     );
 
     await this.userService.resetPasswordWithOtp(userId, newPasswordHash);

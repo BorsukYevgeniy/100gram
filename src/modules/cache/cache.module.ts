@@ -2,20 +2,23 @@ import { Module } from '@nestjs/common';
 import { CacheService } from './cache.service';
 
 import { RedisModule } from '@nestjs-modules/ioredis';
+import { ConfigModule, ConfigType } from '@nestjs/config';
 import Redis, { Cluster } from 'ioredis';
 import { PinoLogger } from 'nestjs-pino';
-import { ConfigModule } from '../config/config.module';
-import { ConfigService } from '../config/config.service';
+import redisConfig from '../../config/redis.config';
 
 @Module({
   imports: [
     RedisModule.forRootAsync({
-      imports: [ConfigModule],
-      inject: [ConfigService, PinoLogger],
-      useFactory: (cf: ConfigService, logger: PinoLogger) => {
+      imports: [ConfigModule.forFeature(redisConfig)],
+      inject: [redisConfig.KEY, PinoLogger],
+      useFactory: (
+        config: ConfigType<typeof redisConfig>,
+        logger: PinoLogger,
+      ) => {
         logger.setContext(RedisModule.name);
         return {
-          ...cf.REDIS_CONFIG,
+          ...config,
           onClientReady: (client: Redis | Cluster) => {
             client.on('connect', () => logger.debug('Redis connected'));
 

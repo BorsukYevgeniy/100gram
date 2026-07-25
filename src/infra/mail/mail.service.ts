@@ -1,27 +1,26 @@
 import { MailerService } from '@nestjs-modules/mailer';
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
+import { ConfigType } from '@nestjs/config';
 import { PinoLogger } from 'nestjs-pino';
-import { ConfigService } from '../../modules/config/config.service';
+import appConfig from '../../config/app.config';
 
 @Injectable()
 export class MailService {
   constructor(
     private readonly mailerService: MailerService,
-    private readonly configService: ConfigService,
+    @Inject(appConfig.KEY)
+    private readonly appConf: ConfigType<typeof appConfig>,
     private readonly logger: PinoLogger,
   ) {
     this.logger.setContext(MailService.name);
   }
 
   async sendVerificationMail(to: string, verificationCode: string) {
-    const link = this.configService.APP_URL.concat(
-      '/auth/verify/',
-      verificationCode,
-    );
+    const link = this.appConf.appUrl.concat('/auth/verify/', verificationCode);
 
     await this.mailerService.sendMail({
       to,
-      subject: 'Verification mail on ' + this.configService.APP_URL,
+      subject: 'Verification mail on ' + this.appConf.appUrl,
       html: `
       <div>
         <h1>For verification go to</h1>
@@ -36,7 +35,7 @@ export class MailService {
   async sendOtpMail(to: string, otp: number) {
     await this.mailerService.sendMail({
       to,
-      subject: 'Password reseting on ' + this.configService.APP_URL,
+      subject: 'Password reseting on ' + this.appConf.appUrl,
       html: `
       <div>
         <h1>Your OTP code for password reseting</h1>

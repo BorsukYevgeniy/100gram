@@ -1,5 +1,6 @@
-import { Injectable } from '@nestjs/common';
-import { JwtService } from '@nestjs/jwt';
+import { Inject, Injectable } from '@nestjs/common';
+import { ConfigType } from '@nestjs/config';
+import { JwtService, JwtSignOptions } from '@nestjs/jwt';
 import { PinoLogger } from 'nestjs-pino';
 import { Token } from '../../../generated/prisma/browser';
 import { Role } from '../../../generated/prisma/enums';
@@ -8,15 +9,17 @@ import {
   RefreshTokenPayload,
   TokenPair,
 } from '../../common/types';
-import { ConfigService } from '../config/config.service';
 import { TokenRepository } from './token.repository';
+
+import jwtConfig from '../../config/jwt.config';
 
 @Injectable()
 export class TokenService {
   constructor(
     private readonly tokenRepository: TokenRepository,
     private readonly jwtService: JwtService,
-    private readonly configService: ConfigService,
+    @Inject(jwtConfig.KEY)
+    private readonly config: ConfigType<typeof jwtConfig>,
     private readonly logger: PinoLogger,
   ) {
     this.logger.setContext(TokenService.name);
@@ -29,22 +32,25 @@ export class TokenService {
   ): Promise<string> {
     return this.jwtService.signAsync<AccessTokenPayload>(
       { id: userId, role, isVerified },
-      this.configService.ACCESS_TOKEN_CONFIG,
+      {
+        secret: this.config.jwtAccessTokenSecret,
+        expiresIn: this.config.jwtAccessTokenExpirationTime,
+      } as JwtSignOptions,
     );
   }
 
   private async generateRefreshToken(userId: number): Promise<string> {
-    return this.jwtService.signAsync<RefreshTokenPayload>(
-      { id: userId },
-      this.configService.REFRESH_TOKEN_CONFIG,
-    );
+    return this.jwtService.signAsync<RefreshTokenPayload>({ id: userId }, {
+      secret: this.config.jwtRefreshTokenSecret,
+      expiresIn: this.config.jwtRefreshTokenExpirationTime,
+    } as JwtSignOptions);
   }
 
   async verifyAccessToken(token: string): Promise<AccessTokenPayload> {
     const payload = await this.jwtService.verifyAsync<AccessTokenPayload>(
       token,
       {
-        secret: this.configService.ACCESS_TOKEN_CONFIG.secret,
+        secret: this.config.jwtAccessTokenSecret,
       },
     );
 
@@ -57,7 +63,7 @@ export class TokenService {
     const payload = await this.jwtService.verifyAsync<RefreshTokenPayload>(
       token,
       {
-        secret: this.configService.REFRESH_TOKEN_CONFIG.secret,
+        secret: this.config.jwtRefreshTokenSecret,
       },
     );
 

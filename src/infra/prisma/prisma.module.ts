@@ -1,9 +1,10 @@
 import { Module } from '@nestjs/common';
-import { ConfigModule } from '../../modules/config/config.module';
+import { ConfigModule } from '@nestjs/config';
+import databaseConfig from '../../config/database.config';
 import { PrismaService } from './prisma.service';
 
 @Module({
-  imports: [ConfigModule],
+  imports: [ConfigModule.forFeature(databaseConfig)],
   providers: [PrismaService],
   exports: [PrismaService],
 })
