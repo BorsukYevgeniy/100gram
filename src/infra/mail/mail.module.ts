@@ -3,12 +3,10 @@ import { MailService } from './mail.service';
 
 import { MailerModule } from '@nestjs-modules/mailer';
 import { ConfigModule, ConfigType } from '@nestjs/config';
-import appConfig from '../../config/app.config';
 import smtpConfig from '../../config/smtp.config';
 
 @Module({
   imports: [
-    ConfigModule.forFeature(appConfig),
     MailerModule.forRootAsync({
       imports: [ConfigModule.forFeature(smtpConfig)],
       inject: [smtpConfig.KEY],

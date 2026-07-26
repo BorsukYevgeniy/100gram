@@ -16,11 +16,11 @@ import { User } from '../../../generated/prisma/browser';
 import { Provider, Role } from '../../../generated/prisma/enums';
 import { AccessTokenPayload, TokenPair } from '../../common/types';
 import authConfig from '../../config/auth.config';
-import { MailService } from '../../infra/mail/mail.service';
 import { TokenService } from '../token/token.service';
 import { UserNoCredOtpVCode } from '../user/types/user.types';
 import { LoginDto } from './dto/login.dto';
 import { ResetPasswordDto } from './dto/reset-password.dto';
+import { AuthMailService } from './mail/auth-mail.service';
 
 @Injectable()
 export class AuthService {
@@ -29,7 +29,7 @@ export class AuthService {
     private readonly config: ConfigType<typeof authConfig>,
     private readonly userService: UserService,
     private readonly tokenService: TokenService,
-    private readonly mailService: MailService,
+    private readonly mailService: AuthMailService,
     private readonly logger: PinoLogger,
   ) {
     this.logger.setContext(AuthService.name);
