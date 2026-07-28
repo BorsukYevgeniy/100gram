@@ -14,11 +14,11 @@ import { ApiUserNotFoundResponse } from '../../user/docs/shared';
 import { CreateGroupChatDto } from '../dto/create-group-chat.dto';
 import { CreatePrivateChatDto } from '../dto/create-private-chat.dto';
 import { UpdateGroupChatDto } from '../dto/update-group-chat.dto';
-import { ApiChatIdParamDocs, ApiChatNotFoundResponse } from './shared';
-
-function ApiChatMustBeGroupResponse() {
-  return ApiBadRequestResponse({ description: 'Chat must be a group' });
-}
+import {
+  ApiChatIdParamDocs,
+  ApiChatMustBeGroupResponse,
+  ApiChatNotFoundResponse,
+} from './shared';
 
 function ApiYouMustBeOwnerResponse() {
   return ApiForbiddenResponse({

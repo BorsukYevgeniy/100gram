@@ -50,6 +50,7 @@ export class ChatValidationService {
       );
       throw new BadRequestException(`Chat is not of type ${expectedType}`);
     }
+    return chat;
   }
 
   async validateChatParticipation(

@@ -1,5 +1,5 @@
 import {
-  BadRequestException,
+  ConflictException,
   ForbiddenException,
   Injectable,
   NotFoundException,
@@ -32,9 +32,7 @@ export class ChatUserService {
 
     if (isParticipant) {
       this.logger.warn({ chatId, userId }, 'User already in chat');
-      throw new BadRequestException(
-        'User already is a participant of the chat',
-      );
+      throw new ConflictException('User already is a participant of the chat');
     }
 
     const chatUser = await this.chatRepo.addUserToChat(chatId, userId);
@@ -45,57 +43,43 @@ export class ChatUserService {
   }
 
   async deleteUserFromChat(chatId: number, userId: number) {
-    const chat = await this.chatRepo.getById(chatId);
-
-    if (!chat) {
-      this.logger.warn({ chatId }, "Chat doesn't exist");
-      throw new NotFoundException('Chat not found');
-    }
-
-    const isParticipant = await this.chatValidator.checkChatParticipation(
+    const chat = await this.chatValidator.validateChatType(
+      chatId,
+      ChatType.GROUP,
+    );
+    const participation = await this.chatValidator.checkChatParticipation(
       userId,
       chatId,
     );
 
-    if (!isParticipant) {
-      this.logger.warn(
-        { userId, chatId },
-        'User is not participant of the chat',
-      );
+    if (!participation)
       throw new ForbiddenException('User is not a participant of the chat');
-    }
 
-    if (chat.chatType === ChatType.PRIVATE) {
-      const deletedChat = await this.chatRepo.delete(chatId);
-      this.logger.info({ chatId }, 'Deleted private chat');
-      return deletedChat;
-    } else if (chat.ownerId !== userId) {
+    if (chat.ownerId !== userId) {
       const chatUser = await this.chatRepo.deleteUserFromChat(chatId, userId);
       this.logger.info({ userId, chatId }, 'Deleted user from group chat');
       return chatUser;
-    } else {
-      const { userId: newOwnerId } = await this.chatRepo.findNewOwner(
+    }
+
+    const { userId: newOwnerId } = await this.chatRepo.findNewOwner(
+      chatId,
+      userId,
+    );
+    if (newOwnerId) {
+      const ownerAndChatUser = await this.chatRepo.updateOwnerAndDeleteUser(
         chatId,
+        newOwnerId,
         userId,
       );
-
-      if (newOwnerId) {
-        const ownerAndChatUser = await this.chatRepo.updateOwnerAndDeleteUser(
-          chatId,
-          newOwnerId,
-          userId,
-        );
-        this.logger.info(
-          { newOwnerId, chatId, userId },
-          'Updated chat owner and deleted user from chat',
-        );
-        return ownerAndChatUser;
-      }
-
-      const deletedChat = await this.chatRepo.delete(chatId);
-      this.logger.info({ chatId }, 'Deleted group chat as no new owner found');
-      return deletedChat;
+      this.logger.info(
+        { newOwnerId, chatId, userId },
+        'Updated chat owner and deleted user from chat',
+      );
+      return ownerAndChatUser;
     }
+    const deletedChat = await this.chatRepo.delete(chatId);
+    this.logger.info({ chatId }, 'Deleted group chat as no new owner found');
+    return deletedChat;
   }
 
   async getUsersInChat(

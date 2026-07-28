@@ -2,13 +2,17 @@ import { applyDecorators } from '@nestjs/common';
 import {
   ApiBadRequestResponse,
   ApiBody,
+  ApiConflictResponse,
   ApiNotFoundResponse,
   ApiOkResponse,
   ApiOperation,
 } from '@nestjs/swagger';
 import { ApiPaginationDocs } from '../../../../common/decorators/docs/pagination';
 import { ApiUserIdParamDocs } from '../../../user/docs/shared';
-import { ApiChatNotFoundResponse } from '../../docs/shared';
+import {
+  ApiChatMustBeGroupResponse,
+  ApiChatNotFoundResponse,
+} from '../../docs/shared';
 import { UpdateRoleDto } from '../../dto/role/update-role.dto';
 
 function ApiChatOrUserNotFound() {
@@ -36,10 +40,11 @@ export class ChatUserRoutesDocs {
       }),
       ApiOkResponse({ description: 'User added' }),
       ApiChatOrUserNotFound(),
-      ApiBadRequestResponse({
+      ApiConflictResponse({
         description: 'User already is a participant of the chat',
       }),
       ApiUserIdParamDocs(),
+      ApiChatMustBeGroupResponse(),
     );
   }
 
@@ -52,9 +57,10 @@ export class ChatUserRoutesDocs {
       ApiOkResponse({ description: 'User deleted' }),
       ApiChatOrUserNotFound(),
       ApiBadRequestResponse({
-        description: 'User already isnt a participant of the chat',
+        description: 'User is not a participant of the chat',
       }),
       ApiUserIdParamDocs(),
+      ApiChatMustBeGroupResponse(),
     );
   }
 
