@@ -1,5 +1,11 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsString, Length } from 'class-validator';
+import {
+  IsInt,
+  IsOptional,
+  IsPositive,
+  IsString,
+  Length,
+} from 'class-validator';
 import { Trim } from '../../../common/decorators/validation/trim.decorator';
 
 export class CreateMessageDto {
@@ -14,4 +20,14 @@ export class CreateMessageDto {
   @Length(1, 3_000)
   @Trim()
   text: string;
+
+  @ApiProperty({
+    type: Number,
+    description: 'Id of message which you want reply',
+    minimum: 0,
+  })
+  @IsOptional()
+  @IsInt()
+  @IsPositive()
+  replyId?: number;
 }

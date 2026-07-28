@@ -10,6 +10,7 @@ import { PaginationDto } from '../../common/dto/pagination.dto';
 import { AccessTokenPayload } from '../../common/types';
 import { CacheService } from '../cache/cache.service';
 import { ChatRepository } from '../chat/repository/chat.repository';
+import { ChatValidationService } from '../chat/validation/chat-validation.service';
 import { FileService } from '../file/file.service';
 import { BlockedUserService } from '../user/blocked-user/blocked-user.service';
 import { CreateMessageDto } from './dto/create-message.dto';
@@ -26,6 +27,7 @@ export class MessageService {
     private readonly fileService: FileService,
     private readonly blockedUserService: BlockedUserService,
     private readonly messageValidator: MessageValidationService,
+    private readonly chatValidator: ChatValidationService,
     private readonly logger: PinoLogger,
     private readonly cache: CacheService,
   ) {
@@ -33,9 +35,7 @@ export class MessageService {
   }
 
   private async checkBlock(userId: number, chatId: number) {
-    const { chatType } = await this.chatRepo.getById(chatId);
-
-    if (chatType !== ChatType.PRIVATE) return;
+    await this.chatValidator.validateChatType(chatId, ChatType.PRIVATE);
 
     const users = await this.chatRepo.getUserIdsInChat(chatId);
 
@@ -137,9 +137,16 @@ export class MessageService {
 
       return message;
     } catch (e) {
-      if (e instanceof PrismaClientKnownRequestError && e.code === 'P2003') {
-        this.logger.warn({ chatId }, 'Chat not found while creating message');
-        throw new NotFoundException('Chat not found');
+      if (
+        e instanceof PrismaClientKnownRequestError &&
+        e.code === 'P2025' &&
+        e.meta.relation === 'Reply'
+      ) {
+        this.logger.warn(
+          { replyId: dto.replyId },
+          'Reply message not found while creating message',
+        );
+        throw new NotFoundException('Reply message not found');
       }
       throw e;
     }
@@ -172,20 +179,28 @@ export class MessageService {
         'Message created via WS',
       );
       await this.cache.incrChatMessageVersion(chatId);
+
       return message;
     } catch (e) {
-      if (e instanceof PrismaClientKnownRequestError && e.code === 'P2003') {
-        this.logger.warn({ chatId }, 'Chat not found while creating message');
-        throw new NotFoundException('Chat not found');
-      } else if (
-        e instanceof PrismaClientKnownRequestError &&
-        e.code === 'P2018'
-      ) {
-        this.logger.warn({ fileIds }, 'Files not found while creating message');
-        throw new NotFoundException('Files not found');
-      } else {
-        throw e;
+      if (e instanceof PrismaClientKnownRequestError) {
+        switch (e.code) {
+          case 'P2018': {
+            this.logger.warn(
+              { fileIds },
+              'Files not found while creating message',
+            );
+            throw new NotFoundException('Files not found');
+          }
+          case 'P2025': {
+            this.logger.warn(
+              { replyId: dto.replyId },
+              'Reply message not found while creating message',
+            );
+            throw new NotFoundException('Reply message not found');
+          }
+        }
       }
+      throw e;
     }
   }
 

@@ -3,6 +3,10 @@ model Message {
   text      String
   createdAt DateTime @default(now()) @db.Timestamptz
 
+  replyId Int?
+  reply   Message?  @relation("Reply", fields: [replyId], references: [id])
+  replies Message[] @relation("Reply")
+
   reactions ReactionToMessage[]
 
   files File[]
