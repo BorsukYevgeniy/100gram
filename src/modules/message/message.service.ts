@@ -101,55 +101,21 @@ export class MessageService {
 
     return result;
   }
-
   async create(
     userId: number,
     chatId: number,
     dto: CreateMessageDto,
     files: Express.Multer.File[],
   ): Promise<MessageFiles> {
-    await this.checkBlock(userId, chatId);
+    const createdFiles = await this.fileService.createFiles(files, userId);
 
-    try {
-      const createdFiles = await this.fileService.createFiles(files, userId);
-
-      const fileIds = createdFiles.map(({ id }) => id);
-
-      const message = await this.messageRepository.create(
-        userId,
-        chatId,
-        dto,
-        fileIds,
-      );
-
-      this.logger.info(
-        {
-          messageId: message.id,
-          chatId,
-          userId,
-          fileIds,
-          provider: 'http',
-        },
-        'Message created via REST API',
-      );
-
-      await this.cache.incrChatMessageVersion(chatId);
-
-      return message;
-    } catch (e) {
-      if (
-        e instanceof PrismaClientKnownRequestError &&
-        e.code === 'P2025' &&
-        e.meta.relation === 'Reply'
-      ) {
-        this.logger.warn(
-          { replyId: dto.replyId },
-          'Reply message not found while creating message',
-        );
-        throw new NotFoundException('Reply message not found');
-      }
-      throw e;
-    }
+    return this.createInternal(
+      userId,
+      chatId,
+      dto,
+      createdFiles.map(({ id }) => id),
+      'http',
+    );
   }
 
   async createFromWs(
@@ -158,6 +124,16 @@ export class MessageService {
     dto: CreateMessageDto,
     fileIds: number[],
   ): Promise<MessageFiles> {
+    return this.createInternal(userId, chatId, dto, fileIds, 'ws');
+  }
+
+  private async createInternal(
+    userId: number,
+    chatId: number,
+    dto: CreateMessageDto,
+    fileIds: number[],
+    provider: 'http' | 'ws',
+  ): Promise<MessageFiles> {
     await this.checkBlock(userId, chatId);
 
     try {
@@ -174,32 +150,36 @@ export class MessageService {
           chatId,
           userId,
           fileIds,
-          provider: 'ws',
+          provider,
         },
-        'Message created via WS',
+        'Message created',
       );
+
       await this.cache.incrChatMessageVersion(chatId);
 
       return message;
     } catch (e) {
       if (e instanceof PrismaClientKnownRequestError) {
         switch (e.code) {
-          case 'P2018': {
-            this.logger.warn(
-              { fileIds },
-              'Files not found while creating message',
-            );
-            throw new NotFoundException('Files not found');
-          }
-          case 'P2025': {
+          case 'P2018':
+            if (provider === 'ws') {
+              this.logger.warn(
+                { fileIds },
+                'Files not found while creating message',
+              );
+              throw new NotFoundException('Files not found');
+            }
+            break;
+
+          case 'P2025':
             this.logger.warn(
               { replyId: dto.replyId },
               'Reply message not found while creating message',
             );
             throw new NotFoundException('Reply message not found');
-          }
         }
       }
+
       throw e;
     }
   }
@@ -217,26 +197,19 @@ export class MessageService {
     dto: UpdateMessageDto,
     files: Express.Multer.File[],
   ): Promise<MessageFiles> {
-    await this.messageValidator.validateMessageOwnership(user, messageId);
-
     const createdFiles = await this.fileService.createFiles(
       files,
       user.id,
       messageId,
     );
 
-    const message = await this.messageRepository.update(
+    return this.updateInternal(
+      user,
       messageId,
       dto,
       createdFiles.map(({ id }) => id),
+      'http',
     );
-
-    this.logger.info(
-      { messageId, updatedBy: user.id, provider: 'http' },
-      'Message updated via REST API',
-    );
-    await this.cache.incrChatMessageVersion(message.chatId);
-    return message;
   }
 
   async updateFromWs(
@@ -245,6 +218,16 @@ export class MessageService {
     dto: UpdateMessageDto,
     fileIds: number[],
   ): Promise<MessageFiles> {
+    return this.updateInternal(user, messageId, dto, fileIds, 'ws');
+  }
+
+  private async updateInternal(
+    user: AccessTokenPayload,
+    messageId: number,
+    dto: UpdateMessageDto,
+    fileIds: number[],
+    transport: 'http' | 'ws',
+  ) {
     await this.messageValidator.validateMessageOwnership(user, messageId);
 
     try {
@@ -255,17 +238,18 @@ export class MessageService {
       );
 
       this.logger.info(
-        { messageId, updatedBy: user.id, provider: 'ws' },
-        'Message updated via WS',
+        { messageId, updatedBy: user.id, transport },
+        'Message updated',
       );
 
       await this.cache.incrChatMessageVersion(message.chatId);
       return message;
     } catch (e) {
       if (e instanceof PrismaClientKnownRequestError && e.code === 'P2018') {
-        this.logger.warn({ fileIds }, 'Files not found while creating message');
+        this.logger.warn({ fileIds }, 'Files not found while updating message');
         throw new NotFoundException('Files not found');
       }
+      throw e;
     }
   }
 
