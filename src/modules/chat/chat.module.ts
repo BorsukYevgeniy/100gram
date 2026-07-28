@@ -10,10 +10,10 @@ import { ChatMessageController } from './chat-message/chat-message.controller';
 import { ChatUserController } from './chat-user/chat-user.controller';
 import { ChatUserService } from './chat-user/chat-user.service';
 import { ChatController } from './chat.controller';
-import { ChatGateway } from './chat.gateway';
 import { ChatService } from './chat.service';
 import { ChatRepositoryModule } from './repository/chat-repository.module';
 import { ChatValidationModule } from './validation/chat-validation.module';
+import { ChatGateway } from './ws/chat.gateway';
 
 @Module({
   imports: [
