@@ -4,6 +4,7 @@ import { ThrottlerModule } from '@nestjs/throttler';
 import authConfig from '../../config/auth.config';
 import { MailModule } from '../../infra/mail/mail.module';
 
+import appConfig from '../../config/app.config';
 import googleOauthConfig from '../../config/google-oauth.config';
 import throttlerConfig from '../../config/throttler.config';
 import { TokenModule } from '../token/token.module';
@@ -15,6 +16,7 @@ import { GoogleStrategy } from './strategies/google.strategy';
 
 @Module({
   imports: [
+    ConfigModule.forFeature(appConfig),
     ConfigModule.forFeature(authConfig),
     ConfigModule.forFeature(googleOauthConfig),
     TokenModule,

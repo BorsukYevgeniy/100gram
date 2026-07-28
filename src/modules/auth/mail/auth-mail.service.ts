@@ -1,10 +1,14 @@
+import { Inject, Injectable } from '@nestjs/common';
 import { ConfigType } from '@nestjs/config';
 import { PinoLogger } from 'nestjs-pino';
 import appConfig from '../../../config/app.config';
 import { MailService } from '../../../infra/mail/mail.service';
+
+@Injectable()
 export class AuthMailService {
   constructor(
     private readonly mailService: MailService,
+    @Inject(appConfig.KEY)
     private readonly appConf: ConfigType<typeof appConfig>,
     private readonly logger: PinoLogger,
   ) {
