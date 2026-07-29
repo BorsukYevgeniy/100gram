@@ -1,24 +1,12 @@
 import { applyDecorators } from '@nestjs/common';
-import {
-  ApiOkResponse,
-  ApiOperation,
-  ApiTags,
-  ApiUnauthorizedResponse,
-} from '@nestjs/swagger';
-import {
-  ApiAuthCookies,
-  ApiVerifiedForbidden,
-} from '../../../common/decorators/docs/auth';
+import { ApiOkResponse, ApiOperation, ApiTags } from '@nestjs/swagger';
+
+import { ApiVerifiedAuthDocs } from '../../../common/decorators/docs/auth';
 import { ApiFileUploadDocs } from '../../../common/decorators/docs/file';
 
 export class FileDocs {
   static Controller() {
-    return applyDecorators(
-      ApiTags('File'),
-      ApiAuthCookies(),
-      ApiUnauthorizedResponse(),
-      ApiVerifiedForbidden(),
-    );
+    return applyDecorators(ApiTags('File'), ApiVerifiedAuthDocs());
   }
   static UploadFile() {
     return applyDecorators(
