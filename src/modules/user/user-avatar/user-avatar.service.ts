@@ -38,10 +38,16 @@ export class UserAvatarService {
   async deleteAvatar(userId: number) {
     const user = await this.userRepo.findFullUserById(userId);
 
+    if (!user) {
+      this.logger.warn({ userId }, 'User not found');
+      throw new BadRequestException('User not found');
+    }
+
     if (!user.avatar) {
       this.logger.warn({ userId }, 'Cannot delete default user avatar');
       throw new BadRequestException('Cannot delete default user avatar');
     }
+
     await this.fileService.unlinkUserAvatar(user.avatar);
     await this.userRepo.updateAvatar(userId);
 

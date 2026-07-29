@@ -7,12 +7,18 @@ import {
   ApiOperation,
 } from '@nestjs/swagger';
 import { ApiPaginationDocs } from '../../../../common/decorators/docs/pagination';
-import {
-  ApiUserIdParamDocs,
-  ApiUserNotFoundResponse,
-} from '../../../user/docs/shared';
+import { ApiUserIdDocs, ApiUserIdParamDocs } from '../../../user/docs/shared';
 import { ApiChatMustBeGroupResponse } from '../../docs/shared';
 import { UpdateRoleDto } from '../../dto/role/update-role.dto';
+
+function UserIsNotParticipantOfChatDocs() {
+  return applyDecorators(
+    ApiUserIdParamDocs(),
+    ApiNotFoundResponse({
+      description: 'User is not a participant of the chat',
+    }),
+  );
+}
 
 export class ChatUserRoutesDocs {
   static GetUsersInChat() {
@@ -33,11 +39,10 @@ export class ChatUserRoutesDocs {
         description: 'Add a new user in someone chat',
       }),
       ApiOkResponse({ description: 'User added' }),
-      ApiUserNotFoundResponse(),
+      ApiUserIdDocs(),
       ApiConflictResponse({
         description: 'User already is a participant of the chat',
       }),
-      ApiUserIdParamDocs(),
       ApiChatMustBeGroupResponse(),
     );
   }
@@ -49,10 +54,7 @@ export class ChatUserRoutesDocs {
         description: 'Delete a user from someone chat',
       }),
       ApiOkResponse({ description: 'User deleted' }),
-      ApiNotFoundResponse({
-        description: 'User is not a participant of the chat',
-      }),
-      ApiUserIdParamDocs(),
+      UserIsNotParticipantOfChatDocs(),
       ApiChatMustBeGroupResponse(),
     );
   }
@@ -64,10 +66,7 @@ export class ChatUserRoutesDocs {
         description: 'Update role of user in someone chat',
       }),
       ApiOkResponse({ description: 'Role updated' }),
-      ApiNotFoundResponse({
-        description: 'User is not a participant of the chat',
-      }),
-      ApiUserIdParamDocs(),
+      UserIsNotParticipantOfChatDocs(),
       ApiBody({ type: UpdateRoleDto, required: true }),
     );
   }

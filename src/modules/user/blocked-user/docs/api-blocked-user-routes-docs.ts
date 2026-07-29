@@ -1,18 +1,23 @@
 import { applyDecorators } from '@nestjs/common';
 import {
   ApiCreatedResponse,
+  ApiNotFoundResponse,
   ApiOkResponse,
   ApiOperation,
   ApiParam,
 } from '@nestjs/swagger';
+import { ApiUserNotFoundResponse } from '../../docs/shared';
 
-function ApiBlockedId() {
-  return ApiParam({
-    name: 'blockedId',
-    type: Number,
-    description: 'The ID of the user which you want to block',
-    required: true,
-  });
+function ApiBlockedIdDocs() {
+  return applyDecorators(
+    ApiParam({
+      name: 'blockedId',
+      type: Number,
+      description: 'The ID of the user which you want to block',
+      required: true,
+    }),
+    ApiNotFoundResponse({ description: 'Blocked user not found' }),
+  );
 }
 
 export class ApiBlockedUserRouterDocs {
@@ -23,6 +28,7 @@ export class ApiBlockedUserRouterDocs {
         description: 'Returns list of users blocked by the authenticated user',
       }),
       ApiOkResponse({ description: 'Blocked users fetched successfully' }),
+      ApiUserNotFoundResponse(),
     );
   }
 
@@ -33,7 +39,7 @@ export class ApiBlockedUserRouterDocs {
         description: 'Blocks a user by ID for the authenticated user',
       }),
       ApiCreatedResponse({ description: 'User blocked successfully' }),
-      ApiBlockedId(),
+      ApiBlockedIdDocs(),
     );
   }
 
@@ -44,7 +50,7 @@ export class ApiBlockedUserRouterDocs {
         description: 'Removes user from blocked list',
       }),
       ApiOkResponse({ description: 'Blocked users fetched successfully' }),
-      ApiBlockedId(),
+      ApiBlockedIdDocs(),
     );
   }
 }

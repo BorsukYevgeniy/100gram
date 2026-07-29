@@ -1,10 +1,7 @@
-import { ApiParam } from '@nestjs/swagger';
+import { applyDecorators } from '@nestjs/common';
+import { ApiUserIdParamDocs } from './api-user-id-param-docs.decorator';
+import { ApiUserNotFoundResponse } from './api-user-not-found-response.decorator';
 
-export function ApiUserIdParamDocs() {
-  return ApiParam({
-    name: 'userId',
-    type: Number,
-    description: 'The ID of the user',
-    required: true,
-  });
+export function ApiUserIdDocs() {
+  return applyDecorators(ApiUserIdParamDocs(), ApiUserNotFoundResponse());
 }

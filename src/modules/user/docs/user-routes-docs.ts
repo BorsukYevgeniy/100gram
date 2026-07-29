@@ -1,7 +1,7 @@
 import { applyDecorators } from '@nestjs/common';
 import { ApiOkResponse, ApiOperation } from '@nestjs/swagger';
 import { ApiAdminAuthDocs } from '../../../common/decorators/docs/auth';
-import { ApiUserIdParamDocs } from './shared/api-user-id-docs.decorator';
+import { ApiUserIdDocs } from './shared';
 
 export class ApiUserRoutesDocs {
   static GetById() {
@@ -11,7 +11,7 @@ export class ApiUserRoutesDocs {
         description: 'Returns user by provided userId',
       }),
       ApiOkResponse({ description: 'User fetched successfully' }),
-      ApiUserIdParamDocs(),
+      ApiUserIdDocs(),
     );
   }
 
@@ -32,7 +32,7 @@ export class ApiUserRoutesDocs {
         description: 'Grants admin role to a user (admin only)',
       }),
       ApiOkResponse({ description: 'Admin assigned successfully' }),
-      ApiUserIdParamDocs(),
+      ApiUserIdDocs(),
       ApiAdminAuthDocs(),
     );
   }
@@ -55,7 +55,7 @@ export class ApiUserRoutesDocs {
       }),
       ApiOkResponse({ description: 'User deleted successfully' }),
       ApiAdminAuthDocs(),
-      ApiUserIdParamDocs(),
+      ApiUserIdDocs(),
     );
   }
 }
