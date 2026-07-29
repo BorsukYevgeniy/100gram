@@ -18,13 +18,8 @@ import {
   ApiChatIdParamDocs,
   ApiChatMustBeGroupResponse,
   ApiChatNotFoundResponse,
+  ApiYouMustBeChatOwnerResponse,
 } from './shared';
-
-function ApiYouMustBeOwnerResponse() {
-  return ApiForbiddenResponse({
-    description: 'You must be an owner of chat',
-  });
-}
 
 export class ChatRoutesDocs {
   static GetMyChats() {
@@ -91,7 +86,7 @@ export class ChatRoutesDocs {
       }),
       ApiOkResponse({ description: 'Token updated successfully' }),
       ApiChatNotFoundResponse(),
-      ApiYouMustBeOwnerResponse(),
+      ApiYouMustBeChatOwnerResponse(),
       ApiChatIdParamDocs(),
     );
   }
@@ -121,7 +116,7 @@ export class ChatRoutesDocs {
       ApiOkResponse({ description: 'Owner updated successfully' }),
       ApiChatMustBeGroupResponse(),
       ApiNotFoundResponse({ description: 'Chat or new owner not found' }),
-      ApiYouMustBeOwnerResponse(),
+      ApiYouMustBeChatOwnerResponse(),
       ApiVerifiedForbidden(),
       ApiChatIdParamDocs(),
       ApiParam({
@@ -141,7 +136,7 @@ export class ChatRoutesDocs {
       }),
       ApiOkResponse({ description: 'Chat updated successfully' }),
       ApiChatMustBeGroupResponse(),
-      ApiYouMustBeOwnerResponse(),
+      ApiYouMustBeChatOwnerResponse(),
       ApiVerifiedForbidden(),
       ApiBody({ type: UpdateGroupChatDto }),
       ApiChatNotFoundResponse(),
@@ -158,7 +153,7 @@ export class ChatRoutesDocs {
       ApiOkResponse({ description: 'Chat deleted successfully' }),
       ApiChatNotFoundResponse(),
       ApiVerifiedForbidden(),
-      ApiYouMustBeOwnerResponse(),
+      ApiYouMustBeChatOwnerResponse(),
       ApiChatIdParamDocs(),
     );
   }

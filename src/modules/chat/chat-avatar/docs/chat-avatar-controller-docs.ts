@@ -1,7 +1,15 @@
 import { applyDecorators } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
-import { ApiUnauthorizedResponse } from '../../../../common/decorators/docs/auth';
+import {
+  ApiUnauthorizedResponse,
+  ApiVerifiedForbidden,
+} from '../../../../common/decorators/docs/auth';
 import { ApiAuthCookies } from '../../../../common/decorators/docs/auth/api-auth-token.decorator';
+import {
+  ApiChatMustBeGroupResponse,
+  ApiChatNotFoundResponse,
+  ApiYouMustBeChatOwnerResponse,
+} from '../../docs/shared';
 import { ApiChatIdParamDocs } from '../../docs/shared/api-chat-id-docs.decorator';
 
 export function ChatAvatarControllerDocs() {
@@ -10,5 +18,9 @@ export function ChatAvatarControllerDocs() {
     ApiChatIdParamDocs(),
     ApiAuthCookies(),
     ApiUnauthorizedResponse(),
+    ApiChatNotFoundResponse(),
+    ApiVerifiedForbidden(),
+    ApiYouMustBeChatOwnerResponse(),
+    ApiChatMustBeGroupResponse(),
   );
 }

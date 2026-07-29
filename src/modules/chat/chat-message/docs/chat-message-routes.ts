@@ -1,13 +1,10 @@
 import { applyDecorators } from '@nestjs/common';
 import {
   ApiCreatedResponse,
-  ApiForbiddenResponse,
   ApiOkResponse,
   ApiOperation,
 } from '@nestjs/swagger';
-import { ApiVerifiedForbidden } from '../../../../common/decorators/docs/auth';
 import { ApiPaginationDocs } from '../../../../common/decorators/docs/pagination';
-import { ApiChatNotFoundResponse } from '../../docs/shared';
 
 export class ChatMessageRoutes {
   static GetMessageInChat() {
@@ -17,9 +14,7 @@ export class ChatMessageRoutes {
         description: 'Returns all messages in chat with pagination',
       }),
       ApiOkResponse({ description: 'Fetched messages in chat' }),
-      ApiChatNotFoundResponse(),
       ApiPaginationDocs(),
-      ApiVerifiedForbidden(),
     );
   }
 
@@ -30,13 +25,6 @@ export class ChatMessageRoutes {
         description: 'Create new message in chat or channel',
       }),
       ApiCreatedResponse({ description: 'Message created successfully' }),
-      ApiChatNotFoundResponse(),
-      ApiForbiddenResponse({
-        description:
-          'You must be a participant of chat or owner of the channel',
-      }),
-      ApiPaginationDocs(),
-      ApiVerifiedForbidden(),
     );
   }
 }

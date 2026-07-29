@@ -1,13 +1,10 @@
 import { applyDecorators } from '@nestjs/common';
 import {
-  ApiForbiddenResponse,
   ApiNoContentResponse,
   ApiOkResponse,
   ApiOperation,
 } from '@nestjs/swagger';
-import { ApiVerifiedForbidden } from '../../../../common/decorators/docs/auth';
 import { ApiFileUploadDocs } from '../../../../common/decorators/docs/file';
-import { ApiChatNotFoundResponse } from '../../docs/shared/api-chat-not-found-response.decorator';
 
 export class ChatAvatarRoutes {
   static UpdateAvatar() {
@@ -18,8 +15,6 @@ export class ChatAvatarRoutes {
       }),
       ApiFileUploadDocs('Avatar image file'),
       ApiOkResponse({ description: 'Avatar updated successfully' }),
-      ApiChatNotFoundResponse(),
-      ApiVerifiedForbidden(),
     );
   }
 
@@ -30,11 +25,6 @@ export class ChatAvatarRoutes {
         description: 'Removes avatar of the authenticated user',
       }),
       ApiNoContentResponse({ description: 'Avatar deleted successfully' }),
-      ApiForbiddenResponse({
-        description: 'You are not owner of this chat',
-      }),
-      ApiChatNotFoundResponse(),
-      ApiVerifiedForbidden(),
     );
   }
 }

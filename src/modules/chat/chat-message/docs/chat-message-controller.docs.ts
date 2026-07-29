@@ -1,10 +1,11 @@
 import { applyDecorators } from '@nestjs/common';
-import { ApiTags } from '@nestjs/swagger';
+import { ApiForbiddenResponse, ApiTags } from '@nestjs/swagger';
 import {
   ApiAuthCookies,
   ApiUnauthorizedResponse,
+  ApiVerifiedForbidden,
 } from '../../../../common/decorators/docs/auth';
-import { ApiChatIdParamDocs } from '../../docs/shared';
+import { ApiChatIdParamDocs, ApiChatNotFoundResponse } from '../../docs/shared';
 
 export function ChatMessageControllerDocs() {
   return applyDecorators(
@@ -12,5 +13,10 @@ export function ChatMessageControllerDocs() {
     ApiChatIdParamDocs(),
     ApiAuthCookies(),
     ApiUnauthorizedResponse(),
+    ApiForbiddenResponse({
+      description: 'You must be a participant of chat or owner of the channel',
+    }),
+    ApiVerifiedForbidden(),
+    ApiChatNotFoundResponse(),
   );
 }
