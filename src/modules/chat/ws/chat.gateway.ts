@@ -8,15 +8,18 @@ import {
 } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
 import { AccessTokenPayload } from '../../../common/types';
-import { WsCreateMessageDto } from '../../message/dto/ws-create-message.dto';
-import { WsDeleteMessageDto } from '../../message/dto/ws-delete-message.dto';
-import { WsUpdateMessageDto } from '../../message/dto/ws-update-message.dto';
+import { WsCreateMessageDto } from '../../message/dto/ws/ws-create-message.dto';
+import { WsDeleteMessageDto } from '../../message/dto/ws/ws-delete-message.dto';
+import { WsUpdateMessageDto } from '../../message/dto/ws/ws-update-message.dto';
 import { MessageService } from '../../message/message.service';
 import { ChatValidationService } from '../validation/chat-validation.service';
 import { WsCurrentUser } from './decorator/ws-user.decorator';
+import { WsRoomDto } from './dto/ws-room.dto';
 import { HttpToWsExceptionsFilter } from './exception-filter/ws-exception.filter';
 import { WsVerifiedAuthGuard } from './guard/ws-verified-auth.guard';
 import WsValidationPipe from './pipe/ws-validation.pipe';
+
+import { ChatGatewayDocs } from './docs/chat-gateway-docs';
 
 @WebSocketGateway({
   cors: {
@@ -37,6 +40,7 @@ export class ChatGateway {
   @WebSocketServer()
   server: Server;
 
+  @ChatGatewayDocs.JoinRoom()
   @SubscribeMessage('joinRoom')
   async handleJoinRoom(
     @MessageBody() payload: { chatId: number },
@@ -47,6 +51,7 @@ export class ChatGateway {
     client.join(`chat-${payload.chatId}`);
   }
 
+  @ChatGatewayDocs.CreateMessage()
   @SubscribeMessage('createMessage')
   async handleCreatingMessage(
     @MessageBody() payload: WsCreateMessageDto,
@@ -64,6 +69,7 @@ export class ChatGateway {
     this.server.to(`chat-${chatId}`).emit('chatCreatedMessage', message);
   }
 
+  @ChatGatewayDocs.UpdateMessage()
   @SubscribeMessage('updateMessage')
   async handleUpdatingMessage(
     @MessageBody()
@@ -82,6 +88,7 @@ export class ChatGateway {
     this.server.to(`chat-${chatId}`).emit('chatUpdatedMessage', message);
   }
 
+  @ChatGatewayDocs.DeleteMessage()
   @SubscribeMessage('deleteMessage')
   async handleDeletingMessage(
     @MessageBody()
@@ -93,9 +100,10 @@ export class ChatGateway {
     this.server.to(`chat-${chatId}`).emit('chatDeletedMessage', message);
   }
 
+  @ChatGatewayDocs.LeaveRoom()
   @SubscribeMessage('leaveRoom')
   async handleLeaveRoom(
-    @MessageBody() chatId: number,
+    @MessageBody() { chatId }: WsRoomDto,
     @ConnectedSocket() client: Socket,
     @WsCurrentUser() user: AccessTokenPayload,
   ) {

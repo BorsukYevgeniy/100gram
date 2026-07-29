@@ -1,6 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { IsArray, IsInt, IsOptional, IsPositive } from 'class-validator';
-import { UpdateMessageDto } from './update-message.dto';
+import { UpdateMessageDto } from '../update-message.dto';
 
 export class WsUpdateMessageDto extends UpdateMessageDto {
   @ApiProperty({
