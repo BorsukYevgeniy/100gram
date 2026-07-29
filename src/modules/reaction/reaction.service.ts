@@ -3,6 +3,7 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
+import { PrismaClientKnownRequestError } from '@prisma/client/runtime/client';
 import { PinoLogger } from 'nestjs-pino';
 import { ChatValidationService } from '../chat/validation/chat-validation.service';
 import { MessageRepository } from '../message/repository/message.repository';
@@ -66,24 +67,43 @@ export class ReactionService {
     messageId: number,
     dto: UpdateReactionDto,
   ) {
-    const reaction = await this.reactionRepo.updateReaction(
-      userId,
-      messageId,
-      dto,
-    );
+    try {
+      const reaction = await this.reactionRepo.updateReaction(
+        userId,
+        messageId,
+        dto,
+      );
 
-    this.logger.info(
-      { userId, messageId, reaction: dto.reaction },
-      'Updated reaction of message',
-    );
+      this.logger.info(
+        { userId, messageId, reaction: dto.reaction },
+        'Updated reaction of message',
+      );
 
-    return reaction;
+      return reaction;
+    } catch (e) {
+      if (e instanceof PrismaClientKnownRequestError && e.code === 'P2025') {
+        this.logger.warn({ messageId }, 'Message not found');
+        throw new NotFoundException('Message not found');
+      }
+      throw e;
+    }
   }
 
   async removeReaction(userId: number, messageId: number) {
-    const reaction = await this.reactionRepo.removeReaction(userId, messageId);
+    try {
+      const reaction = await this.reactionRepo.removeReaction(
+        userId,
+        messageId,
+      );
 
-    this.logger.info({ userId, messageId }, 'Deleted reaction to message');
-    return reaction;
+      this.logger.info({ userId, messageId }, 'Deleted reaction to message');
+      return reaction;
+    } catch (e) {
+      if (e instanceof PrismaClientKnownRequestError && e.code === 'P2025') {
+        this.logger.warn({ messageId }, 'Message not found');
+        throw new NotFoundException('Message not found');
+      }
+      throw e;
+    }
   }
 }
