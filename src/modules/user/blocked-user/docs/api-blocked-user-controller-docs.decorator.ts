@@ -1,16 +1,12 @@
 import { applyDecorators } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
-import {
-  ApiAuthCookies,
-  ApiUnauthorizedResponse,
-} from '../../../../common/decorators/docs/auth';
+import { ApiAuthDocs } from '../../../../common/decorators/docs/auth';
 import { ApiUserNotFoundResponse } from '../../docs/shared';
 
 export function ApiBlockedUserControllerDocs() {
   return applyDecorators(
     ApiTags('Blocked User'),
-    ApiAuthCookies(),
-    ApiUnauthorizedResponse(),
+    ApiAuthDocs(),
     ApiUserNotFoundResponse(),
   );
 }

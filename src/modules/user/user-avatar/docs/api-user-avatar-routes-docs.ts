@@ -4,8 +4,8 @@ import {
   ApiOkResponse,
   ApiOperation,
 } from '@nestjs/swagger';
-import { ApiAdminVerifiedForbidden } from '../../../../common/decorators/docs/auth';
 
+import { ApiAdminAuthDocs } from '../../../../common/decorators/docs/auth';
 import { ApiFileUploadDocs } from '../../../../common/decorators/docs/file';
 import { ApiUserIdParamDocs } from '../../docs/shared';
 
@@ -38,7 +38,7 @@ export class ApiUserAvatarRoutesDocs {
         description: 'Allows admin to delete avatar of any user by userId',
       }),
       ApiNoContentResponse({ description: 'Avatar deleted successfully' }),
-      ApiAdminVerifiedForbidden(),
+      ApiAdminAuthDocs(),
       ApiUserIdParamDocs(),
     );
   }

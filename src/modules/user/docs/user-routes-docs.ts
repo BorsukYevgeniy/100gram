@@ -1,6 +1,6 @@
 import { applyDecorators } from '@nestjs/common';
 import { ApiOkResponse, ApiOperation } from '@nestjs/swagger';
-import { ApiAdminForbidden } from '../../../common/decorators/docs/auth/api-admin-forbidden.decorator';
+import { ApiAdminAuthDocs } from '../../../common/decorators/docs/auth';
 import { ApiUserIdParamDocs } from './shared/api-user-id-docs.decorator';
 
 export class ApiUserRoutesDocs {
@@ -33,7 +33,7 @@ export class ApiUserRoutesDocs {
       }),
       ApiOkResponse({ description: 'Admin assigned successfully' }),
       ApiUserIdParamDocs(),
-      ApiAdminForbidden(),
+      ApiAdminAuthDocs(),
     );
   }
 
@@ -54,7 +54,7 @@ export class ApiUserRoutesDocs {
         description: 'Deletes user by ID (admin only)',
       }),
       ApiOkResponse({ description: 'User deleted successfully' }),
-      ApiAdminForbidden(),
+      ApiAdminAuthDocs(),
       ApiUserIdParamDocs(),
     );
   }

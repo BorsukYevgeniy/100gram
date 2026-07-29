@@ -9,7 +9,7 @@ import {
   ApiTooManyRequestsResponse,
   ApiUnauthorizedResponse as SwaggerApiUnauthorizedResponse,
 } from '@nestjs/swagger';
-import { ApiUnauthorizedResponse } from '../../../common/decorators/docs/auth';
+import { ApiAuthDocs } from '../../../common/decorators/docs/auth';
 import { ResetPasswordDto } from '../dto/reset-password.dto';
 
 function ApiTooManyAttemptsResendEmailResponse() {
@@ -79,7 +79,7 @@ export class AuthRoutesDocs {
         description: 'Logs out current session and clears cookies',
       }),
       ApiOkResponse({ description: 'Logged out successfully' }),
-      ApiUnauthorizedResponse(),
+      ApiAuthDocs(),
     );
   }
 
@@ -92,7 +92,7 @@ export class AuthRoutesDocs {
       ApiOkResponse({
         description: 'Logged out from all devices successfully',
       }),
-      ApiUnauthorizedResponse(),
+      ApiAuthDocs(),
     );
   }
 
@@ -119,7 +119,7 @@ export class AuthRoutesDocs {
       SwaggerApiUnauthorizedResponse({
         description: 'Refresh token missing or invalid',
       }),
-      ApiUnauthorizedResponse(),
+      ApiAuthDocs(),
     );
   }
 
@@ -130,7 +130,7 @@ export class AuthRoutesDocs {
         description: 'Sends new verification email to authenticated user',
       }),
       ApiOkResponse({ description: 'Verification email sent' }),
-      ApiUnauthorizedResponse(),
+      ApiAuthDocs(),
       ApiTooManyAttemptsResendEmailResponse(),
     );
   }
@@ -142,7 +142,7 @@ export class AuthRoutesDocs {
         description: 'Sends OTP code to user email for verification',
       }),
       ApiOkResponse({ description: 'OTP sent (if email exists)' }),
-      ApiUnauthorizedResponse(),
+      ApiAuthDocs(),
       ApiTooManyAttemptsResendEmailResponse(),
     );
   }
@@ -154,7 +154,7 @@ export class AuthRoutesDocs {
         description: 'Allows authenticated user to reset password',
       }),
       ApiOkResponse({ description: 'Password reset successfully' }),
-      ApiUnauthorizedResponse(),
+      ApiAuthDocs(),
       ApiBody({ type: ResetPasswordDto }),
     );
   }

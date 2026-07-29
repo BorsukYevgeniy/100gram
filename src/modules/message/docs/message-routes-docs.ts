@@ -24,7 +24,6 @@ export class MessageRoutesDocs {
       ApiOkResponse({
         description: 'Message updated successfully',
       }),
-
       ApiFileUploadDocs('File for message'),
     );
   }
