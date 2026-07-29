@@ -4,12 +4,18 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { PrismaClientKnownRequestError } from '@prisma/client/runtime/client';
+import { PinoLogger } from 'nestjs-pino';
 import { BlockedUser } from '../../../../generated/prisma/client';
 import { BlockedUserRepository } from './blocked-user.repository';
 
 @Injectable()
 export class BlockedUserService {
-  constructor(private readonly blockedUserRepo: BlockedUserRepository) {}
+  constructor(
+    private readonly blockedUserRepo: BlockedUserRepository,
+    private readonly logger: PinoLogger,
+  ) {
+    this.logger.setContext(BlockedUserService.name);
+  }
 
   async blockUser(blockerId: number, blockedId: number): Promise<BlockedUser> {
     if (blockerId === blockedId) {
@@ -20,7 +26,7 @@ export class BlockedUserService {
       return this.blockedUserRepo.blockUser(blockerId, blockedId);
     } catch (e) {
       if (e instanceof PrismaClientKnownRequestError && e.code === 'P2025') {
-        // this.logger.warn({ userId: id }, "User doesn't exist");
+        this.logger.warn({ blockedId }, "User doesn't exist");
         throw new NotFoundException('User not found');
       }
       throw e;
@@ -36,7 +42,7 @@ export class BlockedUserService {
       return this.blockedUserRepo.unblockUser(userId, blockedId);
     } catch (e) {
       if (e instanceof PrismaClientKnownRequestError && e.code === 'P2025') {
-        // this.logger.warn({ userId: id }, "User doesn't exist");
+        this.logger.warn({ blockedId }, "User doesn't exist");
         throw new NotFoundException('User not found');
       }
       throw e;
