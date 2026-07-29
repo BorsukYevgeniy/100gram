@@ -15,9 +15,8 @@ import { CreateGroupChatDto } from '../dto/create-group-chat.dto';
 import { CreatePrivateChatDto } from '../dto/create-private-chat.dto';
 import { UpdateGroupChatDto } from '../dto/update-group-chat.dto';
 import {
-  ApiChatIdParamDocs,
+  ApiChatIdDocs,
   ApiChatMustBeGroupResponse,
-  ApiChatNotFoundResponse,
   ApiYouMustBeChatOwnerResponse,
 } from './shared';
 
@@ -85,9 +84,8 @@ export class ChatRoutesDocs {
         description: 'Update token for inviting users',
       }),
       ApiOkResponse({ description: 'Token updated successfully' }),
-      ApiChatNotFoundResponse(),
       ApiYouMustBeChatOwnerResponse(),
-      ApiChatIdParamDocs(),
+      ApiChatIdDocs(),
     );
   }
 
@@ -102,8 +100,7 @@ export class ChatRoutesDocs {
         description: 'You must be a participant of chat',
       }),
       ApiVerifiedAuthDocs(),
-      ApiChatNotFoundResponse(),
-      ApiChatIdParamDocs(),
+      ApiChatIdDocs(),
     );
   }
 
@@ -115,10 +112,10 @@ export class ChatRoutesDocs {
       }),
       ApiOkResponse({ description: 'Owner updated successfully' }),
       ApiChatMustBeGroupResponse(),
-      ApiNotFoundResponse({ description: 'Chat or new owner not found' }),
+      ApiNotFoundResponse({ description: 'New owner not found' }),
       ApiYouMustBeChatOwnerResponse(),
       ApiVerifiedAuthDocs(),
-      ApiChatIdParamDocs(),
+      ApiChatIdDocs(),
       ApiParam({
         name: 'ownerId',
         type: Number,
@@ -139,8 +136,7 @@ export class ChatRoutesDocs {
       ApiYouMustBeChatOwnerResponse(),
       ApiVerifiedAuthDocs(),
       ApiBody({ type: UpdateGroupChatDto }),
-      ApiChatNotFoundResponse(),
-      ApiChatIdParamDocs(),
+      ApiChatIdDocs(),
     );
   }
 
@@ -151,10 +147,9 @@ export class ChatRoutesDocs {
         description: 'Delete chat by ID',
       }),
       ApiOkResponse({ description: 'Chat deleted successfully' }),
-      ApiChatNotFoundResponse(),
       ApiVerifiedAuthDocs(),
       ApiYouMustBeChatOwnerResponse(),
-      ApiChatIdParamDocs(),
+      ApiChatIdDocs(),
     );
   }
 }

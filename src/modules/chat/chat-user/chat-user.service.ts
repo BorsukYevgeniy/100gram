@@ -1,6 +1,5 @@
 import {
   ConflictException,
-  ForbiddenException,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
@@ -35,11 +34,19 @@ export class ChatUserService {
       throw new ConflictException('User already is a participant of the chat');
     }
 
-    const chatUser = await this.chatRepo.addUserToChat(chatId, userId);
+    try {
+      const chatUser = await this.chatRepo.addUserToChat(chatId, userId);
 
-    this.logger.info({ chatId, userId }, 'User added to chat');
+      this.logger.info({ chatId, userId }, 'User added to chat');
 
-    return chatUser;
+      return chatUser;
+    } catch (e) {
+      if (e instanceof PrismaClientKnownRequestError && e.code === 'P2003') {
+        this.logger.warn({ chatId, userId }, 'User not found');
+        throw new NotFoundException('User not found');
+      }
+      throw e;
+    }
   }
 
   async deleteUserFromChat(chatId: number, userId: number) {
@@ -53,7 +60,7 @@ export class ChatUserService {
     );
 
     if (!participation)
-      throw new ForbiddenException('User is not a participant of the chat');
+      throw new NotFoundException('User is not a participant of the chat');
 
     if (chat.ownerId !== userId) {
       const chatUser = await this.chatRepo.deleteUserFromChat(chatId, userId);
@@ -65,6 +72,7 @@ export class ChatUserService {
       chatId,
       userId,
     );
+
     if (newOwnerId) {
       const ownerAndChatUser = await this.chatRepo.updateOwnerAndDeleteUser(
         chatId,
@@ -77,6 +85,7 @@ export class ChatUserService {
       );
       return ownerAndChatUser;
     }
+
     const deletedChat = await this.chatRepo.delete(chatId);
     this.logger.info({ chatId }, 'Deleted group chat as no new owner found');
     return deletedChat;
@@ -119,21 +128,26 @@ export class ChatUserService {
   ) {
     await this.chatValidator.validateOwner(currentUser, chatId);
 
-    try {
-      const chatUser = await this.chatRepo.updateChatRole(chatId, userId, role);
+    const participation = await this.chatValidator.checkChatParticipation(
+      userId,
+      chatId,
+    );
 
-      this.logger.info(
-        { chatId, userId, newRole: role },
-        'Updated user role in chat',
+    if (!participation) {
+      this.logger.warn(
+        { chatId, userId },
+        'User is not a participant of the chat',
       );
-
-      return chatUser;
-    } catch (e) {
-      if (e instanceof PrismaClientKnownRequestError && e.code === 'P2003') {
-        this.logger.warn({ chatId, userId }, 'User or chat not found');
-        throw new NotFoundException('User or chat not found');
-      }
-      throw e;
+      throw new NotFoundException('User is not a participant of the chat');
     }
+
+    const chatUser = await this.chatRepo.updateChatRole(chatId, userId, role);
+
+    this.logger.info(
+      { chatId, userId, newRole: role },
+      'Updated user role in chat',
+    );
+
+    return chatUser;
   }
 }

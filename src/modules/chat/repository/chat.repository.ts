@@ -39,7 +39,7 @@ export class ChatRepository {
     return this.prisma.chat.create({
       data: {
         chatType: ChatType.GROUP,
-        ownerId,
+        owner: { connect: { id: ownerId } },
         title: dto.title,
         description: dto.description,
         visibility: dto.visibility,

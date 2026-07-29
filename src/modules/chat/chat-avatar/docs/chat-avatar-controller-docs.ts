@@ -3,18 +3,16 @@ import { ApiTags } from '@nestjs/swagger';
 
 import { ApiVerifiedAuthDocs } from '../../../../common/decorators/docs/auth';
 import {
+  ApiChatIdDocs,
   ApiChatMustBeGroupResponse,
-  ApiChatNotFoundResponse,
   ApiYouMustBeChatOwnerResponse,
 } from '../../docs/shared';
-import { ApiChatIdParamDocs } from '../../docs/shared/api-chat-id-docs.decorator';
 
 export function ChatAvatarControllerDocs() {
   return applyDecorators(
     ApiTags('Chat Avatar'),
-    ApiChatIdParamDocs(),
+    ApiChatIdDocs(),
     ApiVerifiedAuthDocs(),
-    ApiChatNotFoundResponse(),
     ApiYouMustBeChatOwnerResponse(),
     ApiChatMustBeGroupResponse(),
   );

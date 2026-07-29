@@ -218,10 +218,18 @@ export class ChatService {
   async updateOwner(chatId: number, newOwnerId: number): Promise<Chat> {
     await this.chatValidator.validateChatType(chatId, ChatType.GROUP);
 
-    const owner = await this.chatRepo.updateOwner(chatId, newOwnerId);
+    try {
+      const owner = await this.chatRepo.updateOwner(chatId, newOwnerId);
 
-    this.logger.info({ chatId, newOwnerId }, 'Updated owner in chat');
-    return owner;
+      this.logger.info({ chatId, newOwnerId }, 'Updated owner in chat');
+      return owner;
+    } catch (e) {
+      if (e instanceof PrismaClientKnownRequestError && e.code === 'P2003') {
+        this.logger.warn({ chatId, newOwnerId }, 'New owner not found');
+        throw new NotFoundException('New owner not found');
+      }
+      throw e;
+    }
   }
 
   async getNewOwnerId(chatId: number, currentOnwerId: number) {

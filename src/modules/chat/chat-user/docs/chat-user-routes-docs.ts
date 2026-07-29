@@ -1,6 +1,5 @@
 import { applyDecorators } from '@nestjs/common';
 import {
-  ApiBadRequestResponse,
   ApiBody,
   ApiConflictResponse,
   ApiNotFoundResponse,
@@ -8,16 +7,12 @@ import {
   ApiOperation,
 } from '@nestjs/swagger';
 import { ApiPaginationDocs } from '../../../../common/decorators/docs/pagination';
-import { ApiUserIdParamDocs } from '../../../user/docs/shared';
 import {
-  ApiChatMustBeGroupResponse,
-  ApiChatNotFoundResponse,
-} from '../../docs/shared';
+  ApiUserIdParamDocs,
+  ApiUserNotFoundResponse,
+} from '../../../user/docs/shared';
+import { ApiChatMustBeGroupResponse } from '../../docs/shared';
 import { UpdateRoleDto } from '../../dto/role/update-role.dto';
-
-function ApiChatOrUserNotFound() {
-  return ApiNotFoundResponse({ description: 'Chat or user not found' });
-}
 
 export class ChatUserRoutesDocs {
   static GetUsersInChat() {
@@ -27,7 +22,6 @@ export class ChatUserRoutesDocs {
         description: 'Return all users in someone chat with pagination',
       }),
       ApiOkResponse({ description: 'Fetched users in chat' }),
-      ApiChatNotFoundResponse(),
       ApiPaginationDocs(),
     );
   }
@@ -39,7 +33,7 @@ export class ChatUserRoutesDocs {
         description: 'Add a new user in someone chat',
       }),
       ApiOkResponse({ description: 'User added' }),
-      ApiChatOrUserNotFound(),
+      ApiUserNotFoundResponse(),
       ApiConflictResponse({
         description: 'User already is a participant of the chat',
       }),
@@ -55,8 +49,7 @@ export class ChatUserRoutesDocs {
         description: 'Delete a user from someone chat',
       }),
       ApiOkResponse({ description: 'User deleted' }),
-      ApiChatOrUserNotFound(),
-      ApiBadRequestResponse({
+      ApiNotFoundResponse({
         description: 'User is not a participant of the chat',
       }),
       ApiUserIdParamDocs(),
@@ -71,7 +64,9 @@ export class ChatUserRoutesDocs {
         description: 'Update role of user in someone chat',
       }),
       ApiOkResponse({ description: 'Role updated' }),
-      ApiChatOrUserNotFound(),
+      ApiNotFoundResponse({
+        description: 'User is not a participant of the chat',
+      }),
       ApiUserIdParamDocs(),
       ApiBody({ type: UpdateRoleDto, required: true }),
     );
