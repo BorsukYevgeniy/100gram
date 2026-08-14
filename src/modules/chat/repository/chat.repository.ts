@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { Chat, ChatToUser } from '../../../../generated/prisma/client';
 import { ChatRole, ChatType } from '../../../../generated/prisma/enums';
 import { PrismaService } from '../../../infra/prisma/prisma.service';
+import { CreateChannelDto } from '../dto/create-channel.dto';
 import { CreateGroupChatDto } from '../dto/create-group-chat.dto';
 import { UpdateGroupChatDto } from '../dto/update-group-chat.dto';
 import { MyChat } from '../types/chat.types';
@@ -9,6 +10,21 @@ import { MyChat } from '../types/chat.types';
 @Injectable()
 export class ChatRepository {
   constructor(private readonly prisma: PrismaService) {}
+
+  async createChannel(
+    dto: CreateChannelDto,
+    ownerId: number,
+    inviteLink?: string,
+  ) {
+    return this.prisma.chat.create({
+      data: {
+        chatType: ChatType.CHANNEL,
+        ...dto,
+        owner: { connect: { id: ownerId } },
+        inviteLink,
+      },
+    });
+  }
 
   async createPrivateChat(
     userId: number,
@@ -216,12 +232,9 @@ export class ChatRepository {
         ...(lastMessageIdCursor && {
           cursor: { lastMessageId: lastMessageIdCursor },
         }),
-
-        orderBy: { lastMessageId: 'desc' },
-
-        take,
       },
-
+      take,
+      orderBy: { lastMessageId: 'desc' },
       select: {
         id: true,
         title: true,

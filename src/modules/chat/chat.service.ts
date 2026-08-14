@@ -16,6 +16,9 @@ import { ChatValidationService } from './validation/chat-validation.service';
 import { randomBytes } from 'crypto';
 import { PaginationDto } from '../../common/dto/pagination.dto';
 import { CacheService } from '../cache/cache.service';
+import { ChannelGroupChatResponseDto } from './dto/channel-group-chat-response.dto';
+import { CreateChannelDto } from './dto/create-channel.dto';
+import { PrivateChatResponseDto } from './dto/private-chat-response.dto';
 import { PaginatedMyChats } from './types/chat.types';
 
 @Injectable()
@@ -33,10 +36,30 @@ export class ChatService {
     return randomBytes(16).toString('hex');
   }
 
+  async createChannel(dto: CreateChannelDto, ownerId: number) {
+    const inviteToken =
+      dto.visibility === Visibility.PRIVATE
+        ? await this.generateInviteToken()
+        : undefined;
+
+    const channel = await this.chatRepo.createChannel(
+      dto,
+      ownerId,
+      inviteToken,
+    );
+
+    this.logger.info(
+      { channelId: channel.id, ownerId, visibility: channel.visibility },
+      'Channel created',
+    );
+
+    return channel;
+  }
+
   async createPrivateChat(
     userId: number,
     dto: CreatePrivateChatDto,
-  ): Promise<Chat> {
+  ): Promise<PrivateChatResponseDto> {
     if (userId === dto.userId) {
       this.logger.warn(
         { userId },
@@ -66,9 +89,9 @@ export class ChatService {
   async createGroupChat(
     ownerId: number,
     dto: CreateGroupChatDto,
-  ): Promise<Chat> {
+  ): Promise<ChannelGroupChatResponseDto> {
     try {
-      let inviteToken =
+      const inviteToken =
         dto.visibility === Visibility.PRIVATE
           ? await this.generateInviteToken()
           : undefined;
@@ -169,10 +192,22 @@ export class ChatService {
     );
   }
 
-  async findById(user: AccessTokenPayload, chatId: number): Promise<Chat> {
+  async findById(
+    user: AccessTokenPayload,
+    chatId: number,
+  ): Promise<PrivateChatResponseDto | ChannelGroupChatResponseDto> {
     await this.chatValidator.validateChatParticipation(user, chatId);
 
-    return this.chatRepo.getById(chatId);
+    const chat = await this.chatRepo.getById(chatId);
+
+    switch (chat.chatType) {
+      case ChatType.PRIVATE:
+        return new PrivateChatResponseDto(chat);
+      case ChatType.GROUP:
+        return new ChannelGroupChatResponseDto(chat);
+      case ChatType.CHANNEL:
+        return new ChannelGroupChatResponseDto(chat);
+    }
   }
 
   async updateGroupChat(id: number, dto: UpdateGroupChatDto): Promise<Chat> {

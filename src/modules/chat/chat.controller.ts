@@ -15,6 +15,7 @@ import { AccessTokenPayload } from '../../common/types';
 import { VerifiedUserGuard } from '../auth/guards/verified-user.guard';
 import { ChatService } from './chat.service';
 import { ChatControllerDocs, ChatRoutesDocs } from './docs';
+import { CreateChannelDto } from './dto/create-channel.dto';
 import { CreateGroupChatDto } from './dto/create-group-chat.dto';
 import { CreatePrivateChatDto } from './dto/create-private-chat.dto';
 import { UpdateGroupChatDto } from './dto/update-group-chat.dto';
@@ -50,6 +51,15 @@ export class ChatController {
     @Body() dto: CreateGroupChatDto,
   ) {
     return this.chatService.createGroupChat(user.id, dto);
+  }
+
+  @ChatRoutesDocs.CreateChannel()
+  @Post('channel')
+  async createChannel(
+    @CurrentUser() user: AccessTokenPayload,
+    @Body() dto: CreateChannelDto,
+  ) {
+    return this.chatService.createChannel(dto, user.id);
   }
 
   @ChatRoutesDocs.AddChatByInviteToken()
