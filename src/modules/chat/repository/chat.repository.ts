@@ -136,4 +136,11 @@ export class ChatRepository {
       },
     });
   }
+
+  async findChatType(chatId: number): Promise<{ chatType: ChatType }> {
+    return this.prisma.chat.findUnique({
+      where: { id: chatId },
+      select: { chatType: true },
+    });
+  }
 }

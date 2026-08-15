@@ -78,7 +78,7 @@ export class ChatValidationService {
         'Admin bypassed participation check',
       );
 
-      return this.chatRepo.getById(chatId);
+      return chatToUser;
     }
   }
 
