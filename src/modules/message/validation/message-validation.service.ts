@@ -6,7 +6,7 @@ import {
 import { PinoLogger } from 'nestjs-pino';
 import { ChatRole, Role } from '../../../../generated/prisma/enums';
 import { AccessTokenPayload } from '../../../common/types';
-import { ChatRepository } from '../../chat/repository/chat.repository';
+import { ChatUserRepository } from '../../chat/chat-user/repository/chat-user.repository';
 import { MessageRepository } from '../repository/message.repository';
 import { MessageFiles } from '../types/message.types';
 
@@ -14,7 +14,7 @@ import { MessageFiles } from '../types/message.types';
 export class MessageValidationService {
   constructor(
     private readonly messageRepo: MessageRepository,
-    private readonly chatRepo: ChatRepository,
+    private readonly chatUserRepo: ChatUserRepository,
     private readonly logger: PinoLogger,
   ) {
     this.logger.setContext(MessageValidationService.name);
@@ -62,7 +62,10 @@ export class MessageValidationService {
       throw new NotFoundException('Message not found');
     }
 
-    const chatRole = await this.chatRepo.getChatUser(message.chatId, user.id);
+    const chatRole = await this.chatUserRepo.getChatUser(
+      message.chatId,
+      user.id,
+    );
 
     const canDelete =
       message.userId === user.id ||

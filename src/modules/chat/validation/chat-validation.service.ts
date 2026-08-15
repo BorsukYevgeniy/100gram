@@ -8,12 +8,14 @@ import { PinoLogger } from 'nestjs-pino';
 import { Chat } from '../../../../generated/prisma/browser';
 import { ChatType, Role } from '../../../../generated/prisma/enums';
 import { AccessTokenPayload } from '../../../common/types';
+import { ChatUserRepository } from '../chat-user/repository/chat-user.repository';
 import { ChatRepository } from '../repository/chat.repository';
 
 @Injectable()
 export class ChatValidationService {
   constructor(
     private readonly chatRepo: ChatRepository,
+    private readonly chatUserRepo: ChatUserRepository,
     private readonly logger: PinoLogger,
   ) {}
 
@@ -83,7 +85,7 @@ export class ChatValidationService {
       return chat;
     }
 
-    const usersInChat = await this.chatRepo.getUserIdsInChat(chatId);
+    const usersInChat = await this.chatUserRepo.getUserIdsInChat(chatId);
     const isParticipant = usersInChat.some(({ user }) => user.id === user.id);
 
     if (!isParticipant) {
@@ -101,7 +103,7 @@ export class ChatValidationService {
   ): Promise<boolean> {
     this.logger.debug({ userId, chatId }, 'Checking chat participation');
 
-    const usersInChat = await this.chatRepo.getUserIdsInChat(chatId);
+    const usersInChat = await this.chatUserRepo.getUserIdsInChat(chatId);
     return usersInChat.some(({ user }) => user.id === userId);
   }
 }

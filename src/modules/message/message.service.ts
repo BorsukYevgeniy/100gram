@@ -9,7 +9,7 @@ import { ChatType } from '../../../generated/prisma/client';
 import { PaginationDto } from '../../common/dto/pagination.dto';
 import { AccessTokenPayload } from '../../common/types';
 import { CacheService } from '../cache/cache.service';
-import { ChatRepository } from '../chat/repository/chat.repository';
+import { ChatUserRepository } from '../chat/chat-user/repository/chat-user.repository';
 import { ChatValidationService } from '../chat/validation/chat-validation.service';
 import { FileService } from '../file/file.service';
 import { BlockedUserService } from '../user/blocked-user/blocked-user.service';
@@ -23,7 +23,7 @@ import { MessageValidationService } from './validation/message-validation.servic
 export class MessageService {
   constructor(
     private readonly messageRepository: MessageRepository,
-    private readonly chatRepo: ChatRepository,
+    private readonly chatUserRepo: ChatUserRepository,
     private readonly fileService: FileService,
     private readonly blockedUserService: BlockedUserService,
     private readonly messageValidator: MessageValidationService,
@@ -37,7 +37,7 @@ export class MessageService {
   private async checkBlock(userId: number, chatId: number) {
     await this.chatValidator.validateChatType(chatId, ChatType.PRIVATE);
 
-    const users = await this.chatRepo.getUserIdsInChat(chatId);
+    const users = await this.chatUserRepo.getUserIdsInChat(chatId);
 
     const otherUserId = users.find(({ user }) => user.id !== userId).user.id;
 

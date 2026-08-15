@@ -1,10 +1,10 @@
 import { Module } from '@nestjs/common';
-import { ChatRepositoryModule } from '../../chat/repository/chat-repository.module';
+import { ChatUserRepositoryModule } from '../../chat/chat-user/repository/chat-user-repository.module';
 import { MessageRepositoryModule } from '../repository/message-repository.module';
 import { MessageValidationService } from './message-validation.service';
 
 @Module({
-  imports: [MessageRepositoryModule, ChatRepositoryModule],
+  imports: [MessageRepositoryModule, ChatUserRepositoryModule],
   providers: [MessageValidationService],
   exports: [MessageValidationService],
 })

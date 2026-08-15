@@ -9,6 +9,7 @@ import { ChatAvatarService } from './chat-avatar/chat-avatar.service';
 import { ChatMessageController } from './chat-message/chat-message.controller';
 import { ChatUserController } from './chat-user/chat-user.controller';
 import { ChatUserService } from './chat-user/chat-user.service';
+import { ChatUserRepositoryModule } from './chat-user/repository/chat-user-repository.module';
 import { ChatController } from './chat.controller';
 import { ChatService } from './chat.service';
 import { ChatRepositoryModule } from './repository/chat-repository.module';
@@ -17,6 +18,7 @@ import { ChatGateway } from './ws/chat.gateway';
 
 @Module({
   imports: [
+    ChatUserRepositoryModule,
     ChatValidationModule,
     ChatRepositoryModule,
     TokenModule,

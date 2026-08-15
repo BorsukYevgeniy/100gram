@@ -49,8 +49,9 @@ export class ChatUserController {
   async deleteUserFromChat(
     @Param('chatId') chatId: number,
     @Param('userId') userId: number,
+    @CurrentUser() currentUser: AccessTokenPayload,
   ) {
-    return this.chatUserService.deleteUserFromChat(chatId, userId);
+    return this.chatUserService.deleteUserFromChat(chatId, userId, currentUser);
   }
 
   @ChatUserRoutesDocs.UpdateUserRole()
