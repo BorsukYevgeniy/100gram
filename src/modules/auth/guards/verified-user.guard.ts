@@ -1,6 +1,7 @@
 import {
   CanActivate,
   ExecutionContext,
+  ForbiddenException,
   Injectable,
   UnauthorizedException,
 } from '@nestjs/common';
@@ -28,7 +29,9 @@ export class VerifiedUserGuard implements CanActivate {
         },
         'Access token missing',
       );
-      throw new UnauthorizedException();
+      throw new UnauthorizedException(
+        'You must be authorized to access this resource',
+      );
     }
 
     try {
@@ -42,13 +45,16 @@ export class VerifiedUserGuard implements CanActivate {
         isVerified: payload.isVerified,
       });
 
-      if (payload.isVerified) {
-        return true;
-      }
+      if (!payload.isVerified)
+        throw new ForbiddenException(
+          'You must be a verified user to access this resource',
+        );
 
-      return false;
-    } catch (e: unknown) {
-      throw new UnauthorizedException();
+      return true;
+    } catch {
+      throw new UnauthorizedException(
+        'You must be authorized to access this resource',
+      );
     }
   }
 }

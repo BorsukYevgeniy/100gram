@@ -38,7 +38,9 @@ export class RolesGuard implements CanActivate {
         },
         'Access token missing',
       );
-      throw new UnauthorizedException();
+      throw new UnauthorizedException(
+        'You must be authorized to access this resource',
+      );
     }
 
     try {
@@ -58,7 +60,9 @@ export class RolesGuard implements CanActivate {
 
       return requieredRoles.includes(payload.role);
     } catch {
-      throw new UnauthorizedException();
+      throw new UnauthorizedException(
+        'You must be authorized to access this resource',
+      );
     }
   }
 }

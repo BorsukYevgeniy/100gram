@@ -30,7 +30,9 @@ export class AuthGuard implements CanActivate {
         'Access token missing',
       );
 
-      throw new UnauthorizedException();
+      throw new UnauthorizedException(
+        'You must be authorized to access this resource',
+      );
     }
     try {
       const payload = await this.tokenService.verifyAccessToken(accessToken);
@@ -43,7 +45,9 @@ export class AuthGuard implements CanActivate {
         isVerified: payload.isVerified,
       });
     } catch {
-      throw new UnauthorizedException();
+      throw new UnauthorizedException(
+        'You must be authorized to access this resource',
+      );
     }
     return true;
   }
