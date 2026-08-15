@@ -16,7 +16,7 @@ import { ChatValidationService } from './validation/chat-validation.service';
 import { randomBytes } from 'crypto';
 import { PaginationDto } from '../../common/dto/pagination.dto';
 import { CacheService } from '../cache/cache.service';
-import { ChatUserRepository } from './chat-user/repository/chat-user.repository';
+import { ChatMemberRepository } from '../chat-member/repository/chat-member.repository';
 import { ChannelGroupChatResponseDto } from './dto/channel-group-chat-response.dto';
 import { CreateChannelDto } from './dto/create-channel.dto';
 import { PrivateChatResponseDto } from './dto/private-chat-response.dto';
@@ -26,7 +26,7 @@ import { PaginatedMyChats } from './types/chat.types';
 export class ChatService {
   constructor(
     private readonly chatRepo: ChatRepository,
-    private readonly chatUserRepo: ChatUserRepository,
+    private readonly chatUserRepo: ChatMemberRepository,
     private readonly chatValidator: ChatValidationService,
     private readonly cache: CacheService,
     private readonly logger: PinoLogger,

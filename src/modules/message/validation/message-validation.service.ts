@@ -6,7 +6,7 @@ import {
 import { PinoLogger } from 'nestjs-pino';
 import { ChatRole, Role } from '../../../../generated/prisma/enums';
 import { AccessTokenPayload } from '../../../common/types';
-import { ChatUserRepository } from '../../chat/chat-user/repository/chat-user.repository';
+import { ChatMemberRepository } from '../../chat-member/repository/chat-member.repository';
 import { MessageRepository } from '../repository/message.repository';
 import { MessageFiles } from '../types/message.types';
 
@@ -14,7 +14,7 @@ import { MessageFiles } from '../types/message.types';
 export class MessageValidationService {
   constructor(
     private readonly messageRepo: MessageRepository,
-    private readonly chatUserRepo: ChatUserRepository,
+    private readonly chatUserRepo: ChatMemberRepository,
     private readonly logger: PinoLogger,
   ) {
     this.logger.setContext(MessageValidationService.name);

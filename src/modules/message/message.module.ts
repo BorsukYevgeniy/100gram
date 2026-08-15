@@ -1,6 +1,6 @@
 import { Module } from '@nestjs/common';
 import { CacheModule } from '../cache/cache.module';
-import { ChatUserRepositoryModule } from '../chat/chat-user/repository/chat-user-repository.module';
+import { ChatMemberRepositoryModule } from '../chat-member/repository/chat-member-repository.module';
 import { ChatValidationModule } from '../chat/validation/chat-validation.module';
 import { FileModule } from '../file/file.module';
 import { ReactionModule } from '../reaction/reaction.module';
@@ -15,7 +15,7 @@ import { MessageValidationModule } from './validation/message-validation.module'
 @Module({
   imports: [
     BlockedUserModule,
-    ChatUserRepositoryModule,
+    ChatMemberRepositoryModule,
     MessageRepositoryModule,
     TokenModule,
     FileModule,

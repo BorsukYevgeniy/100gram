@@ -8,14 +8,14 @@ import { PinoLogger } from 'nestjs-pino';
 import { Chat } from '../../../../generated/prisma/browser';
 import { ChatType, Role } from '../../../../generated/prisma/enums';
 import { AccessTokenPayload } from '../../../common/types';
-import { ChatUserRepository } from '../chat-user/repository/chat-user.repository';
+import { ChatMemberRepository } from '../../chat-member/repository/chat-member.repository';
 import { ChatRepository } from '../repository/chat.repository';
 
 @Injectable()
 export class ChatValidationService {
   constructor(
     private readonly chatRepo: ChatRepository,
-    private readonly chatUserRepo: ChatUserRepository,
+    private readonly chatUserRepo: ChatMemberRepository,
     private readonly logger: PinoLogger,
   ) {}
 

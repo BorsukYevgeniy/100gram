@@ -5,18 +5,18 @@ import {
 } from '@nestjs/common';
 import { PrismaClientKnownRequestError } from '@prisma/client/runtime/client';
 import { PinoLogger } from 'nestjs-pino';
-import { ChatType } from '../../../../generated/prisma/enums';
-import { PaginationDto } from '../../../common/dto/pagination.dto';
-import { AccessTokenPayload } from '../../../common/types';
-import { PaginatedUserNoCredOtpVCode } from '../../user/types/user.types';
-import { UpdateRoleDto } from '../dto/role/update-role.dto';
-import { ChatValidationService } from '../validation/chat-validation.service';
-import { ChatUserRepository } from './repository/chat-user.repository';
+import { ChatType } from '../../../generated/prisma/enums';
+import { PaginationDto } from '../../common/dto/pagination.dto';
+import { AccessTokenPayload } from '../../common/types';
+import { UpdateRoleDto } from '../chat/dto/role/update-role.dto';
+import { ChatValidationService } from '../chat/validation/chat-validation.service';
+import { PaginatedUserNoCredOtpVCode } from '../user/types/user.types';
+import { ChatMemberRepository } from './repository/chat-member.repository';
 
 @Injectable()
-export class ChatUserService {
+export class ChatMemberService {
   constructor(
-    private readonly chatRepo: ChatUserRepository,
+    private readonly chatRepo: ChatMemberRepository,
     private readonly chatValidator: ChatValidationService,
     private readonly logger: PinoLogger,
   ) {}

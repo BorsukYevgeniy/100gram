@@ -9,7 +9,7 @@ import { ChatType } from '../../../generated/prisma/client';
 import { PaginationDto } from '../../common/dto/pagination.dto';
 import { AccessTokenPayload } from '../../common/types';
 import { CacheService } from '../cache/cache.service';
-import { ChatUserRepository } from '../chat/chat-user/repository/chat-user.repository';
+import { ChatMemberRepository } from '../chat-member/repository/chat-member.repository';
 import { ChatValidationService } from '../chat/validation/chat-validation.service';
 import { FileService } from '../file/file.service';
 import { BlockedUserService } from '../user/blocked-user/blocked-user.service';
@@ -23,7 +23,7 @@ import { MessageValidationService } from './validation/message-validation.servic
 export class MessageService {
   constructor(
     private readonly messageRepository: MessageRepository,
-    private readonly chatUserRepo: ChatUserRepository,
+    private readonly chatUserRepo: ChatMemberRepository,
     private readonly fileService: FileService,
     private readonly blockedUserService: BlockedUserService,
     private readonly messageValidator: MessageValidationService,

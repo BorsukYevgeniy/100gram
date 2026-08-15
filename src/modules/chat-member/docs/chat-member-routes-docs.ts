@@ -6,10 +6,10 @@ import {
   ApiOkResponse,
   ApiOperation,
 } from '@nestjs/swagger';
-import { ApiPaginationDocs } from '../../../../common/decorators/docs/pagination';
-import { ApiUserIdDocs, ApiUserIdParamDocs } from '../../../user/docs/shared';
-import { ApiChatMustBeGroupResponse } from '../../docs/shared';
-import { UpdateRoleDto } from '../../dto/role/update-role.dto';
+import { ApiPaginationDocs } from '../../../common/decorators/docs/pagination';
+import { ApiChatMustBeGroupResponse } from '../../chat/docs/shared';
+import { UpdateRoleDto } from '../../chat/dto/role/update-role.dto';
+import { ApiUserIdDocs, ApiUserIdParamDocs } from '../../user/docs/shared';
 
 function UserIsNotParticipantOfChatDocs() {
   return applyDecorators(
@@ -20,7 +20,7 @@ function UserIsNotParticipantOfChatDocs() {
   );
 }
 
-export class ChatUserRoutesDocs {
+export class ChatMemberRoutesDocs {
   static GetUsersInChat() {
     return applyDecorators(
       ApiOperation({

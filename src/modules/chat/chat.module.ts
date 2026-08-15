@@ -1,15 +1,13 @@
 import { Module } from '@nestjs/common';
 import { FileStorageModule } from '../../infra/file/storage.module';
 import { CacheModule } from '../cache/cache.module';
+import { ChatMemberRepositoryModule } from '../chat-member/repository/chat-member-repository.module';
 import { MessageModule } from '../message/message.module';
 import { TokenModule } from '../token/token.module';
 import { ChatAvatarFileService } from './chat-avatar/chat-avatar-file.service';
 import { ChatAvatarController } from './chat-avatar/chat-avatar.controller';
 import { ChatAvatarService } from './chat-avatar/chat-avatar.service';
 import { ChatMessageController } from './chat-message/chat-message.controller';
-import { ChatUserController } from './chat-user/chat-user.controller';
-import { ChatUserService } from './chat-user/chat-user.service';
-import { ChatUserRepositoryModule } from './chat-user/repository/chat-user-repository.module';
 import { ChatController } from './chat.controller';
 import { ChatService } from './chat.service';
 import { ChatRepositoryModule } from './repository/chat-repository.module';
@@ -18,26 +16,20 @@ import { ChatGateway } from './ws/chat.gateway';
 
 @Module({
   imports: [
-    ChatUserRepositoryModule,
     ChatValidationModule,
     ChatRepositoryModule,
     TokenModule,
     FileStorageModule,
     MessageModule,
     CacheModule,
+    ChatMemberRepositoryModule,
   ],
-  controllers: [
-    ChatMessageController,
-    ChatUserController,
-    ChatAvatarController,
-    ChatController,
-  ],
+  controllers: [ChatMessageController, ChatAvatarController, ChatController],
   providers: [
     ChatGateway,
     ChatService,
     ChatAvatarService,
     ChatAvatarFileService,
-    ChatUserService,
   ],
   exports: [ChatService],
 })
