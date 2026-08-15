@@ -1,5 +1,6 @@
 import {
   BadRequestException,
+  ConflictException,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
@@ -93,6 +94,9 @@ export class ChatService {
     ownerId: number,
     dto: CreateGroupChatDto,
   ): Promise<ChannelGroupChatResponseDto> {
+    if (dto.userIds.includes(ownerId))
+      throw new ConflictException('Owner cannot be a member of the group chat');
+
     try {
       const inviteToken =
         dto.visibility === Visibility.PRIVATE
@@ -171,9 +175,7 @@ export class ChatService {
         { chatId: chat.id, userId: user.id },
         'User already in chat',
       );
-      throw new BadRequestException(
-        'User already is a participant of the chat',
-      );
+      throw new ConflictException('User already is a participant of the chat');
     }
 
     const chatUser = await this.chatUserRepo.addUserToChat(chat.id, user.id);
@@ -187,6 +189,7 @@ export class ChatService {
   }
 
   async updateInviteToken(user: AccessTokenPayload, chatId: number) {
+    await this.chatValidator.validateChatType(chatId, ChatType.GROUP);
     await this.chatValidator.validateOwner(user, chatId);
 
     return this.chatRepo.updateInviteToken(
@@ -253,8 +256,13 @@ export class ChatService {
     }
   }
 
-  async updateOwner(chatId: number, newOwnerId: number): Promise<ChatToUser> {
+  async updateOwner(
+    chatId: number,
+    user: AccessTokenPayload,
+    newOwnerId: number,
+  ): Promise<ChatToUser> {
     await this.chatValidator.validateChatType(chatId, ChatType.GROUP);
+    await this.chatValidator.validateOwner(user, chatId);
 
     try {
       const owner = await this.chatUserRepo.updateOwner(chatId, newOwnerId);
@@ -262,7 +270,7 @@ export class ChatService {
       this.logger.info({ chatId, newOwnerId }, 'Updated owner in chat');
       return owner;
     } catch (e) {
-      if (e instanceof PrismaClientKnownRequestError && e.code === 'P2003') {
+      if (e instanceof PrismaClientKnownRequestError && e.code === 'P2025') {
         this.logger.warn({ chatId, newOwnerId }, 'New owner not found');
         throw new NotFoundException('New owner not found');
       }

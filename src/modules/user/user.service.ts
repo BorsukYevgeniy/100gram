@@ -99,7 +99,7 @@ export class UserService {
 
       // If owner found update owner in chat else delete chat
       if (newOwnerId) {
-        await this.chatService.updateOwner(chatId, newOwnerId);
+        await this.chatService.updateOwner(chatId, user, newOwnerId);
         this.logger.info(
           { chatId, oldOwnerId: userId, newOwnerId },
           'Updated chat owner before deleting user',

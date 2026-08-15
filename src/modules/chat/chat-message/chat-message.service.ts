@@ -1,3 +1,4 @@
+import { Injectable } from '@nestjs/common';
 import { ChatType } from '../../../../generated/prisma/enums';
 import { PaginationDto } from '../../../common/dto/pagination.dto';
 import { AccessTokenPayload } from '../../../common/types';
@@ -6,6 +7,7 @@ import { MessageService } from '../../message/message.service';
 import { ChatRepository } from '../repository/chat.repository';
 import { ChatValidationService } from '../validation/chat-validation.service';
 
+@Injectable()
 export class ChatMessageService {
   constructor(
     private readonly chatRepo: ChatRepository,

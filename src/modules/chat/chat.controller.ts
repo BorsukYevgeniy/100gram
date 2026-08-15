@@ -94,8 +94,9 @@ export class ChatController {
   async updateOwner(
     @Param('chatId') chatId: number,
     @Param('ownerId') ownerId: number,
+    @CurrentUser() user: AccessTokenPayload,
   ) {
-    return this.chatService.updateOwner(chatId, ownerId);
+    return this.chatService.updateOwner(chatId, user, ownerId);
   }
 
   @ChatRoutesDocs.UpdateGroupChat()

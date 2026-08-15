@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { Chat } from '../../../../generated/prisma/client';
-import { ChatType } from '../../../../generated/prisma/enums';
+import { ChatRole, ChatType } from '../../../../generated/prisma/enums';
 import { PrismaService } from '../../../infra/prisma/prisma.service';
 import { CreateChannelDto } from '../dto/create-channel.dto';
 import { CreateGroupChatDto } from '../dto/create-group-chat.dto';
@@ -56,7 +56,6 @@ export class ChatRepository {
     return this.prisma.chat.create({
       data: {
         chatType: ChatType.GROUP,
-        owner: { connect: { id: ownerId } },
         title,
         description,
         visibility,
@@ -64,7 +63,10 @@ export class ChatRepository {
         membersCount: userIds.length + 1,
 
         chatToUsers: {
-          create: userIds.map((id) => ({ userId: id })),
+          create: [
+            ...userIds.map((userId) => ({ userId })),
+            { userId: ownerId, role: ChatRole.OWNER },
+          ],
         },
       },
     });

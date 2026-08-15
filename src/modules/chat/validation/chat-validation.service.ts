@@ -83,8 +83,6 @@ export class ChatValidationService {
   }
 
   async validateNotBlocked(userId: number, chatId: number) {
-    await this.validateChatType(chatId, ChatType.PRIVATE);
-
     const users = await this.chatUserRepo.getUserIdsInChat(chatId);
 
     const otherUserId = users.find(({ user }) => user.id !== userId).user.id;

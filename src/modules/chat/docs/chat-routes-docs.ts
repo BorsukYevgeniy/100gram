@@ -2,6 +2,7 @@ import { applyDecorators } from '@nestjs/common';
 import {
   ApiBadRequestResponse,
   ApiBody,
+  ApiConflictResponse,
   ApiCreatedResponse,
   ApiForbiddenResponse,
   ApiNotFoundResponse,
@@ -41,11 +42,11 @@ export class ChatRoutesDocs {
   static CreatePrivateChat() {
     return applyDecorators(
       ApiOperation({
-        summary: 'Craete private chat',
+        summary: 'Create private chat',
         description: 'Create chat with 1 user',
       }),
       ApiCreatedResponse({
-        description: 'Private hat created successfully',
+        description: 'Private chat created successfully',
         type: PrivateChatResponseDto,
       }),
       ApiUserNotFoundResponse(),
@@ -67,6 +68,9 @@ export class ChatRoutesDocs {
         type: ChannelGroupChatResponseDto,
       }),
       ApiNotFoundResponse({ description: 'Users not found' }),
+      ApiConflictResponse({
+        description: 'Owner cannot be a member of the group chat',
+      }),
       ApiBody({ type: CreateGroupChatDto }),
     );
   }

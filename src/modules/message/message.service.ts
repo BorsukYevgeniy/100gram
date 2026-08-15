@@ -1,9 +1,11 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaClientKnownRequestError } from '@prisma/client/runtime/client';
 import { PinoLogger } from 'nestjs-pino';
+import { ChatType } from '../../../generated/prisma/enums';
 import { PaginationDto } from '../../common/dto/pagination.dto';
 import { AccessTokenPayload } from '../../common/types';
 import { CacheService } from '../cache/cache.service';
+import { ChatRepository } from '../chat/repository/chat.repository';
 import { ChatValidationService } from '../chat/validation/chat-validation.service';
 import { FileService } from '../file/file.service';
 import { CreateMessageDto } from './dto/create-message.dto';
@@ -15,6 +17,7 @@ import { MessageValidationService } from './validation/message-validation.servic
 @Injectable()
 export class MessageService {
   constructor(
+    private readonly chatRepo: ChatRepository,
     private readonly messageRepository: MessageRepository,
     private readonly fileService: FileService,
     private readonly messageValidator: MessageValidationService,
@@ -109,7 +112,10 @@ export class MessageService {
     fileIds: number[],
     provider: 'http' | 'ws',
   ): Promise<MessageFiles> {
-    await this.chatValidator.validateNotBlocked(userId, chatId);
+    const { chatType } = await this.chatRepo.findChatType(chatId);
+
+    if (chatType === ChatType.PRIVATE)
+      await this.chatValidator.validateNotBlocked(userId, chatId);
 
     try {
       const message = await this.messageRepository.create(
