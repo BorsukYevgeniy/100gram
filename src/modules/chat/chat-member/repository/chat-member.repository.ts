@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
-import { ChatToUser } from '../../../../generated/prisma/browser';
-import { ChatRole, ChatType } from '../../../../generated/prisma/enums';
-import { PrismaService } from '../../../infra/prisma/prisma.service';
+import { ChatToUser } from '../../../../../generated/prisma/browser';
+import { ChatRole, ChatType } from '../../../../../generated/prisma/enums';
+import { PrismaService } from '../../../../infra/prisma/prisma.service';
 
 @Injectable()
 export class ChatMemberRepository {

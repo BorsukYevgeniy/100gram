@@ -1,5 +1,5 @@
 import { Module } from '@nestjs/common';
-import { PrismaModule } from '../../../infra/prisma/prisma.module';
+import { PrismaModule } from '../../../../infra/prisma/prisma.module';
 import { ChatMemberRepository } from './chat-member.repository';
 
 @Module({

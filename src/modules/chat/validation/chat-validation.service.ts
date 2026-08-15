@@ -8,8 +8,8 @@ import { PinoLogger } from 'nestjs-pino';
 import { Chat } from '../../../../generated/prisma/browser';
 import { ChatType, Role } from '../../../../generated/prisma/enums';
 import { AccessTokenPayload } from '../../../common/types';
-import { ChatMemberRepository } from '../../chat-member/repository/chat-member.repository';
 import { BlockedUserService } from '../../user/blocked-user/blocked-user.service';
+import { ChatMemberRepository } from '../chat-member/repository/chat-member.repository';
 import { ChatRepository } from '../repository/chat.repository';
 
 @Injectable()

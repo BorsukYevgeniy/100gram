@@ -6,7 +6,7 @@ import {
 import { PinoLogger } from 'nestjs-pino';
 import { ChatRole, Role } from '../../../../generated/prisma/enums';
 import { AccessTokenPayload } from '../../../common/types';
-import { ChatMemberRepository } from '../../chat-member/repository/chat-member.repository';
+import { ChatMemberRepository } from '../../chat/chat-member/repository/chat-member.repository';
 import { MessageRepository } from '../repository/message.repository';
 import { MessageFiles } from '../types/message.types';
 

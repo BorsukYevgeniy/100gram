@@ -14,7 +14,6 @@ import { join } from 'path';
 import appConfig from './config/app.config';
 import pinoConfig from './config/pino.config';
 import { CacheModule } from './modules/cache/cache.module';
-import { ChatMemberModule } from './modules/chat-member/chat-member.module';
 
 @Module({
   imports: [
@@ -39,7 +38,6 @@ import { ChatMemberModule } from './modules/chat-member/chat-member.module';
     }),
     FileModule,
     CacheModule,
-    ChatMemberModule,
   ],
 })
 export class AppModule {}

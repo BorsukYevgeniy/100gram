@@ -16,7 +16,7 @@ import { ChatValidationService } from './validation/chat-validation.service';
 import { randomBytes } from 'crypto';
 import { PaginationDto } from '../../common/dto/pagination.dto';
 import { CacheService } from '../cache/cache.service';
-import { ChatMemberRepository } from '../chat-member/repository/chat-member.repository';
+import { ChatMemberRepository } from './chat-member/repository/chat-member.repository';
 import { ChannelGroupChatResponseDto } from './dto/channel-group-chat-response.dto';
 import { CreateChannelDto } from './dto/create-channel.dto';
 import { PrivateChatResponseDto } from './dto/private-chat-response.dto';
