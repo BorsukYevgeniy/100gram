@@ -1,18 +1,11 @@
-import {
-  ForbiddenException,
-  Injectable,
-  NotFoundException,
-} from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaClientKnownRequestError } from '@prisma/client/runtime/client';
 import { PinoLogger } from 'nestjs-pino';
-import { ChatType } from '../../../generated/prisma/client';
 import { PaginationDto } from '../../common/dto/pagination.dto';
 import { AccessTokenPayload } from '../../common/types';
 import { CacheService } from '../cache/cache.service';
-import { ChatMemberRepository } from '../chat-member/repository/chat-member.repository';
 import { ChatValidationService } from '../chat/validation/chat-validation.service';
 import { FileService } from '../file/file.service';
-import { BlockedUserService } from '../user/blocked-user/blocked-user.service';
 import { CreateMessageDto } from './dto/create-message.dto';
 import { UpdateMessageDto } from './dto/update-message.dto';
 import { MessageRepository } from './repository/message.repository';
@@ -23,32 +16,13 @@ import { MessageValidationService } from './validation/message-validation.servic
 export class MessageService {
   constructor(
     private readonly messageRepository: MessageRepository,
-    private readonly chatUserRepo: ChatMemberRepository,
     private readonly fileService: FileService,
-    private readonly blockedUserService: BlockedUserService,
     private readonly messageValidator: MessageValidationService,
     private readonly chatValidator: ChatValidationService,
     private readonly logger: PinoLogger,
     private readonly cache: CacheService,
   ) {
     this.logger.setContext(MessageService.name);
-  }
-
-  private async checkBlock(userId: number, chatId: number) {
-    await this.chatValidator.validateChatType(chatId, ChatType.PRIVATE);
-
-    const users = await this.chatUserRepo.getUserIdsInChat(chatId);
-
-    const otherUserId = users.find(({ user }) => user.id !== userId).user.id;
-
-    const isBlocked = await this.blockedUserService.isBlocked(
-      userId,
-      otherUserId,
-    );
-
-    if (isBlocked) {
-      throw new ForbiddenException('You are blocked by this user');
-    }
   }
 
   async getMessagesInChat(
@@ -135,7 +109,7 @@ export class MessageService {
     fileIds: number[],
     provider: 'http' | 'ws',
   ): Promise<MessageFiles> {
-    await this.checkBlock(userId, chatId);
+    await this.chatValidator.validateNotBlocked(userId, chatId);
 
     try {
       const message = await this.messageRepository.create(

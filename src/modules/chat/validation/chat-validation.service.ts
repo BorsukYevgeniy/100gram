@@ -9,6 +9,7 @@ import { Chat } from '../../../../generated/prisma/browser';
 import { ChatType, Role } from '../../../../generated/prisma/enums';
 import { AccessTokenPayload } from '../../../common/types';
 import { ChatMemberRepository } from '../../chat-member/repository/chat-member.repository';
+import { BlockedUserService } from '../../user/blocked-user/blocked-user.service';
 import { ChatRepository } from '../repository/chat.repository';
 
 @Injectable()
@@ -16,6 +17,7 @@ export class ChatValidationService {
   constructor(
     private readonly chatRepo: ChatRepository,
     private readonly chatUserRepo: ChatMemberRepository,
+    private readonly blockedUserService: BlockedUserService,
     private readonly logger: PinoLogger,
   ) {}
 
@@ -94,6 +96,23 @@ export class ChatValidationService {
         'User is not chat participant',
       );
       throw new ForbiddenException('User is not a participant of the chat');
+    }
+  }
+
+  async validateNotBlocked(userId: number, chatId: number) {
+    await this.validateChatType(chatId, ChatType.PRIVATE);
+
+    const users = await this.chatUserRepo.getUserIdsInChat(chatId);
+
+    const otherUserId = users.find(({ user }) => user.id !== userId).user.id;
+
+    const isBlocked = await this.blockedUserService.isBlocked(
+      userId,
+      otherUserId,
+    );
+
+    if (isBlocked) {
+      throw new ForbiddenException('You are blocked by this user');
     }
   }
 

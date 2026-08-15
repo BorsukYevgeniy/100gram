@@ -1,11 +1,9 @@
 import { Module } from '@nestjs/common';
 import { CacheModule } from '../cache/cache.module';
-import { ChatMemberRepositoryModule } from '../chat-member/repository/chat-member-repository.module';
 import { ChatValidationModule } from '../chat/validation/chat-validation.module';
 import { FileModule } from '../file/file.module';
 import { ReactionModule } from '../reaction/reaction.module';
 import { TokenModule } from '../token/token.module';
-import { BlockedUserModule } from '../user/blocked-user/blocked-user.module';
 import { MessageController } from './message.controller';
 import { MessageService } from './message.service';
 import { MessageReactionController } from './reaction/message-reaction.controller';
@@ -14,8 +12,6 @@ import { MessageValidationModule } from './validation/message-validation.module'
 
 @Module({
   imports: [
-    BlockedUserModule,
-    ChatMemberRepositoryModule,
     MessageRepositoryModule,
     TokenModule,
     FileModule,
