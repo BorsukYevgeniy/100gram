@@ -14,6 +14,7 @@ import { ChatRepository } from './repository/chat.repository';
 import { ChatValidationService } from './validation/chat-validation.service';
 
 import { randomBytes } from 'crypto';
+import { ChatToUser } from '../../../generated/prisma/browser';
 import { PaginationDto } from '../../common/dto/pagination.dto';
 import { CacheService } from '../cache/cache.service';
 import { ChatMemberRepository } from './chat-member/repository/chat-member.repository';
@@ -252,11 +253,11 @@ export class ChatService {
     }
   }
 
-  async updateOwner(chatId: number, newOwnerId: number): Promise<Chat> {
+  async updateOwner(chatId: number, newOwnerId: number): Promise<ChatToUser> {
     await this.chatValidator.validateChatType(chatId, ChatType.GROUP);
 
     try {
-      const owner = await this.chatRepo.updateOwner(chatId, newOwnerId);
+      const owner = await this.chatUserRepo.updateOwner(chatId, newOwnerId);
 
       this.logger.info({ chatId, newOwnerId }, 'Updated owner in chat');
       return owner;

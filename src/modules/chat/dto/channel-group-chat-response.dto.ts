@@ -37,12 +37,6 @@ export class ChannelGroupChatResponseDto extends PrivateChatResponseDto {
   })
   readonly inviteToken: string;
 
-  @ApiProperty({
-    type: Number,
-    description: 'ID of the chat owner',
-  })
-  readonly ownerId: number;
-
   constructor(chat: Chat) {
     super(chat);
     this.title = chat.title;
@@ -50,6 +44,5 @@ export class ChannelGroupChatResponseDto extends PrivateChatResponseDto {
     this.avatar = chat.avatar;
     this.membersCount = chat.membersCount;
     this.inviteToken = chat.inviteToken;
-    this.ownerId = chat.ownerId;
   }
 }

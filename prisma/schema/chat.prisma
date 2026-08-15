@@ -17,9 +17,6 @@ model Chat {
   membersCount Int     @default(1)
   inviteToken  String? @unique
 
-  ownerId Int?
-  owner   User? @relation(fields: [ownerId], references: [id])
-
   /**
    * Private chats dont have owner, avatar, inviteToken, title and description.
    * He's visibility is private by default and cant be changed.

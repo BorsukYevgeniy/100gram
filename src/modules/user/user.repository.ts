@@ -75,15 +75,6 @@ export class UserRepository {
     });
   }
 
-  async findChatsWhereUserIsOwner(userId: number) {
-    return this.prisma.user.findUnique({
-      where: { id: userId },
-      select: {
-        chatsOwned: { select: { id: true, ownerId: true, chatType: true } },
-      },
-    });
-  }
-
   async getUserByVerificationCode(verificationCode: string): Promise<User> {
     return this.prisma.user.findUnique({ where: { verificationCode } });
   }

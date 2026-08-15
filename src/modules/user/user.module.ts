@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { ScheduleModule } from '@nestjs/schedule';
 import { FileStorageModule } from '../../infra/file/storage.module';
 import { PrismaModule } from '../../infra/prisma/prisma.module';
+import { ChatMemberRepositoryModule } from '../chat/chat-member/repository/chat-member-repository.module';
 import { ChatModule } from '../chat/chat.module';
 import { TokenModule } from '../token/token.module';
 import { BlockedUserModule } from './blocked-user/blocked-user.module';
@@ -16,6 +17,7 @@ import { UserService } from './user.service';
 @Module({
   imports: [
     ScheduleModule.forRoot(),
+    ChatMemberRepositoryModule,
     PrismaModule,
     TokenModule,
     ChatModule,

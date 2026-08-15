@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { ChatToUser } from '../../../../../generated/prisma/browser';
-import { ChatRole, ChatType } from '../../../../../generated/prisma/enums';
+import { ChatRole } from '../../../../../generated/prisma/enums';
 import { PrismaService } from '../../../../infra/prisma/prisma.service';
 
 @Injectable()
@@ -19,6 +19,7 @@ export class ChatMemberRepository {
       }),
     ]);
   }
+
   async addUserToChat(chatId: number, userId: number) {
     return await this.prisma.$transaction([
       this.prisma.chatToUser.create({
@@ -33,6 +34,7 @@ export class ChatMemberRepository {
       }),
     ]);
   }
+
   async getUsersInChat(chatId: number, take: number, userCursor: number) {
     return this.prisma.chatToUser.findMany({
       where: { chatId },
@@ -67,6 +69,7 @@ export class ChatMemberRepository {
       },
     });
   }
+
   async getUserIdsInChat(chatId: number) {
     return this.prisma.chatToUser.findMany({
       where: { chatId },
@@ -77,11 +80,13 @@ export class ChatMemberRepository {
       },
     });
   }
+
   async getChatUser(chatId: number, userId: number) {
     return this.prisma.chatToUser.findUnique({
       where: { chatId_userId: { chatId, userId } },
     });
   }
+
   async updateChatRole(chatId: number, userId: number, role: ChatRole) {
     return this.prisma.chatToUser.update({
       where: { chatId_userId: { chatId, userId } },
@@ -100,6 +105,23 @@ export class ChatMemberRepository {
       },
     });
   }
+
+  async updateOwner(chatId: number, newOwnerId: number) {
+    const [_, newOwner] = await this.prisma.$transaction([
+      this.prisma.chatToUser.updateMany({
+        where: { chatId, role: ChatRole.OWNER },
+        data: { role: ChatRole.MEMBER },
+      }),
+
+      this.prisma.chatToUser.update({
+        where: { chatId_userId: { chatId, userId: newOwnerId } },
+        data: { role: ChatRole.OWNER },
+      }),
+    ]);
+
+    return newOwner;
+  }
+
   async updateOwnerAndDeleteUser(
     chatId: number,
     newOwnerId: number,
@@ -109,10 +131,25 @@ export class ChatMemberRepository {
       this.prisma.chatToUser.delete({
         where: { chatId_userId: { chatId, userId } },
       }),
-      this.prisma.chat.update({
-        where: { id: chatId, chatType: ChatType.GROUP },
-        data: { ownerId: newOwnerId },
+      this.prisma.chatToUser.update({
+        where: { chatId_userId: { chatId, userId: newOwnerId } },
+        data: { role: ChatRole.OWNER },
       }),
     ]);
+  }
+
+  async findChatOwner(chatId: number): Promise<ChatToUser> {
+    return this.prisma.chatToUser.findFirst({
+      where: {
+        chatId,
+        role: ChatRole.OWNER,
+      },
+    });
+  }
+
+  async findChatsWhereUserIsOwner(userId: number) {
+    return this.prisma.chatToUser.findMany({
+      where: { userId, role: ChatRole.OWNER },
+    });
   }
 }

@@ -12,7 +12,7 @@ model User {
 
   otpHash      String?   @unique
   otpExpiresAt DateTime? @db.Timestamptz()
-  otpAttempts  Int?      
+  otpAttempts  Int?
 
   isVerified       Boolean   @default(false)
   verifiedAt       DateTime? @db.Timestamptz
@@ -22,7 +22,6 @@ model User {
   chatToUsers ChatToUser[]
   tokens      Token[]
   // Chats where the user is the owner
-  chatsOwned  Chat[]
   files       File[]
   reactions   ReactionToMessage[]
 

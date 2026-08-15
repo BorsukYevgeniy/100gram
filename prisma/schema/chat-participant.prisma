@@ -13,6 +13,7 @@ model ChatToUser {
 }
 
 enum ChatRole {
+  OWNER
   MODERATOR
   MEMBER
 }

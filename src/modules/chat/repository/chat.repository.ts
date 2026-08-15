@@ -25,6 +25,7 @@ export class ChatRepository {
       },
     });
   }
+
   async createPrivateChat(
     userId: number,
     participantId: number,
@@ -46,6 +47,7 @@ export class ChatRepository {
       },
     });
   }
+
   async createGroupChat(
     ownerId: number,
     { title, userIds, visibility, description }: CreateGroupChatDto,
@@ -67,37 +69,36 @@ export class ChatRepository {
       },
     });
   }
+
   async updateInviteToken(chatId: number, inviteToken: string) {
     return this.prisma.chat.update({
       where: { id: chatId, chatType: ChatType.GROUP },
       data: { inviteToken },
     });
   }
+
   async updateGroupChat(id: number, dto: UpdateGroupChatDto): Promise<Chat> {
     return this.prisma.chat.update({
       where: { id, chatType: ChatType.GROUP },
       data: dto,
     });
   }
+
   async getById(id: number): Promise<Chat> {
     return this.prisma.chat.findUnique({
       where: { id },
     });
   }
+
   async getByinviteToken(inviteToken: string): Promise<Chat> {
     return this.prisma.chat.findUnique({
       where: { inviteToken, chatType: ChatType.GROUP },
     });
   }
+
   async delete(id: number): Promise<Chat> {
     return this.prisma.chat.delete({
       where: { id },
-    });
-  }
-  async updateOwner(chatId: number, newOnwerId: number): Promise<Chat> {
-    return this.prisma.chat.update({
-      where: { id: chatId, chatType: ChatType.GROUP },
-      data: { ownerId: newOnwerId },
     });
   }
 

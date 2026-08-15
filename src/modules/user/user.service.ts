@@ -3,6 +3,7 @@ import { PrismaClientKnownRequestError } from '@prisma/client/runtime/client';
 import { PinoLogger } from 'nestjs-pino';
 import { User } from '../../../generated/prisma/client';
 import { AccessTokenPayload } from '../../common/types';
+import { ChatMemberRepository } from '../chat/chat-member/repository/chat-member.repository';
 import { ChatService } from '../chat/chat.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UserNoCredOtpVCode } from './types/user.types';
@@ -12,6 +13,7 @@ import { UserRepository } from './user.repository';
 export class UserService {
   constructor(
     private readonly userRepository: UserRepository,
+    private readonly chatUserRepo: ChatMemberRepository,
     private readonly chatService: ChatService,
     private readonly logger: PinoLogger,
   ) {
@@ -79,11 +81,10 @@ export class UserService {
     user: AccessTokenPayload,
     userId: number,
   ): Promise<UserNoCredOtpVCode> {
-    const { chatsOwned } =
-      await this.userRepository.findChatsWhereUserIsOwner(userId);
+    const chats = await this.chatUserRepo.findChatsWhereUserIsOwner(userId);
 
     // Delete user if he dont have chats where he is owner
-    if (!chatsOwned || chatsOwned.length === 0) {
+    if (!chats || chats.length === 0) {
       const deletedUser = await this.userRepository.delete(userId);
       this.logger.info(
         { userId: deletedUser.id },
@@ -93,20 +94,20 @@ export class UserService {
     }
 
     // Find new owner for every chat where user is owner
-    for (const chat of chatsOwned) {
-      const newOwnerId = await this.chatService.getNewOwnerId(chat.id, user.id);
+    for (const { chatId, userId } of chats) {
+      const newOwnerId = await this.chatService.getNewOwnerId(chatId, userId);
 
       // If owner found update owner in chat else delete chat
       if (newOwnerId) {
-        await this.chatService.updateOwner(chat.id, newOwnerId);
+        await this.chatService.updateOwner(chatId, newOwnerId);
         this.logger.info(
-          { chatId: chat.id, oldOwnerId: user.id, newOwnerId },
+          { chatId, oldOwnerId: userId, newOwnerId },
           'Updated chat owner before deleting user',
         );
       } else {
-        await this.chatService.delete(user, chat.id);
+        await this.chatService.delete(user, chatId);
         this.logger.info(
-          { chatId: chat.id, oldOwnerId: user.id },
+          { chatId, oldOwnerId: userId },
           'Deleted chat as no new owner found before deleting user',
         );
       }

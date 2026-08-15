@@ -5,7 +5,6 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { PinoLogger } from 'nestjs-pino';
-import { Chat } from '../../../../generated/prisma/browser';
 import { ChatType, Role } from '../../../../generated/prisma/enums';
 import { AccessTokenPayload } from '../../../common/types';
 import { BlockedUserService } from '../../user/blocked-user/blocked-user.service';
@@ -24,14 +23,14 @@ export class ChatValidationService {
   async validateOwner(user: AccessTokenPayload, chatId: number) {
     this.logger.debug({ userId: user.id, chatId }, 'Validating chat owner');
 
-    const chat = await this.chatRepo.getById(chatId);
+    const owner = await this.chatUserRepo.findChatOwner(chatId);
 
-    if (!chat) {
-      this.logger.warn({ chatId }, 'Chat not found');
-      throw new NotFoundException('Chat not found');
-    }
+    // if (!chat) {
+    //   this.logger.warn({ chatId }, 'Chat not found');
+    //   throw new NotFoundException('Chat not found');
+    // }
 
-    if (chat.ownerId !== user.id && user.role !== Role.ADMIN) {
+    if (owner.userId !== user.id && user.role !== Role.ADMIN) {
       this.logger.warn({ userId: user.id, chatId }, 'User is not chat owner');
       throw new ForbiddenException();
     }
@@ -57,20 +56,20 @@ export class ChatValidationService {
     return chat;
   }
 
-  async validateChatParticipation(
-    user: AccessTokenPayload,
-    chatId: number,
-  ): Promise<Chat> {
+  async validateChatParticipation(user: AccessTokenPayload, chatId: number) {
     this.logger.debug(
       { userId: user.id, chatId },
       'Validating chat participation',
     );
 
-    const chat = await this.chatRepo.getById(chatId);
+    const chatToUser = await this.chatUserRepo.getChatUser(chatId, user.id);
 
-    if (!chat) {
-      this.logger.warn({ chatId }, 'Chat not found');
-      throw new NotFoundException('Chat not found');
+    if (!chatToUser) {
+      this.logger.warn(
+        { userId: user.id, chatId },
+        'User is not a participant of the chat',
+      );
+      throw new ForbiddenException('User is not a participant of the chat');
     }
 
     if (user.role === Role.ADMIN) {
@@ -78,24 +77,8 @@ export class ChatValidationService {
         { userId: user.id, chatId },
         'Admin bypassed participation check',
       );
-      return chat;
-    } else if (user.id === chat.ownerId) {
-      this.logger.debug(
-        { userId: user.id, chatId },
-        'Owner bypassed participation check',
-      );
-      return chat;
-    }
 
-    const usersInChat = await this.chatUserRepo.getUserIdsInChat(chatId);
-    const isParticipant = usersInChat.some(({ user }) => user.id === user.id);
-
-    if (!isParticipant) {
-      this.logger.warn(
-        { userId: user.id, chatId },
-        'User is not chat participant',
-      );
-      throw new ForbiddenException('User is not a participant of the chat');
+      return this.chatRepo.getById(chatId);
     }
   }
 
@@ -122,7 +105,7 @@ export class ChatValidationService {
   ): Promise<boolean> {
     this.logger.debug({ userId, chatId }, 'Checking chat participation');
 
-    const usersInChat = await this.chatUserRepo.getUserIdsInChat(chatId);
-    return usersInChat.some(({ user }) => user.id === userId);
+    const usersInChat = await this.chatUserRepo.getChatUser(chatId, userId);
+    return !!usersInChat;
   }
 }
