@@ -16,6 +16,11 @@
     "strictBindCallApply": false,
     "forceConsistentCasingInFileNames": false,
     "noFallthroughCasesInSwitch": false,
-    "types": ["node", "Multer"]
+    "rootDir": ".",
+    "types": ["node", "Multer"],
+    "paths": {
+      "@app/config": ["./libs/config/src"],
+      "@app/config/*": ["./libs/config/src/*"]
+    }
   }
 }

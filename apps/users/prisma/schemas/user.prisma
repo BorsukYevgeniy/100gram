@@ -1,0 +1,40 @@
+model User {
+  id          Int      @id @default(autoincrement())
+  email       String   @unique
+  nickname    String
+  description String?
+  password    String
+  avatar      String?
+  createdAt   DateTime @default(now()) @db.Timestamptz()
+
+  role     Role     @default(USER)
+  provider Provider @default(LOCAL)
+
+  otpHash      String?   @unique
+  otpExpiresAt DateTime? @db.Timestamptz()
+  otpAttempts  Int?
+
+  isVerified       Boolean   @default(false)
+  verifiedAt       DateTime? @db.Timestamptz
+  verificationCode String    @unique @default(uuid())
+
+  // messages    Message[]
+  // chatToUsers ChatToUser[]
+  // tokens      Token[]
+  // // Chats where the user is the owner
+  // files       File[]
+  // reactions   ReactionToMessage[]
+
+  blockedUsers BlockedUser[] @relation("Blocker")
+  blockedBy    BlockedUser[] @relation("Blocked")
+}
+
+enum Role {
+  ADMIN
+  USER
+}
+
+enum Provider {
+  LOCAL
+  GOOGLE
+}
