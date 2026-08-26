@@ -4,7 +4,8 @@ import { ConfigModule, ConfigType } from '@nestjs/config';
 import { LoggerModule } from 'nestjs-pino';
 import appConfig from './config/app.config';
 import { BlockedUserModule } from './modules/blocked-users/blocked-users.module';
-import { UsersModule } from './modules/users/users.module';
+import { TokenModule } from './modules/token/token.module';
+import { UsersModule } from './modules/users/user.module';
 
 @Module({
   imports: [
@@ -20,6 +21,7 @@ import { UsersModule } from './modules/users/users.module';
     }),
     UsersModule,
     BlockedUserModule,
+    TokenModule,
   ],
 })
 export class AppModule {}

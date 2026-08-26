@@ -5,7 +5,7 @@ import { Controller } from '@nestjs/common';
 // import { UserService } from './user.service';
 
 // import { UserNoCredOtpVCode } from '../../../../users/src/modules/users/types/user.types';
-import { UserService } from './users.service';
+import { UserService } from './user.service';
 // import { CurrentUser } from '../../common/decorators/routes/user.decorator';
 
 // import { ApiUserControllerDocs, ApiUserRoutesDocs } from './docs';

@@ -20,7 +20,7 @@ model User {
 
   // messages    Message[]
   // chatToUsers ChatToUser[]
-  // tokens      Token[]
+  tokens Token[]
   // // Chats where the user is the owner
   // files       File[]
   // reactions   ReactionToMessage[]
