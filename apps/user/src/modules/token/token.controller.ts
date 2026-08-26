@@ -1,45 +1,50 @@
 import { AccessTokenPayload } from '@app/contracts/auth';
 import { Controller } from '@nestjs/common';
 import { MessagePattern, Payload } from '@nestjs/microservices';
+import { Role as PrismaRole } from '../../../generated/prisma/enums';
 import { TokenService } from './token.service';
 
 @Controller('token')
 export class TokenController {
   constructor(private readonly tokenService: TokenService) {}
 
-  @MessagePattern()
+  @MessagePattern('token.verifyAccessToken')
   async verifyAccessToken(@Payload() token: string) {
     return this.tokenService.verifyAccessToken(token);
   }
 
-  @MessagePattern()
+  @MessagePattern('token.verifyRefreshToken')
   async verifyRefreshToken(@Payload() token: string) {
     return this.tokenService.verifyRefreshToken(token);
   }
 
-  @MessagePattern()
+  @MessagePattern('token.getUserTokens')
   async getUserTokens(@Payload() userId: number) {
     return this.tokenService.getUserTokens(userId);
   }
 
-  @MessagePattern()
+  @MessagePattern('token.generateTokens')
   async generateTokens(
     @Payload() { id, isVerified, role }: AccessTokenPayload,
   ) {
-    return this.tokenService.generateTokens(id, role, isVerified);
+    return this.tokenService.generateTokens(
+      id,
+      role as unknown as PrismaRole,
+      isVerified,
+    );
   }
 
-  @MessagePattern()
+  @MessagePattern('token.deleteToken')
   async deleteToken(@Payload() token: string) {
     return this.tokenService.deleteToken(token);
   }
 
-  @MessagePattern()
+  @MessagePattern('token.deleteAllUserTokens')
   async deleteAllUserTokens(@Payload() userId: number) {
     return this.tokenService.deleteAllUserTokens(userId);
   }
 
-  @MessagePattern()
+  @MessagePattern('token.update')
   async update(
     @Payload()
     {
@@ -49,6 +54,11 @@ export class TokenController {
       role,
     }: AccessTokenPayload & { oldToken: string },
   ) {
-    return this.tokenService.update(id, role, isVerified, oldToken);
+    return this.tokenService.update(
+      id,
+      role as unknown as PrismaRole,
+      isVerified,
+      oldToken,
+    );
   }
 }

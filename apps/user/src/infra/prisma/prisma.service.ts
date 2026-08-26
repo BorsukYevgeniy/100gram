@@ -20,7 +20,6 @@ export class PrismaService
     @Inject(databaseConfig.KEY) config: ConfigType<typeof databaseConfig>,
     private readonly logger: PinoLogger,
   ) {
-    console.log(config);
     super({
       adapter: new PrismaPg(
         new Pool({

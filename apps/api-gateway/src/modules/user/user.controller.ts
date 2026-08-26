@@ -1,47 +1,55 @@
-import { Controller } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Param,
+  ParseIntPipe,
+  Patch,
+  UseGuards,
+} from '@nestjs/common';
+import { RequiredRoles } from '../auth/decorator/required-roles.decorator';
+import { RolesGuard } from '../auth/guard/roles.guard';
+// import { Role } from '../../../generated/prisma/client';
+// import { AccessTokenPayload } from '../../common/types';
 // import { RequiredRoles } from '../auth/decorator/required-roles.decorator';
 // import { AuthGuard } from '../auth/guards/auth.guard';
 // import { RolesGuard } from '../auth/guards/roles.guard';
 // import { UserService } from './user.service';
 
 // import { UserNoCredOtpVCode } from '../../../../users/src/modules/users/types/user.types';
-import { UserService } from './user.service';
 // import { CurrentUser } from '../../common/decorators/routes/user.decorator';
 
 // import { ApiUserControllerDocs, ApiUserRoutesDocs } from './docs';
+import { AccessTokenPayload, Roles } from '@app/contracts/auth';
+import { CurrentUser } from '../auth/decorator/current-user.decorator';
+import { AuthGuard } from '../auth/guard/auth.guard';
+import { UserService } from './user.service';
 
 // @ApiUserControllerDocs()
-
-import { MessagePattern, Payload } from '@nestjs/microservices';
-
 @Controller('users')
 export class UserController {
   constructor(private readonly userService: UserService) {}
 
   // @ApiUserRoutesDocs.GetById()
-  // @UseGuards(AuthGuard)
-  @MessagePattern('user.getById')
-  async getById(@Payload() userId: number) {
+  @UseGuards(AuthGuard)
+  @Get(':userId')
+  async getById(@Param('userId', ParseIntPipe) userId: number) {
     //: Promise<UserNoCredOtpVCode> {
-    return this.userService.findById(userId);
+    return this.userService.getUserById(userId);
   }
 
   // @ApiUserRoutesDocs.GetMe()
-  // @UseGuards(AuthGuard)
-  @MessagePattern('user.getMe')
-  async getMe(
-    // @CurrentUser() user: AccessTokenPayload,
-    user,
-  ) {
+  @UseGuards(AuthGuard)
+  @Get('me')
+  async getMe(@CurrentUser() user: AccessTokenPayload) {
     //: Promise<UserNoCredOtpVCode> {
-    return this.userService.findById(user.id);
+    return this.userService.getUserById(user.id);
   }
 
   // @ApiUserRoutesDocs.AssignAdmin()
-  // @RequiredRoles([Role.ADMIN])
-  // @UseGuards(RolesGuard)
-  @MessagePattern('user.assignAdmin')
-  async assignAdmin(@Payload() userId: number) {
+  @RequiredRoles([Roles.ADMIN])
+  @UseGuards(RolesGuard)
+  @Patch('assign-admin/:userId')
+  async assignAdmin(@Param('userId') userId: number) {
     //: Promise<UserNoCredOtpVCode> {
     return this.userService.assignAdmin(userId);
   }
@@ -50,8 +58,7 @@ export class UserController {
   // @UseGuards(AuthGuard)
   // @Delete('me')
   // async deleteMe(
-  // @CurrentUser() user: AccessTokenPayload,
-  //   user,
+  //   @CurrentUser() user: AccessTokenPayload,
   // ): Promise<UserNoCredOtpVCode> {
   //   return this.userService.delete(user, user.id);
   // }
@@ -61,8 +68,7 @@ export class UserController {
   // @UseGuards(RolesGuard)
   // @Delete(':userId')
   // async deleteUserById(
-  // @CurrentUser() user: AccessTokenPayload,
-  //   user,
+  //   @CurrentUser() user: AccessTokenPayload,
   //   @Param('userId') userId: number,
   // ): Promise<UserNoCredOtpVCode> {
   //   return this.userService.delete(user, userId);

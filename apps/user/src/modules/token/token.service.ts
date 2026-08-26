@@ -31,7 +31,7 @@ export class TokenService {
     isVerified: boolean,
   ): Promise<string> {
     return this.jwtService.signAsync<AccessTokenPayload>(
-      { id: userId, role: role as ContractRole, isVerified },
+      { id: userId, role: role as unknown as ContractRole, isVerified },
       {
         secret: this.config.jwtAccessTokenSecret,
         expiresIn: this.config.jwtAccessTokenExpirationTime,

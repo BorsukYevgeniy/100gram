@@ -1,7 +1,7 @@
+import { CreateUserDto } from '@app/contracts/user';
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaClientKnownRequestError } from '@prisma/client/runtime/client';
 import { PinoLogger } from 'nestjs-pino';
-import { CreateUserDto } from './dto/create-user.dto';
 // import { UserNoCredOtpVCode } from '../../../../users/src/modules/users/types/user.types';
 import { User } from '../../../generated/prisma/client';
 import { UserRepository } from './user.repository';
