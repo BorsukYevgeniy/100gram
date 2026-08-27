@@ -1,6 +1,6 @@
 export enum Roles {
-  USER,
-  ADMIN,
+  USER = 'USER',
+  ADMIN = 'ADMIN',
 }
 
-export type Role = (typeof Roles)[keyof typeof Roles];
+export type Role = 'USER' | 'ADMIN';

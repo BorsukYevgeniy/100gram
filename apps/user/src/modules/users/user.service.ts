@@ -1,8 +1,8 @@
-import { CreateUserDto } from '@app/contracts/user';
+import { CreateUserDto } from '@app/contracts/user/dto';
+import { UserNoCredOtpVCode } from '@app/contracts/user/types';
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaClientKnownRequestError } from '@prisma/client/runtime/client';
 import { PinoLogger } from 'nestjs-pino';
-// import { UserNoCredOtpVCode } from '../../../../users/src/modules/users/types/user.types';
 import { User } from '../../../generated/prisma/client';
 import { UserRepository } from './user.repository';
 
@@ -48,8 +48,7 @@ export class UserService {
     return user;
   }
 
-  async findById(id: number) {
-    //: Promise<UserNoCredOtpVCode> {
+  async findById(id: number): Promise<UserNoCredOtpVCode> {
     const user = await this.userRepository.findById(id);
 
     if (!user) {
@@ -60,8 +59,7 @@ export class UserService {
     return user;
   }
 
-  async assignAdmin(id: number) {
-    //: Promise<UserNoCredOtpVCode> {
+  async assignAdmin(id: number): Promise<UserNoCredOtpVCode> {
     try {
       const admin = await this.userRepository.assingAdmin(id);
 
@@ -116,6 +114,10 @@ export class UserService {
   //   this.logger.info({ userId: deletedUser.id }, 'User deleted');
   //   return deletedUser;
   // }
+
+  async delete(userId: number) {
+    return this.userRepository.delete(userId);
+  }
 
   async getUserByVerificationCode(verificationCode: string): Promise<User> {
     return this.userRepository.getUserByVerificationCode(verificationCode);

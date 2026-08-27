@@ -6,15 +6,19 @@ import {
 } from '@nestjs/common';
 import { UserService } from '../user/user.service';
 
-import { AccessTokenPayload, Role, TokenPair } from '@app/contracts/auth';
+import {
+  AccessTokenPayload,
+  Provider,
+  Role,
+  TokenPair,
+} from '@app/contracts/auth';
+import { CreateUserDto } from '@app/contracts/user/dto';
 import { ConfigType } from '@nestjs/config';
 import { compare, hash } from 'bcryptjs';
 import { randomInt } from 'crypto';
 import { PinoLogger } from 'nestjs-pino';
 import authConfig from '../../config/auth.config';
 import { TokenService } from '../token/token.service';
-// import { UserNoCredOtpVCode } from '../user/types/user.types';
-import { CreateUserDto, Provider } from '@app/contracts/user';
 import { LoginDto } from './dto/login.dto';
 import { ResetPasswordDto } from './dto/reset-password.dto';
 // import { AuthMailService } from './mail/auth-mail.service';

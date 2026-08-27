@@ -1,115 +1,89 @@
 import { Controller } from '@nestjs/common';
-// import { RequiredRoles } from '../auth/decorator/required-roles.decorator';
-// import { AuthGuard } from '../auth/guards/auth.guard';
-// import { RolesGuard } from '../auth/guards/roles.guard';
-// import { UserService } from './user.service';
-
-// import { UserNoCredOtpVCode } from '../../../../users/src/modules/users/types/user.types';
 import { UserService } from './user.service';
-// import { CurrentUser } from '../../common/decorators/routes/user.decorator';
 
-// import { ApiUserControllerDocs, ApiUserRoutesDocs } from './docs';
-
-// @ApiUserControllerDocs()
-
-import { CreateUserDto } from '@app/contracts/user';
+import { CreateUserDto } from '@app/contracts/user/dto';
+import { UserPattern } from '@app/contracts/user/pattern';
+import {
+  AddOtpToUserPayload,
+  ResetPasswordPayload,
+} from '@app/contracts/user/payload';
+import { UserNoCredOtpVCode } from '@app/contracts/user/types';
 import { MessagePattern, Payload } from '@nestjs/microservices';
+import { User } from '../../../generated/prisma/browser';
 
 @Controller('users')
 export class UserController {
   constructor(private readonly userService: UserService) {}
 
-  // @ApiUserRoutesDocs.GetById()
-  // @UseGuards(AuthGuard)
-  @MessagePattern('user.getById')
-  async getById(@Payload() userId: number) {
-    //: Promise<UserNoCredOtpVCode> {
+  @MessagePattern(UserPattern.GET_BY_ID)
+  async getById(@Payload() userId: number): Promise<UserNoCredOtpVCode> {
     return this.userService.findById(userId);
   }
 
-  // @ApiUserRoutesDocs.GetMe()
-  // @UseGuards(AuthGuard)
-  @MessagePattern('user.getMe')
-  async getMe(
-    // @CurrentUser() user: AccessTokenPayload,
-    user,
-  ) {
-    //: Promise<UserNoCredOtpVCode> {
-    return this.userService.findById(user.id);
-  }
-
-  // @ApiUserRoutesDocs.AssignAdmin()
-  // @RequiredRoles([Role.ADMIN])
-  // @UseGuards(RolesGuard)
-  @MessagePattern('user.assignAdmin')
-  async assignAdmin(@Payload() userId: number) {
-    //: Promise<UserNoCredOtpVCode> {
+  @MessagePattern(UserPattern.ASSIGN_ADMIN)
+  async assignAdmin(@Payload() userId: number): Promise<UserNoCredOtpVCode> {
     return this.userService.assignAdmin(userId);
   }
 
-  @MessagePattern('user.create')
-  async create(@Payload() dto: CreateUserDto) {
-    //: Promise<UserNoCredOtpVCode> {
+  @MessagePattern(UserPattern.CREATE)
+  async create(@Payload() dto: CreateUserDto): Promise<User> {
     return this.userService.create(dto);
   }
 
-  @MessagePattern('user.findByEmail')
-  async findByEmail(@Payload() email: string) {
-    //: Promise<UserNoCredOtpVCode> {
+  @MessagePattern(UserPattern.FIND_BY_EMAIL)
+  async findByEmail(@Payload() email: string): Promise<User> {
     return this.userService.findByEmail(email);
   }
 
-  @MessagePattern('user.findFullUserById')
-  async findFullUserById(@Payload() id: number) {
+  @MessagePattern(UserPattern.FIND_FULL_USER_BY_ID)
+  async findFullUserById(@Payload() id: number): Promise<User> {
     return this.userService.findFullUserById(id);
   }
 
-  @MessagePattern('user.verify')
-  async verify(@Payload() verificationCode: string) {
-    //: Promise<UserNoCredOtpVCode> {
+  @MessagePattern(UserPattern.VERIFY)
+  async verify(
+    @Payload() verificationCode: string,
+  ): Promise<UserNoCredOtpVCode> {
     return this.userService.verify(verificationCode);
   }
 
-  @MessagePattern('user.getUserByVerificationCode')
-  async getUserByVerificationCode(@Payload() verificationCode: string) {
+  @MessagePattern(UserPattern.GET_BY_VERIFICATION_CODE)
+  async getUserByVerificationCode(
+    @Payload() verificationCode: string,
+  ): Promise<User> {
     return this.userService.getUserByVerificationCode(verificationCode);
   }
 
-  @MessagePattern('user.createGoogleUser')
-  async createGoogleUser(@Payload() dto: CreateUserDto) {
+  @MessagePattern(UserPattern.CREATE_GOOGLE_USER)
+  async createGoogleUser(@Payload() dto: CreateUserDto): Promise<User> {
     return this.userService.createGoogleUser(dto);
   }
 
-  @MessagePattern('user.addOtpToUser')
+  @MessagePattern(UserPattern.ADD_OTP_TO_USER)
   async addOtpToUser(
     @Payload()
-    {
-      otpExpiresAt,
-      otpHash,
-      userId,
-    }: {
-      userId: number;
-      otpHash: string;
-      otpExpiresAt: Date;
-    },
+    { otpExpiresAt, otpHash, userId }: AddOtpToUserPayload,
   ) {
     return this.userService.addOtpToUser(userId, otpHash, otpExpiresAt);
   }
 
-  @MessagePattern('user.incrementOtpAttempts')
+  @MessagePattern(UserPattern.INCREMENT_OTP_ATTEMPTS)
   async incrementOtpAttempts(@Payload() userId: number) {
     return this.userService.incrementOtpAttempts(userId);
   }
 
-  @MessagePattern('user.resetPasswordWithOtp')
+  @MessagePattern(UserPattern.RESET_PASSWORD_WITH_OTP)
   async resetPasswordWithOtp(
-    @Payload() { newPassword, userId }: { userId: number; newPassword: string },
+    @Payload() { newPassword, userId }: ResetPasswordPayload,
   ) {
     return this.userService.resetPasswordWithOtp(userId, newPassword);
   }
 
-  // @ApiUserRoutesDocs.DeleteMe()
-  // @UseGuards(AuthGuard)
+  @MessagePattern(UserPattern.DELETE)
+  async delete(@Payload() userId: number): Promise<UserNoCredOtpVCode> {
+    return this.userService.delete(userId);
+  }
+
   // @Delete('me')
   // async deleteMe(
   // @CurrentUser() user: AccessTokenPayload,
@@ -118,9 +92,6 @@ export class UserController {
   //   return this.userService.delete(user, user.id);
   // }
 
-  // @ApiUserRoutesDocs.DeleteUser()
-  // @RequiredRoles([Role.ADMIN])
-  // @UseGuards(RolesGuard)
   // @Delete(':userId')
   // async deleteUserById(
   // @CurrentUser() user: AccessTokenPayload,

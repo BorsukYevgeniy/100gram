@@ -3,7 +3,7 @@ import {
   AuthRequest,
   TokenPair,
 } from '@app/contracts/auth';
-import { CreateUserDto } from '@app/contracts/user';
+import { CreateUserDto } from '@app/contracts/user/dto';
 import {
   Body,
   Controller,
@@ -21,27 +21,27 @@ import {
 import { Response } from 'express';
 import { CurrentUser } from './decorator/current-user.decorator';
 // import { UserNoCredOtpVCode } from '../user/types/user.types';
+import { ThrottlerGuard } from '@nestjs/throttler';
 import { AuthService } from './auth.service';
 import { Public } from './decorator/public.decorator';
-// import { AuthControllerDocs, AuthRoutesDocs } from './docs';
-import { ThrottlerGuard } from '@nestjs/throttler';
+import { AuthControllerDocs, AuthRoutesDocs } from './docs';
 import { LoginDto } from './dto/login.dto';
 import { ResetPasswordDto } from './dto/reset-password.dto';
 import { AuthGuard } from './guard/auth.guard';
 import { GoogleGuard } from './guard/google.guard';
 
-// @AuthControllerDocs()
+@AuthControllerDocs()
 @Controller('auth')
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
-  // @AuthRoutesDocs.GoogleLogin()
+  @AuthRoutesDocs.GoogleLogin()
   @Public()
   @Get('google/login')
   @UseGuards(GoogleGuard)
   async googleLogin(): Promise<void> {}
 
-  // @AuthRoutesDocs.GoogleCallback()
+  @AuthRoutesDocs.GoogleCallback()
   @Public()
   @Get('google/callback')
   @UseGuards(GoogleGuard)
@@ -54,7 +54,7 @@ export class AuthController {
     this.setTokenCookie(res, tokens);
   }
 
-  // @AuthRoutesDocs.Register()
+  @AuthRoutesDocs.Register()
   @Post('register')
   async register(@Body() dto: CreateUserDto, @Res() res: Response) {
     const tokens = await this.authService.register(dto);
@@ -62,7 +62,7 @@ export class AuthController {
     this.setTokenCookie(res, tokens, 201);
   }
 
-  // @AuthRoutesDocs.Login()
+  @AuthRoutesDocs.Login()
   @Post('login')
   async login(@Body() dto: LoginDto, @Res() res: Response) {
     const tokens = await this.authService.login(dto);
@@ -70,7 +70,7 @@ export class AuthController {
     this.setTokenCookie(res, tokens);
   }
 
-  // @AuthRoutesDocs.Logout()
+  @AuthRoutesDocs.Logout()
   @Post('logout')
   @UseGuards(AuthGuard)
   @HttpCode(HttpStatus.OK)
@@ -83,7 +83,7 @@ export class AuthController {
     this.clearTokenCookie(res);
   }
 
-  // @AuthRoutesDocs.LogoutAll()
+  @AuthRoutesDocs.LogoutAll()
   @Post('logout-all')
   @UseGuards(AuthGuard)
   @HttpCode(HttpStatus.OK)
@@ -95,17 +95,17 @@ export class AuthController {
     this.clearTokenCookie(res);
   }
 
-  // @AuthRoutesDocs.Verify()
+  @AuthRoutesDocs.Verify()
   @Post('verify/:verificationCode')
   @HttpCode(HttpStatus.OK)
   async verify(
     @Param('verificationCode', ParseUUIDPipe) verificationCode: string,
   ) {
-    //: Promise<UserNoCredOtpVCode> {
+    // : Promise<UserNoCredOtpVCode> {
     return this.authService.verifyUser(verificationCode);
   }
 
-  // @AuthRoutesDocs.Refresh()
+  @AuthRoutesDocs.Refresh()
   @Post('refresh')
   @UseGuards(AuthGuard)
   @HttpCode(HttpStatus.OK)
@@ -120,7 +120,7 @@ export class AuthController {
     this.setTokenCookie(res, tokens);
   }
 
-  // @AuthRoutesDocs.ResendVerificationMail()
+  @AuthRoutesDocs.ResendVerificationMail()
   @Post('resend-verification-email')
   @UseGuards(AuthGuard, ThrottlerGuard)
   @HttpCode(HttpStatus.OK)
@@ -128,7 +128,7 @@ export class AuthController {
     return this.authService.resendVerificationMail(user);
   }
 
-  // @AuthRoutesDocs.SendOTPMail()
+  @AuthRoutesDocs.SendOTPMail()
   @Post('send-otp-email')
   @UseGuards(AuthGuard, ThrottlerGuard)
   @HttpCode(HttpStatus.OK)
@@ -137,7 +137,7 @@ export class AuthController {
     return { message: 'If email exists, OTP sent' };
   }
 
-  // @AuthRoutesDocs.ResetPassword()
+  @AuthRoutesDocs.ResetPassword()
   @Post('reset-password')
   @UseGuards(AuthGuard)
   @HttpCode(HttpStatus.OK)

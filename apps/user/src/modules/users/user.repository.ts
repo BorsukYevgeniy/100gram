@@ -1,16 +1,15 @@
-import { CreateUserDto } from '@app/contracts/user';
+import { CreateUserDto } from '@app/contracts/user/dto';
+import { UserNoCredOtpVCode } from '@app/contracts/user/types';
 import { Injectable } from '@nestjs/common';
 import { Role, User } from '../../../generated/prisma/client';
 import { Provider } from '../../../generated/prisma/enums';
 import { PrismaService } from '../../infra/prisma/prisma.service';
-// import { UserNoCredOtpVCode } from './types/user.types';
 
 @Injectable()
 export class UserRepository {
   constructor(private readonly prisma: PrismaService) {}
 
-  async delete(userId: number) {
-    //: Promise<UserNoCredOtpVCode> {
+  async delete(userId: number): Promise<UserNoCredOtpVCode> {
     return this.prisma.user.delete({
       where: { id: userId },
       omit: {
@@ -47,8 +46,7 @@ export class UserRepository {
     return this.prisma.user.findUnique({ where: { id } });
   }
 
-  async findById(id: number) {
-    //: Promise<UserNoCredOtpVCode | null> {
+  async findById(id: number): Promise<UserNoCredOtpVCode | null> {
     return this.prisma.user.findUnique({
       where: { id },
       omit: {
@@ -62,8 +60,7 @@ export class UserRepository {
     });
   }
 
-  async assingAdmin(id: number) {
-    //: Promise<UserNoCredOtpVCode> {
+  async assingAdmin(id: number): Promise<UserNoCredOtpVCode> {
     return this.prisma.user.update({
       where: { id },
       data: { role: Role.ADMIN },
@@ -82,8 +79,7 @@ export class UserRepository {
     return this.prisma.user.findUnique({ where: { verificationCode } });
   }
 
-  async verify(verificationCode: string) {
-    //: Promise<UserNoCredOtpVCode> {
+  async verify(verificationCode: string): Promise<UserNoCredOtpVCode> {
     return this.prisma.user.update({
       where: { verificationCode },
       data: { isVerified: true, verifiedAt: new Date() },
@@ -112,8 +108,10 @@ export class UserRepository {
     });
   }
 
-  async updateAvatar(userId: number, avatar?: string) {
-    //: Promise<UserNoCredOtpVCode> {
+  async updateAvatar(
+    userId: number,
+    avatar?: string,
+  ): Promise<UserNoCredOtpVCode> {
     return this.prisma.user.update({
       where: { id: userId },
       data: { avatar },
