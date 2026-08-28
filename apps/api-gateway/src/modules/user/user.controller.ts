@@ -1,12 +1,18 @@
 import { Roles } from '@app/contracts/auth';
-import { Controller, Get, Param, Patch, UseGuards } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Param,
+  ParseIntPipe,
+  Patch,
+  UseGuards,
+} from '@nestjs/common';
 import { AccessTokenPayload } from '../../common/types';
 import { RequiredRoles } from '../auth/decorator/required-roles.decorator';
 import { UserService } from './user.service';
 
 import { CurrentUser } from '../../common/decorators/routes/user.decorator';
 
-import { Observable } from 'rxjs';
 import { UserNoCredOtpVCode } from '../../../../../libs/contracts/src/user/types';
 import { AuthGuard } from '../auth/guard/auth.guard';
 import { RolesGuard } from '../auth/guard/roles.guard';
@@ -20,16 +26,18 @@ export class UserController {
   @ApiUserRoutesDocs.GetById()
   @UseGuards(AuthGuard)
   @Get(':userId')
-  getById(@Param('userId') userId: number): Observable<UserNoCredOtpVCode> {
+  async getById(
+    @Param('userId', ParseIntPipe) userId: number,
+  ): Promise<UserNoCredOtpVCode> {
     return this.userService.getById(userId);
   }
 
   @ApiUserRoutesDocs.GetMe()
   @UseGuards(AuthGuard)
   @Get('me')
-  getMe(
+  async getMe(
     @CurrentUser() user: AccessTokenPayload,
-  ): Observable<UserNoCredOtpVCode> {
+  ): Promise<UserNoCredOtpVCode> {
     return this.userService.getById(user.id);
   }
 
@@ -37,7 +45,9 @@ export class UserController {
   @RequiredRoles([Roles.ADMIN])
   @UseGuards(RolesGuard)
   @Patch('assign-admin/:userId')
-  assignAdmin(@Param('userId') userId: number): Observable<UserNoCredOtpVCode> {
+  async assignAdmin(
+    @Param('userId', ParseIntPipe) userId: number,
+  ): Promise<UserNoCredOtpVCode> {
     return this.userService.assignAdmin(userId);
   }
 

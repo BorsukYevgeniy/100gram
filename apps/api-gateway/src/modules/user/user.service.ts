@@ -6,92 +6,64 @@ import {
 } from '@app/contracts/user/payload';
 import { User, UserNoCredOtpVCode } from '@app/contracts/user/types';
 import { Inject, Injectable } from '@nestjs/common';
-import { ClientProxy, RpcException } from '@nestjs/microservices';
-import { catchError, firstValueFrom, Observable, throwError } from 'rxjs';
+import { ClientProxy } from '@nestjs/microservices';
+import { firstValueFrom } from 'rxjs';
 import { USER_CLIENT } from './user.constant';
 
 @Injectable()
 export class UserService {
   constructor(@Inject(USER_CLIENT) private readonly userClient: ClientProxy) {}
 
-  getById(userId: number): Observable<UserNoCredOtpVCode> {
-    return this.userClient
-      .send<UserNoCredOtpVCode, number>(UserPattern.GET_BY_ID, userId)
-      .pipe(catchError((e) => throwError(() => new RpcException(e.response))));
+  private async send<TOut, TIn>(
+    pattern: UserPattern,
+    input: TIn,
+  ): Promise<TOut> {
+    return firstValueFrom(this.userClient.send<TOut, TIn>(pattern, input));
   }
 
-  assignAdmin(userId: number): Observable<UserNoCredOtpVCode> {
-    return this.userClient
-      .send<UserNoCredOtpVCode, number>(UserPattern.ASSIGN_ADMIN, userId)
-      .pipe(catchError((e) => throwError(() => new RpcException(e.response))));
+  async getById(userId: number): Promise<UserNoCredOtpVCode> {
+    return this.send<UserNoCredOtpVCode, number>(UserPattern.GET_BY_ID, userId);
   }
 
-  delete(userId: number): Observable<UserNoCredOtpVCode> {
-    return this.userClient
-      .send<UserNoCredOtpVCode, number>(UserPattern.DELETE, userId)
-      .pipe(catchError((e) => throwError(() => new RpcException(e.response))));
+  async assignAdmin(userId: number): Promise<UserNoCredOtpVCode> {
+    return this.send<UserNoCredOtpVCode, number>(
+      UserPattern.ASSIGN_ADMIN,
+      userId,
+    );
+  }
+
+  async delete(userId: number): Promise<UserNoCredOtpVCode> {
+    return this.send<UserNoCredOtpVCode, number>(UserPattern.DELETE, userId);
   }
 
   async create(dto: CreateUserDto): Promise<User> {
-    return firstValueFrom(
-      this.userClient
-        .send<User, CreateUserDto>(UserPattern.CREATE, dto)
-        .pipe(
-          catchError((e) => throwError(() => new RpcException(e.response))),
-        ),
-    );
+    return this.send<User, CreateUserDto>(UserPattern.CREATE, dto);
   }
 
   async findByEmail(email: string): Promise<User> {
-    return firstValueFrom(
-      this.userClient
-        .send<User, string>(UserPattern.FIND_BY_EMAIL, email)
-        .pipe(
-          catchError((e) => throwError(() => new RpcException(e.response))),
-        ),
-    );
+    return this.send<User, string>(UserPattern.FIND_BY_EMAIL, email);
   }
 
   async findFullUserById(id: number): Promise<User> {
-    return firstValueFrom(
-      this.userClient
-        .send<User, number>(UserPattern.FIND_FULL_USER_BY_ID, id)
-        .pipe(
-          catchError((e) => throwError(() => new RpcException(e.response))),
-        ),
-    );
+    return this.send<User, number>(UserPattern.FIND_FULL_USER_BY_ID, id);
   }
 
   async getUserByVerificationCode(verificationCode: string): Promise<User> {
-    return firstValueFrom(
-      this.userClient
-        .send<
-          User,
-          string
-        >(UserPattern.GET_BY_VERIFICATION_CODE, verificationCode)
-        .pipe(
-          catchError((e) => throwError(() => new RpcException(e.response))),
-        ),
+    return this.send<User, string>(
+      UserPattern.GET_BY_VERIFICATION_CODE,
+      verificationCode,
     );
   }
+
   async verify(verificationCode: string): Promise<UserNoCredOtpVCode> {
-    return firstValueFrom(
-      this.userClient
-        .send<UserNoCredOtpVCode, string>(UserPattern.VERIFY, verificationCode)
-        .pipe(
-          catchError((e) => throwError(() => new RpcException(e.response))),
-        ),
+    return this.send<UserNoCredOtpVCode, string>(
+      UserPattern.VERIFY,
+      verificationCode,
     );
   }
 
   async createGoogleUser(dto: CreateUserDto): Promise<User> {
-    return firstValueFrom(
-      this.userClient
-        .send<User, CreateUserDto>(UserPattern.CREATE_GOOGLE_USER, dto)
-        .pipe(
-          catchError((e) => throwError(() => new RpcException(e.response))),
-        ),
-    );
+    return this.send<User, CreateUserDto>(UserPattern.CREATE_GOOGLE_USER, dto);
   }
 
   async addOtpToUser(
@@ -99,41 +71,27 @@ export class UserService {
     otpHash: string,
     otpExpiresAt: Date,
   ): Promise<void> {
-    return firstValueFrom(
-      this.userClient
-        .send<
-          void,
-          AddOtpToUserPayload
-        >(UserPattern.ADD_OTP_TO_USER, { userId, otpHash, otpExpiresAt })
-        .pipe(
-          catchError((e) => throwError(() => new RpcException(e.response))),
-        ),
-    );
+    return this.send<void, AddOtpToUserPayload>(UserPattern.ADD_OTP_TO_USER, {
+      userId,
+      otpHash,
+      otpExpiresAt,
+    });
   }
 
   async incrementOtpAttempts(userId: number): Promise<void> {
-    return firstValueFrom(
-      this.userClient
-        .send<void, number>(UserPattern.INCREMENT_OTP_ATTEMPTS, userId)
-        .pipe(
-          catchError((e) => throwError(() => new RpcException(e.response))),
-        ),
-    );
+    return this.send<void, number>(UserPattern.INCREMENT_OTP_ATTEMPTS, userId);
   }
 
   async resetPasswordWithOtp(
     userId: number,
     newPassword: string,
   ): Promise<void> {
-    return firstValueFrom(
-      this.userClient
-        .send<void, ResetPasswordPayload>(UserPattern.RESET_PASSWORD_WITH_OTP, {
-          userId,
-          newPassword,
-        })
-        .pipe(
-          catchError((e) => throwError(() => new RpcException(e.response))),
-        ),
+    return this.send<void, ResetPasswordPayload>(
+      UserPattern.RESET_PASSWORD_WITH_OTP,
+      {
+        userId,
+        newPassword,
+      },
     );
   }
 }

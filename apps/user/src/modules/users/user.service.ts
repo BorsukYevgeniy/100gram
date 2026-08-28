@@ -1,6 +1,7 @@
 import { CreateUserDto } from '@app/contracts/user/dto';
 import { UserNoCredOtpVCode } from '@app/contracts/user/types';
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { RpcException } from '@nestjs/microservices';
 import { PrismaClientKnownRequestError } from '@prisma/client/runtime/client';
 import { PinoLogger } from 'nestjs-pino';
 import { User } from '../../../generated/prisma/client';
@@ -42,18 +43,18 @@ export class UserService {
 
     if (!user) {
       this.logger.warn({ userId: id }, "User doesn't exist");
-      throw new NotFoundException('User not found');
+      throw new RpcException({ message: 'User not found', statusCode: 404 });
     }
 
     return user;
   }
 
-  async findById(id: number): Promise<UserNoCredOtpVCode> {
-    const user = await this.userRepository.findById(id);
+  async findById(userId: number): Promise<UserNoCredOtpVCode> {
+    const user = await this.userRepository.findById(userId);
 
     if (!user) {
-      this.logger.warn({ userId: id }, "User doesn't exist");
-      throw new NotFoundException('User not found');
+      this.logger.warn({ userId }, "User doesn't exist");
+      throw new RpcException({ message: 'User not found', statusCode: 404 });
     }
 
     return user;
@@ -68,7 +69,7 @@ export class UserService {
     } catch (e) {
       if (e instanceof PrismaClientKnownRequestError && e.code === 'P2025') {
         this.logger.warn({ userId: id }, "User doesn't exist");
-        throw new NotFoundException('User not found');
+        throw new RpcException({ message: 'User not found', statusCode: 404 });
       }
       throw e;
     }
