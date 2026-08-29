@@ -11,9 +11,8 @@ import { AccessTokenPayload } from '../../common/types';
 import { RequiredRoles } from '../auth/decorator/required-roles.decorator';
 import { UserService } from './user.service';
 
-import { CurrentUser } from '../../common/decorators/routes/user.decorator';
-
 import { UserNoCredOtpVCode } from '../../../../../libs/contracts/src/user/types';
+import { CurrentUser } from '../auth/decorator/current-user.decorator';
 import { AuthGuard } from '../auth/guard/auth.guard';
 import { RolesGuard } from '../auth/guard/roles.guard';
 import { ApiUserControllerDocs, ApiUserRoutesDocs } from './docs';
@@ -24,7 +23,7 @@ export class UserController {
   constructor(private readonly userService: UserService) {}
 
   @ApiUserRoutesDocs.GetById()
-  @UseGuards(AuthGuard)
+  // @UseGuards(AuthGuard)
   @Get(':userId')
   async getById(
     @Param('userId', ParseIntPipe) userId: number,

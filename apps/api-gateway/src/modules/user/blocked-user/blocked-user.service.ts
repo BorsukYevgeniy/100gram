@@ -5,7 +5,7 @@ import { BlockUserDto } from '../../../../../../libs/contracts/src/blocked-user/
 import { BlockedUser } from '../../../../../../libs/contracts/src/blocked-user/interface';
 import { BlockedUserPattern } from '../../../../../../libs/contracts/src/blocked-user/pattern';
 import { UnblockUserPayload } from '../../../../../../libs/contracts/src/blocked-user/payload';
-import { USER_CLIENT } from '../user.constant';
+import { USER_CLIENT } from '../../../common/client/user-client.constants';
 
 @Injectable()
 export class BlockedUserService {

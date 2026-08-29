@@ -1,28 +1,12 @@
 import { Module } from '@nestjs/common';
-import { ConfigModule, ConfigType } from '@nestjs/config';
-import { ClientsModule } from '@nestjs/microservices';
-import userMicroserviceConfig from '../../config/user-microservice.config';
+import { UserClientModule } from '../../common/client/user-client.module';
 import { TokenModule } from '../token/token.module';
-import { USER_CLIENT } from './user.constant';
+import { BlockedUserModule } from './blocked-user/blocked-user.module';
 import { UserController } from './user.controller';
 import { UserService } from './user.service';
-import { BlockedUserModule } from './blocked-user/blocked-user.module';
 
 @Module({
-  imports: [
-    ClientsModule.registerAsync({
-      clients: [
-        {
-          name: USER_CLIENT,
-          imports: [ConfigModule.forFeature(userMicroserviceConfig)],
-          inject: [userMicroserviceConfig.KEY],
-          useFactory: (с: ConfigType<typeof userMicroserviceConfig>) => с,
-        },
-      ],
-    }),
-    TokenModule,
-    BlockedUserModule,
-  ],
+  imports: [UserClientModule, TokenModule, BlockedUserModule],
   controllers: [UserController],
   providers: [UserService],
   exports: [UserService],

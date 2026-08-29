@@ -7,8 +7,8 @@ import {
   Post,
   UseGuards,
 } from '@nestjs/common';
-import { CurrentUser } from '../../../common/decorators/routes/user.decorator';
 import { AccessTokenPayload } from '../../../common/types';
+import { CurrentUser } from '../../auth/decorator/current-user.decorator';
 import { AuthGuard } from '../../auth/guard/auth.guard';
 import { BlockedUserService } from './blocked-user.service';
 import { ApiBlockedUserControllerDocs, ApiBlockedUserRouterDocs } from './docs';
