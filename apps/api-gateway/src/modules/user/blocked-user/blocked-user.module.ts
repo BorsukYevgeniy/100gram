@@ -1,12 +1,10 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigType } from '@nestjs/config';
 import { ClientsModule } from '@nestjs/microservices';
-import userMicroserviceConfig from '../../config/user-microservice.config';
-import { TokenModule } from '../token/token.module';
-import { USER_CLIENT } from './user.constant';
-import { UserController } from './user.controller';
-import { UserService } from './user.service';
-import { BlockedUserModule } from './blocked-user/blocked-user.module';
+import userMicroserviceConfig from '../../../config/user-microservice.config';
+import { USER_CLIENT } from '../user.constant';
+import { BlockedUserController } from './blocked-user.controller';
+import { BlockedUserService } from './blocked-user.service';
 
 @Module({
   imports: [
@@ -20,11 +18,8 @@ import { BlockedUserModule } from './blocked-user/blocked-user.module';
         },
       ],
     }),
-    TokenModule,
-    BlockedUserModule,
   ],
-  controllers: [UserController],
-  providers: [UserService],
-  exports: [UserService],
+  providers: [BlockedUserService],
+  controllers: [BlockedUserController],
 })
-export class UserModule {}
+export class BlockedUserModule {}

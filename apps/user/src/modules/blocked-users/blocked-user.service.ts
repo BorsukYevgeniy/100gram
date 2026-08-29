@@ -1,0 +1,62 @@
+import { Injectable } from '@nestjs/common';
+import { RpcException } from '@nestjs/microservices';
+import { PrismaClientKnownRequestError } from '@prisma/client/runtime/client';
+import { PinoLogger } from 'nestjs-pino';
+import { BlockedUser } from '../../../generated/prisma/browser';
+import { BlockedUserRepository } from './blocked-user.repository';
+
+@Injectable()
+export class BlockedUserService {
+  constructor(
+    private readonly blockedUserRepo: BlockedUserRepository,
+    private readonly logger: PinoLogger,
+  ) {
+    this.logger.setContext(BlockedUserService.name);
+  }
+
+  async blockUser(blockerId: number, blockedId: number): Promise<BlockedUser> {
+    if (blockerId === blockedId) {
+      throw new RpcException({
+        message: 'User cannot block themselves',
+        statusCode: 400,
+      });
+    }
+
+    try {
+      return this.blockedUserRepo.blockUser(blockerId, blockedId);
+    } catch (e) {
+      if (e instanceof PrismaClientKnownRequestError && e.code === 'P2025') {
+        this.logger.warn({ blockedId }, "User doesn't exist");
+        throw new RpcException({ message: 'User not found', statusCode: 404 });
+      }
+      throw e;
+    }
+  }
+
+  async unblockUser(userId: number, blockedId: number): Promise<BlockedUser> {
+    if (userId === blockedId) {
+      throw new RpcException({
+        message: 'User cannot unblock themselves',
+        statusCode: 400,
+      });
+    }
+
+    try {
+      return this.blockedUserRepo.unblockUser(userId, blockedId);
+    } catch (e) {
+      if (e instanceof PrismaClientKnownRequestError && e.code === 'P2025') {
+        this.logger.warn({ blockedId }, "User doesn't exist");
+        throw new RpcException({ message: 'User not found', statusCode: 404 });
+      }
+      throw e;
+    }
+  }
+
+  async getMyBlockedUsers(userId: number): Promise<BlockedUser[]> {
+    return this.blockedUserRepo.getBlockedUsers(userId);
+  }
+
+  async isBlocked(blockerId: number, blockedId: number): Promise<boolean> {
+    return this.blockedUserRepo.isBlocked(blockerId, blockedId);
+  }
+}
