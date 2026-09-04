@@ -2,7 +2,7 @@ import { Role } from '@app/contracts/auth';
 import { Inject, Injectable } from '@nestjs/common';
 import { ClientProxy } from '@nestjs/microservices';
 import { firstValueFrom } from 'rxjs';
-import { USER_CLIENT } from '../../common/client/user-client.constants';
+import { USER_CLIENT } from '../../common/client/user/user-client.constants';
 
 @Injectable()
 export class TokenService {

@@ -1,0 +1,35 @@
+model Chat {
+  id          Int     @id @default(autoincrement())
+  avatar      String?
+  title       String?
+  description String?
+
+  messages Message[] @relation("ChatMessages")
+
+  lastMessageId Int?     @unique
+  lastMessage   Message? @relation("LastMessage", fields: [lastMessageId], references: [id])
+
+  chatToUsers ChatToUser[]
+
+  chatType   ChatType
+  visibility Visibility @default(PRIVATE)
+
+  membersCount Int     @default(1)
+  inviteToken  String? @unique
+
+  /**
+   * Private chats dont have owner, avatar, inviteToken, title and description.
+   * He's visibility is private by default and cant be changed.
+   */
+}
+
+enum ChatType {
+  PRIVATE
+  GROUP
+  CHANNEL
+}
+
+enum Visibility {
+  PUBLIC
+  PRIVATE
+}

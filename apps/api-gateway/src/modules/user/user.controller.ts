@@ -11,7 +11,7 @@ import { AccessTokenPayload } from '../../common/types';
 import { RequiredRoles } from '../auth/decorator/required-roles.decorator';
 import { UserService } from './user.service';
 
-import { UserNoCredOtpVCode } from '../../../../../libs/contracts/src/user/types';
+import { UserNoCredOtpVCode } from '@app/contracts/user/types';
 import { CurrentUser } from '../auth/decorator/current-user.decorator';
 import { AuthGuard } from '../auth/guard/auth.guard';
 import { RolesGuard } from '../auth/guard/roles.guard';

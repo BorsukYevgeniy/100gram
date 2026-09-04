@@ -1,5 +1,5 @@
 import { Module } from '@nestjs/common';
-import { UserClientModule } from '../../common/client/user-client.module';
+import { UserClientModule } from '../../common/client/user/user-client.module';
 import { TokenModule } from '../token/token.module';
 import { BlockedUserModule } from './blocked-user/blocked-user.module';
 import { UserController } from './user.controller';

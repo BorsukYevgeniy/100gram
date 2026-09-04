@@ -1,0 +1,21 @@
+model Message {
+  id        Int      @id @default(autoincrement())
+  text      String
+  createdAt DateTime @default(now()) @db.Timestamptz
+
+  replyId Int?
+  reply   Message?  @relation("Reply", fields: [replyId], references: [id])
+  replies Message[] @relation("Reply")
+
+  reactions ReactionToMessage[]
+
+  // files File[]
+
+  userId Int
+  // user   User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  chatId Int
+  chat   Chat @relation("ChatMessages", fields: [chatId], references: [id], onDelete: Cascade)
+
+  lastOfChat Chat? @relation("LastMessage")
+}

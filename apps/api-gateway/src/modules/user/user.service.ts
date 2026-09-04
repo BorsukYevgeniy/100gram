@@ -8,7 +8,7 @@ import { User, UserNoCredOtpVCode } from '@app/contracts/user/types';
 import { Inject, Injectable } from '@nestjs/common';
 import { ClientProxy } from '@nestjs/microservices';
 import { firstValueFrom } from 'rxjs';
-import { USER_CLIENT } from '../../common/client/user-client.constants';
+import { USER_CLIENT } from '../../common/client/user/user-client.constants';
 
 @Injectable()
 export class UserService {

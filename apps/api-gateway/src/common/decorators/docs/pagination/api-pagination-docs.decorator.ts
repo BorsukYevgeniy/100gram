@@ -1,6 +1,6 @@
 import { applyDecorators } from '@nestjs/common';
 import { ApiBadRequestResponse, ApiQuery } from '@nestjs/swagger';
-import { PaginationDto } from '../../../dto/pagination.dto';
+import { PaginationDto } from '@app/contracts/pagination';
 
 export function ApiPaginationDocs() {
   return applyDecorators(

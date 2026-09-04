@@ -1,6 +1,6 @@
 import { Role } from '../../../../../apps/user/generated/prisma/enums';
 import { Provider } from '../../auth/provider.enum';
-// import { Paginated } from '../../../common/types';
+import { Paginated } from '../../pagination';
 
 export interface User {
   email: string;
@@ -34,7 +34,7 @@ export type UserNoCredOtpVCode = Omit<
   | 'provider'
 >;
 
-// export type PaginatedUserNoCredOtpVCode = Paginated<
-//   'users',
-//   UserNoCredOtpVCode
-// >;
+export type PaginatedUserNoCredOtpVCode = Paginated<
+  'users',
+  UserNoCredOtpVCode
+>;
