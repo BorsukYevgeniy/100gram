@@ -1,3 +1,6 @@
+import { CreateGroupChatDto } from '@app/contracts/chat/dto/create-group-chat.dto';
+import { CreatePrivateChatDto } from '@app/contracts/chat/dto/create-private-chat.dto';
+import { UpdateGroupChatDto } from '@app/contracts/chat/dto/update-group-chat.dto';
 import {
   BadRequestException,
   ConflictException,
@@ -6,9 +9,6 @@ import {
 } from '@nestjs/common';
 import { PrismaClientKnownRequestError } from '@prisma/client/runtime/client';
 import { PinoLogger } from 'nestjs-pino';
-import { CreateGroupChatDto } from '@app/contracts/chat/dto/create-group-chat.dto';
-import { CreatePrivateChatDto } from '@app/contracts/chat/dto/create-private-chat.dto';
-import { UpdateGroupChatDto } from '@app/contracts/chat/dto/update-group-chat.dto';
 import { Chat, ChatType, Visibility } from '../../../generated/prisma/client';
 import { ChatRepository } from './repository/chat.repository';
 import { ChatValidationService } from './validation/chat-validation.service';
@@ -61,7 +61,7 @@ export class ChatService {
       'Channel created',
     );
 
-    return channel;
+    return new ChannelGroupChatResponseDto(channel);
   }
 
   async createPrivateChat(
@@ -84,7 +84,7 @@ export class ChatService {
         'Private chat created',
       );
 
-      return chat;
+      return new PrivateChatResponseDto(chat);
     } catch (e) {
       if (e instanceof PrismaClientKnownRequestError && e.code === 'P2003') {
         this.logger.warn({ peerId: dto.userId }, 'Peer user not found');
@@ -123,7 +123,7 @@ export class ChatService {
         'Group chat created',
       );
 
-      return chat;
+      return new ChannelGroupChatResponseDto(chat);
     } catch (e) {
       if (e instanceof PrismaClientKnownRequestError && e.code === 'P2003') {
         this.logger.warn({ users: dto.userIds }, 'One of users not found');
@@ -155,7 +155,7 @@ export class ChatService {
           'Group chat created successfully after resolving invite token collision',
         );
 
-        return chat;
+        return new ChannelGroupChatResponseDto(chat);
       }
       throw e;
     }

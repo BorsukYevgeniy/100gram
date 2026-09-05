@@ -1,9 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { Chat } from '../../../../../apps/chat/generated/prisma/browser';
-import {
-  ChatType,
-  Visibility,
-} from '../../../../../apps/chat/generated/prisma/enums';
+import { Chat, ChatTypeEnum, ChatVisibilityEnum } from '../types';
 
 export class PrivateChatResponseDto {
   @ApiProperty({
@@ -24,24 +20,24 @@ export class PrivateChatResponseDto {
 
   @ApiProperty({
     type: String,
-    enum: ChatType,
+    enum: ChatTypeEnum,
     description: 'Type of the chat',
-    example: ChatType.PRIVATE,
+    example: ChatTypeEnum.PRIVATE,
   })
-  readonly chatType: ChatType;
+  readonly chatType: ChatTypeEnum;
 
   @ApiProperty({
     type: String,
-    enum: Visibility,
+    enum: ChatVisibilityEnum,
     description: 'Visibility of the chat',
-    example: Visibility.PRIVATE,
+    example: ChatVisibilityEnum.PRIVATE,
   })
-  readonly visibility: Visibility;
+  readonly visibility: ChatVisibilityEnum;
 
   constructor(chat: Chat) {
     this.id = chat.id;
-    this.chatType = chat.chatType;
+    this.chatType = chat.chatType as ChatTypeEnum;
     this.lastMessageId = chat.lastMessageId;
-    this.visibility = chat.visibility;
+    this.visibility = chat.visibility as ChatVisibilityEnum;
   }
 }

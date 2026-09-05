@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { Chat } from '../../../../../apps/chat/generated/prisma/browser';
+import { Chat } from '../types';
 import { PrivateChatResponseDto } from './private-chat-response.dto';
 
 export class ChannelGroupChatResponseDto extends PrivateChatResponseDto {

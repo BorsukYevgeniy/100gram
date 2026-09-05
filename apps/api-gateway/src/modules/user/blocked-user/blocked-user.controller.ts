@@ -1,3 +1,4 @@
+import { AccessTokenPayload } from '@app/contracts//auth';
 import {
   Controller,
   Delete,
@@ -7,7 +8,6 @@ import {
   Post,
   UseGuards,
 } from '@nestjs/common';
-import { AccessTokenPayload } from '../../../common/types';
 import { CurrentUser } from '../../auth/decorator/current-user.decorator';
 import { AuthGuard } from '../../auth/guard/auth.guard';
 import { BlockedUserService } from './blocked-user.service';

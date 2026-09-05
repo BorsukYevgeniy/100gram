@@ -22,13 +22,15 @@ export type MyChat = Pick<Chat, 'id' | 'title' | 'avatar'> & {
 export type PaginatedMyChats = Paginated<'chats', MyChat>;
 export type ChatResponse = PrivateChatResponseDto | ChannelGroupChatResponseDto;
 
-export enum ChatVisibility {
+export enum ChatVisibilityEnum {
   PRIVATE = 'PRIVATE',
   PUBLIC = 'PUBLIC',
 }
+export type ChatVisibilityType = 'PRIVATE' | 'PUBLIC';
 
-export enum ChatType {
+export enum ChatTypeEnum {
   PRIVATE = 'PRIVATE',
   GROUP = 'GROUP',
   CHANNEL = 'CHANNEL',
 }
+export type ChatTypeType = 'PRIVATE' | 'GROUP' | 'CHANNEL';

@@ -8,7 +8,7 @@ import {
   IsString,
   Length,
 } from 'class-validator';
-import { Visibility } from '../../../../../apps/chat/generated/prisma/enums';
+import { ChatVisibilityEnum } from '../types';
 // import { Trim } from '../../../common/decorators/validation/trim.decorator';
 
 export class CreateGroupChatDto {
@@ -41,13 +41,13 @@ export class CreateGroupChatDto {
     type: String,
     description: 'Visibility of the group chat',
     required: false,
-    enum: Visibility,
+    enum: ChatVisibilityEnum,
   })
   @IsOptional()
   @IsString()
-  @IsEnum(Visibility)
+  @IsEnum(ChatVisibilityEnum)
   // @Trim()
-  visibility: Visibility = Visibility.PRIVATE;
+  visibility: ChatVisibilityEnum = ChatVisibilityEnum.PRIVATE;
 
   @ApiProperty({
     type: [Number],

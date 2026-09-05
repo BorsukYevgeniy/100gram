@@ -1,6 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { IsEnum, IsString } from 'class-validator';
-import { ChatRole } from '../../../../../apps/chat/generated/prisma/enums';
+import { ChatRole } from '../types/chat-member.types';
 
 export class UpdateRoleDto {
   @ApiProperty({

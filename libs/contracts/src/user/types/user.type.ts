@@ -1,4 +1,4 @@
-import { Role } from '../../../../../apps/user/generated/prisma/enums';
+import { Role } from '../../auth';
 import { Provider } from '../../auth/provider.enum';
 import { Paginated } from '../../pagination';
 

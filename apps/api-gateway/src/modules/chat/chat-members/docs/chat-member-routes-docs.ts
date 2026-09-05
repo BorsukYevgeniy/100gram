@@ -1,3 +1,4 @@
+import { UpdateRoleDto } from '@app/contracts/chat/dto';
 import { applyDecorators } from '@nestjs/common';
 import {
   ApiBody,
@@ -9,7 +10,6 @@ import {
 import { ApiPaginationDocs } from '../../../../common/decorators/docs/pagination';
 import { ApiUserIdDocs, ApiUserIdParamDocs } from '../../../user/docs/shared';
 import { ApiChatMustBeGroupResponse } from '../../docs/shared';
-import { UpdateRoleDto } from '../../dto/role/update-role.dto';
 
 function UserIsNotParticipantOfChatDocs() {
   return applyDecorators(

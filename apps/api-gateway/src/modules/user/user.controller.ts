@@ -1,4 +1,4 @@
-import { Roles } from '@app/contracts/auth';
+import { AccessTokenPayload, Roles } from '@app/contracts/auth';
 import {
   Controller,
   Get,
@@ -7,7 +7,6 @@ import {
   Patch,
   UseGuards,
 } from '@nestjs/common';
-import { AccessTokenPayload } from '../../common/types';
 import { RequiredRoles } from '../auth/decorator/required-roles.decorator';
 import { UserService } from './user.service';
 

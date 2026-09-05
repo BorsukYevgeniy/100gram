@@ -7,7 +7,10 @@ async function bootstrap() {
     AppModule,
     {
       transport: Transport.TCP,
-      options: { host: 'localhost', port: Number(process.env.PORT) },
+      options: {
+        host: process.env.APP_HOST,
+        port: Number(process.env.APP_PORT),
+      },
     },
   );
 
