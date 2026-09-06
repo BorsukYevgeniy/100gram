@@ -1,12 +1,7 @@
 import { CreateGroupChatDto } from '@app/contracts/chat/dto/create-group-chat.dto';
 import { CreatePrivateChatDto } from '@app/contracts/chat/dto/create-private-chat.dto';
 import { UpdateGroupChatDto } from '@app/contracts/chat/dto/update-group-chat.dto';
-import {
-  BadRequestException,
-  ConflictException,
-  Injectable,
-  NotFoundException,
-} from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { PrismaClientKnownRequestError } from '@prisma/client/runtime/client';
 import { PinoLogger } from 'nestjs-pino';
 import { Chat, ChatType, Visibility } from '../../../generated/prisma/client';
@@ -15,7 +10,6 @@ import { ChatValidationService } from './validation/chat-validation.service';
 
 import { randomBytes } from 'crypto';
 import { ChatToUser } from '../../../generated/prisma/browser';
-// import { PaginationDto } from '../../common/dto/pagination.dto';
 // import { CacheService } from '../cache/cache.service';
 import { AccessTokenPayload } from '@app/contracts/auth';
 import { ChatMember } from '@app/contracts/chat-member/types/chat-member.types';
@@ -26,6 +20,7 @@ import {
 } from '@app/contracts/chat/dto';
 import { PaginatedMyChats } from '@app/contracts/chat/types/chat.types';
 import { PaginationDto } from '@app/contracts/pagination';
+import { RpcException } from '@nestjs/microservices';
 import { ChatMemberRepository } from './chat-member/repository/chat-member.repository';
 
 @Injectable()
@@ -73,7 +68,10 @@ export class ChatService {
         { userId },
         'Attempt to create private chat with yourself',
       );
-      throw new BadRequestException('Cannot create private chat with yourself');
+      throw new RpcException({
+        message: 'Cannot create private chat with yourself',
+        statusCode: 400,
+      });
     }
 
     try {
@@ -88,7 +86,7 @@ export class ChatService {
     } catch (e) {
       if (e instanceof PrismaClientKnownRequestError && e.code === 'P2003') {
         this.logger.warn({ peerId: dto.userId }, 'Peer user not found');
-        throw new NotFoundException('User not found');
+        throw new RpcException({ message: 'User not found', statusCode: 404 });
       }
       throw e;
     }
@@ -99,7 +97,10 @@ export class ChatService {
     dto: CreateGroupChatDto,
   ): Promise<ChannelGroupChatResponseDto> {
     if (dto.userIds.includes(ownerId))
-      throw new ConflictException('Owner cannot be a member of the group chat');
+      throw new RpcException({
+        statusCode: 409,
+        message: 'Owner cannot be a member of the group chat',
+      });
 
     try {
       const inviteToken =
@@ -127,7 +128,7 @@ export class ChatService {
     } catch (e) {
       if (e instanceof PrismaClientKnownRequestError && e.code === 'P2003') {
         this.logger.warn({ users: dto.userIds }, 'One of users not found');
-        throw new NotFoundException('User not found');
+        throw new RpcException({ message: 'User not found', statusCode: 404 });
       } else if (
         e instanceof PrismaClientKnownRequestError &&
         e.code === 'P2002'
@@ -169,7 +170,7 @@ export class ChatService {
 
     if (!chat) {
       this.logger.warn({ inviteToken }, 'Chat with invite token not found');
-      throw new NotFoundException('Chat not found');
+      throw new RpcException({ message: 'Chat not found', statusCode: 404 });
     }
 
     const isParticipant = await this.chatValidator.checkChatParticipation(
@@ -182,7 +183,10 @@ export class ChatService {
         { chatId: chat.id, userId: user.id },
         'User already in chat',
       );
-      throw new ConflictException('User already is a participant of the chat');
+      throw new RpcException({
+        statusCode: 409,
+        message: 'User already is a participant of the chat',
+      });
     }
 
     const [chatMember, _] = await this.chatUserRepo.addUserToChat(
@@ -249,7 +253,7 @@ export class ChatService {
     } catch (e) {
       if (e instanceof PrismaClientKnownRequestError && e.code === 'P2025') {
         this.logger.warn({ chatId }, 'Chat not found');
-        throw new NotFoundException('Chat not found');
+        throw new RpcException({ message: 'Chat not found', statusCode: 404 });
       }
     }
   }
@@ -276,7 +280,7 @@ export class ChatService {
     } catch (e) {
       if (e instanceof PrismaClientKnownRequestError && e.code === 'P2025') {
         this.logger.warn({ chatId }, 'Chat not found');
-        throw new NotFoundException('Chat not found');
+        throw new RpcException({ message: 'Chat not found' });
       }
       throw e;
     }
@@ -298,7 +302,10 @@ export class ChatService {
     } catch (e) {
       if (e instanceof PrismaClientKnownRequestError && e.code === 'P2025') {
         this.logger.warn({ chatId, newOwnerId }, 'New owner not found');
-        throw new NotFoundException('New owner not found');
+        throw new RpcException({
+          message: 'New owner not found',
+          statusCode: 404,
+        });
       }
       throw e;
     }

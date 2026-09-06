@@ -1,14 +1,14 @@
 import { Controller } from '@nestjs/common';
 import { MessagePattern, Payload } from '@nestjs/microservices';
-import { ChatMemberResponseDto } from '@app/contracts//chat-member/dto';
-import { ChatMemberPattern } from '@app/contracts//chat-member/pattern';
+import { ChatMemberResponseDto } from '@app/contracts/chat-member/dto';
+import { ChatMemberPattern } from '@app/contracts/chat-member/pattern';
 import {
   AddUserToChatPayload,
   DeleteUserFromChatPayload,
   GetUsersInChatPayload,
-} from '@app/contracts//chat-member/payload';
-import { UpdateUserRolePayload } from '@app/contracts//chat-member/payload/update-user-role.payload';
-import { PaginatedUserNoCredOtpVCode } from '@app/contracts//user/types';
+} from '@app/contracts/chat-member/payload';
+import { UpdateUserRolePayload } from '@app/contracts/chat-member/payload/update-user-role.payload';
+import { PaginatedUserNoCredOtpVCode } from '@app/contracts/user/types';
 import { ChatMemberService } from './chat-member.service';
 
 @Controller()
@@ -56,3 +56,4 @@ export class ChatMemberController {
     );
   }
 }
+

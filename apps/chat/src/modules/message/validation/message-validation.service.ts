@@ -7,8 +7,8 @@ import { PinoLogger } from 'nestjs-pino';
 import {
   AccessTokenPayload,
   Roles,
-} from '@app/contracts//auth';
-import { Message } from '@app/contracts//message/types';
+} from '@app/contracts/auth';
+import { Message } from '@app/contracts/message/types';
 import { ChatRole } from '../../../../generated/prisma/enums';
 import { ChatMemberRepository } from '../../chat/chat-member/repository/chat-member.repository';
 import { MessageRepository } from '../repository/message.repository';
@@ -82,3 +82,4 @@ export class MessageValidationService {
     }
   }
 }
+

@@ -1,12 +1,12 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { ClientProxy } from '@nestjs/microservices';
 import { firstValueFrom } from 'rxjs';
-import { AccessTokenPayload } from '@app/contracts//auth';
-import { ChatMessagePattern } from '@app/contracts//chat-message/pattern';
-import { ChatMessageAction } from '@app/contracts//chat-message/payload/chat-message-action.payload';
-import { CreateMessageDto } from '@app/contracts//message/dto';
-import { Message } from '@app/contracts//message/types';
-import { PaginationDto } from '@app/contracts//pagination';
+import { AccessTokenPayload } from '@app/contracts/auth';
+import { ChatMessagePattern } from '@app/contracts/chat-message/pattern';
+import { ChatMessageAction } from '@app/contracts/chat-message/payload/chat-message-action.payload';
+import { CreateMessageDto } from '@app/contracts/message/dto';
+import { Message } from '@app/contracts/message/types';
+import { PaginationDto } from '@app/contracts/pagination';
 import { CHAT_CLIENT } from '../../../common/client/chat/chat-client.constants';
 
 @Injectable()
@@ -49,3 +49,4 @@ export class ChatMessagesService {
     });
   }
 }
+

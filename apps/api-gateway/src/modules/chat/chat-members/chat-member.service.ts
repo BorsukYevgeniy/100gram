@@ -1,21 +1,21 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { ClientProxy } from '@nestjs/microservices';
 import { firstValueFrom } from 'rxjs';
-import { AccessTokenPayload } from '@app/contracts//auth';
+import { AccessTokenPayload } from '@app/contracts/auth';
 import {
   ChatMemberResponseDto,
   UpdateRoleDto,
-} from '@app/contracts//chat-member/dto';
-import { ChatMemberPattern } from '@app/contracts//chat-member/pattern';
+} from '@app/contracts/chat-member/dto';
+import { ChatMemberPattern } from '@app/contracts/chat-member/pattern';
 import {
   AddUserToChatPayload,
   DeleteUserFromChatPayload,
   GetUsersInChatPayload,
-} from '@app/contracts//chat-member/payload';
-import { UpdateUserRolePayload } from '@app/contracts//chat-member/payload/update-user-role.payload';
-import { ChatMember } from '@app/contracts//chat-member/types/chat-member.types';
-import { PaginationDto } from '@app/contracts//pagination';
-import { PaginatedUserNoCredOtpVCode } from '@app/contracts//user/types';
+} from '@app/contracts/chat-member/payload';
+import { UpdateUserRolePayload } from '@app/contracts/chat-member/payload/update-user-role.payload';
+import { ChatMember } from '@app/contracts/chat-member/types/chat-member.types';
+import { PaginationDto } from '@app/contracts/pagination';
+import { PaginatedUserNoCredOtpVCode } from '@app/contracts/user/types';
 import { CHAT_CLIENT } from '../../../common/client/chat/chat-client.constants';
 
 @Injectable()
@@ -73,3 +73,4 @@ export class ChatMemberService {
     );
   }
 }
+

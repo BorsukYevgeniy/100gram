@@ -1,10 +1,10 @@
 import { Controller } from '@nestjs/common';
 import { MessagePattern, Payload } from '@nestjs/microservices';
-import { ChatMessagePattern } from '@app/contracts//chat-message/pattern';
-import { ChatMessageAction } from '@app/contracts//chat-message/payload/chat-message-action.payload';
-import { CreateMessageDto } from '@app/contracts//message/dto';
-import { Message } from '@app/contracts//message/types';
-import { PaginationDto } from '@app/contracts//pagination';
+import { ChatMessagePattern } from '@app/contracts/chat-message/pattern';
+import { ChatMessageAction } from '@app/contracts/chat-message/payload/chat-message-action.payload';
+import { CreateMessageDto } from '@app/contracts/message/dto';
+import { Message } from '@app/contracts/message/types';
+import { PaginationDto } from '@app/contracts/pagination';
 import { ChatMessageService } from './chat-message.service';
 
 @Controller('chats/:chatId/messages')
@@ -37,3 +37,4 @@ export class ChatMessageController {
     );
   }
 }
+

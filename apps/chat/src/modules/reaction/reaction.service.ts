@@ -1,12 +1,9 @@
-import {
-  ForbiddenException,
-  Injectable,
-  NotFoundException,
-} from '@nestjs/common';
-import { PrismaClientKnownRequestError } from '@prisma/client/runtime/client';
-import { PinoLogger } from 'nestjs-pino';
 import { AddReactionDto } from '@app/contracts/reaction/dto/add-reaction.dto';
 import { UpdateReactionDto } from '@app/contracts/reaction/dto/update-reaction.dto';
+import { Injectable } from '@nestjs/common';
+import { RpcException } from '@nestjs/microservices';
+import { PrismaClientKnownRequestError } from '@prisma/client/runtime/client';
+import { PinoLogger } from 'nestjs-pino';
 import { ChatValidationService } from '../chat/validation/chat-validation.service';
 import { MessageRepository } from '../message/repository/message.repository';
 import { ReactionRepository } from './reaction.repository';
@@ -31,7 +28,7 @@ export class ReactionService {
 
     if (!msg) {
       this.logger.warn({ messageId }, 'Message not found');
-      throw new NotFoundException('Message not found');
+      throw new RpcException({ statusCode: 404, message: 'Message not found' });
     }
 
     const isParticipant = await this.chatValidator.checkChatParticipation(
@@ -41,7 +38,10 @@ export class ReactionService {
 
     if (!isParticipant) {
       this.logger.warn({ userId }, 'User is not participant of the chat');
-      throw new ForbiddenException('User is not participant of the chat');
+      throw new RpcException({
+        message: 'User is not participant of the chat',
+        statusCode: 403,
+      });
     }
   }
 
@@ -83,7 +83,10 @@ export class ReactionService {
     } catch (e) {
       if (e instanceof PrismaClientKnownRequestError && e.code === 'P2025') {
         this.logger.warn({ messageId }, 'Message not found');
-        throw new NotFoundException('Message not found');
+        throw new RpcException({
+          statusCode: 404,
+          message: 'Message not found',
+        });
       }
       throw e;
     }
@@ -101,7 +104,10 @@ export class ReactionService {
     } catch (e) {
       if (e instanceof PrismaClientKnownRequestError && e.code === 'P2025') {
         this.logger.warn({ messageId }, 'Message not found');
-        throw new NotFoundException('Message not found');
+        throw new RpcException({
+          statusCode: 404,
+          message: 'Message not found',
+        });
       }
       throw e;
     }

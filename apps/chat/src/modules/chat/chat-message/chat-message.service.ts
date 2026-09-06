@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
-import { AccessTokenPayload } from '@app/contracts//auth';
-import { CreateMessageDto } from '@app/contracts//message/dto';
-import { PaginationDto } from '@app/contracts//pagination';
+import { AccessTokenPayload } from '@app/contracts/auth';
+import { CreateMessageDto } from '@app/contracts/message/dto';
+import { PaginationDto } from '@app/contracts/pagination';
 import { ChatType } from '../../../../generated/prisma/enums';
 import { MessageService } from '../../message/message.service';
 import { ChatRepository } from '../repository/chat.repository';
@@ -41,3 +41,4 @@ export class ChatMessageService {
     return this.messageService.create(user.id, chatId, dto, files);
   }
 }
+

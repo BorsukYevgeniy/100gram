@@ -5,7 +5,7 @@ import {
   UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
-import { AccessTokenPayload } from '../../../../../../libs/contracts/src/auth';
+import { AccessTokenPayload } from '@app/contracts/auth';
 import { AvatarInterceptor } from '../../../common/interceptor/avatar.interceptor';
 import { CurrentUser } from '../../auth/decorator/current-user.decorator';
 import { VerifiedUserGuard } from '../../auth/guard/verified-auth.guard';
@@ -44,3 +44,4 @@ export class UserAvatarController {
   //   return this.userAvatarService.deleteAvatar(userId);
   // }
 }
+

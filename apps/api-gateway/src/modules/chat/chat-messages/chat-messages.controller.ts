@@ -1,7 +1,7 @@
-import { AccessTokenPayload } from '@app/contracts//auth';
-import { CreateMessageDto } from '@app/contracts//message/dto';
-import { Message } from '@app/contracts//message/types';
-import { PaginationDto } from '@app/contracts//pagination';
+import { AccessTokenPayload } from '@app/contracts/auth';
+import { CreateMessageDto } from '@app/contracts/message/dto';
+import { Message } from '@app/contracts/message/types';
+import { PaginationDto } from '@app/contracts/pagination';
 import {
   Body,
   Controller,
@@ -57,3 +57,4 @@ export class ChatMessageController {
     );
   }
 }
+

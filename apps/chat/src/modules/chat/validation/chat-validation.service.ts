@@ -1,19 +1,10 @@
-import {
-  BadRequestException,
-  ForbiddenException,
-  Inject,
-  Injectable,
-  NotFoundException,
-} from '@nestjs/common';
-import { ClientProxy } from '@nestjs/microservices';
+import { AccessTokenPayload, Roles } from '@app/contracts/auth';
+import { BlockUserDto } from '@app/contracts/blocked-user/dto';
+import { Inject, Injectable } from '@nestjs/common';
+import { ClientProxy, RpcException } from '@nestjs/microservices';
 import { PinoLogger } from 'nestjs-pino';
 import { firstValueFrom } from 'rxjs';
-import {
-  AccessTokenPayload,
-  Roles,
-} from '@app/contracts//auth';
-import { BlockUserDto } from '@app/contracts//blocked-user/dto';
-import { BlockedUserPattern } from '@app/contracts//blocked-user/pattern';
+import { BlockedUserPattern } from '@app/contracts/blocked-user/pattern';
 import { ChatType } from '../../../../generated/prisma/enums';
 import { USER_CLIENT } from '../../../common/client/user-client.constants';
 import { ChatMemberRepository } from '../chat-member/repository/chat-member.repository';
@@ -40,7 +31,10 @@ export class ChatValidationService {
 
     if (owner.userId !== user.id && user.role !== Roles.ADMIN) {
       this.logger.warn({ userId: user.id, chatId }, 'User is not chat owner');
-      throw new ForbiddenException();
+      throw new RpcException({
+        statusCode: 403,
+        message: 'User is not chat owner',
+      });
     }
   }
 
@@ -51,7 +45,7 @@ export class ChatValidationService {
 
     if (!chat) {
       this.logger.warn({ chatId }, 'Chat not found');
-      throw new NotFoundException('Chat not found');
+      throw new RpcException({ message: 'Chat not found', statusCode: 404 });
     }
 
     if (chat.chatType !== expectedType) {
@@ -59,7 +53,10 @@ export class ChatValidationService {
         { chatId, expectedType, actualType: chat.chatType },
         'Chat has invalid type',
       );
-      throw new BadRequestException(`Chat is not of type ${expectedType}`);
+      throw new RpcException({
+        statusCode: 400,
+        message: `Chat is not of type ${expectedType}`,
+      });
     }
     return chat;
   }
@@ -77,7 +74,10 @@ export class ChatValidationService {
         { userId: user.id, chatId },
         'User is not a participant of the chat',
       );
-      throw new ForbiddenException('User is not a participant of the chat');
+      throw new RpcException({
+        statusCode: 403,
+        message: 'User is not a participant of the chat',
+      });
     }
 
     if (user.role === Roles.ADMIN) {
@@ -105,7 +105,10 @@ export class ChatValidationService {
     );
 
     if (isBlocked) {
-      throw new ForbiddenException('You are blocked by this user');
+      throw new RpcException({
+        statusCode: 403,
+        message: 'You are blocked by this user',
+      });
     }
   }
 
@@ -119,3 +122,5 @@ export class ChatValidationService {
     return !!usersInChat;
   }
 }
+
+

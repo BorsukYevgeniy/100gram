@@ -1,8 +1,8 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
-import { PrismaClientKnownRequestError } from '@prisma/client/runtime/client';
-import { PinoLogger } from 'nestjs-pino';
 import { CreateMessageDto } from '@app/contracts/message/dto/create-message.dto';
 import { UpdateMessageDto } from '@app/contracts/message/dto/update-message.dto';
+import { Injectable } from '@nestjs/common';
+import { PrismaClientKnownRequestError } from '@prisma/client/runtime/client';
+import { PinoLogger } from 'nestjs-pino';
 import { ChatType } from '../../../generated/prisma/enums';
 // import { CacheService } from '../cache/cache.service';
 import { ChatRepository } from '../chat/repository/chat.repository';
@@ -10,6 +10,7 @@ import { ChatValidationService } from '../chat/validation/chat-validation.servic
 // import { FileService } from '../file/file.service';
 import { AccessTokenPayload } from '@app/contracts/auth';
 import { PaginationDto } from '@app/contracts/pagination';
+import { RpcException } from '@nestjs/microservices';
 import { MessageRepository } from './repository/message.repository';
 import { MessageValidationService } from './validation/message-validation.service';
 
@@ -160,7 +161,10 @@ export class MessageService {
               { replyId: dto.replyId },
               'Reply message not found while creating message',
             );
-            throw new NotFoundException('Reply message not found');
+            throw new RpcException({
+              message: 'Reply message not found',
+              statusCode: 404,
+            });
         }
       }
 

@@ -124,8 +124,7 @@ export class UserService {
     return this.userRepository.getUserByVerificationCode(verificationCode);
   }
 
-  async verify(verificationLink: string) {
-    //: Promise<UserNoCredOtpVCode> {
+  async verify(verificationLink: string): Promise<UserNoCredOtpVCode> {
     const user = await this.userRepository.verify(verificationLink);
 
     this.logger.info({ userId: user.id }, 'User verified successfully');

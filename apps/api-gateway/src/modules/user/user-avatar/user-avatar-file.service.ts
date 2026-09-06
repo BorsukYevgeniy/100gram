@@ -1,8 +1,8 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { ClientProxy } from '@nestjs/microservices';
 import { firstValueFrom } from 'rxjs';
-import { FilePattern } from '../../../../../../libs/contracts/src/files/pattern/file.pattern';
-import { CreateFilePayload } from '../../../../../../libs/contracts/src/files/payload/create-file.payload';
+import { FilePattern } from '@app/contracts/files/pattern/file.pattern';
+import { CreateFilePayload } from '@app/contracts/files/payload/create-file.payload';
 import { FILES_CLIENT } from '../../../common/client/files/files-client.constants';
 
 @Injectable()
@@ -37,3 +37,4 @@ export class UserAvatarFileService {
   //   return this.fileClient.unlink(fileName, this.USER_AVATAR_DIR_PATH);
   // }
 }
+

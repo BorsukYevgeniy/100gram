@@ -1,4 +1,4 @@
-import { AccessTokenPayload } from '@app/contracts//auth';
+import { AccessTokenPayload } from '@app/contracts/auth';
 import {
   Controller,
   Delete,
@@ -43,3 +43,4 @@ export class BlockedUserController {
     return this.blockedUserService.unblock(user.id, blockedId);
   }
 }
+

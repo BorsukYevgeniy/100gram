@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { randomUUID } from 'crypto';
 import { extname } from 'path';
-import { CreateFileInput } from '../../../../../libs/contracts/src/files/types';
+import { CreateFileInput } from '@app/contracts/files/types';
 import { MinioService } from '../../infra/minio/minio.service';
 
 @Injectable()
@@ -37,3 +37,4 @@ export class FilesService {
     }
   }
 }
+

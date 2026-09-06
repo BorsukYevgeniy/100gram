@@ -9,10 +9,10 @@ import {
   Query,
   UseGuards,
 } from '@nestjs/common';
-import { AccessTokenPayload } from '@app/contracts//auth';
-import { UpdateRoleDto } from '@app/contracts//chat/dto';
-import { PaginationDto } from '@app/contracts//pagination';
-import { PaginatedUserNoCredOtpVCode } from '@app/contracts//user/types';
+import { AccessTokenPayload } from '@app/contracts/auth';
+import { UpdateRoleDto } from '@app/contracts/chat/dto';
+import { PaginationDto } from '@app/contracts/pagination';
+import { PaginatedUserNoCredOtpVCode } from '@app/contracts/user/types';
 import { CurrentUser } from '../../auth/decorator/current-user.decorator';
 import { VerifiedUserGuard } from '../../auth/guard/verified-auth.guard';
 import { ChatMemberService } from './chat-member.service';
@@ -73,3 +73,4 @@ export class ChatMemberController {
     );
   }
 }
+

@@ -1,23 +1,18 @@
 import {
-  ConflictException,
-  Inject,
-  Injectable,
-  NotFoundException,
-} from '@nestjs/common';
-import { ClientProxy } from '@nestjs/microservices';
+  PaginatedUserNoCredOtpVCode,
+  UserNoCredOtpVCode,
+} from '@app/contracts/user/types';
+import { AccessTokenPayload } from '@app/contracts/auth';
+import { ChatMemberResponseDto } from '@app/contracts/chat-member/dto';
+import { UpdateRoleDto } from '@app/contracts/chat-member/dto/update-role.dto';
+import { ChatMember } from '@app/contracts/chat-member/types/chat-member.types';
+import { PaginationDto } from '@app/contracts/pagination';
+import { UserPattern } from '@app/contracts/user/pattern';
+import { Inject, Injectable } from '@nestjs/common';
+import { ClientProxy, RpcException } from '@nestjs/microservices';
 import { PrismaClientKnownRequestError } from '@prisma/client/runtime/client';
 import { PinoLogger } from 'nestjs-pino';
 import { firstValueFrom } from 'rxjs';
-import { AccessTokenPayload } from '@app/contracts//auth';
-import { ChatMemberResponseDto } from '@app/contracts//chat-member/dto';
-import { UpdateRoleDto } from '@app/contracts//chat-member/dto/update-role.dto';
-import { ChatMember } from '@app/contracts//chat-member/types/chat-member.types';
-import { PaginationDto } from '@app/contracts//pagination';
-import { UserPattern } from '@app/contracts//user/pattern';
-import {
-  PaginatedUserNoCredOtpVCode,
-  UserNoCredOtpVCode,
-} from '@app/contracts//user/types';
 import { ChatType } from '../../../../generated/prisma/enums';
 import { USER_CLIENT } from '../../../common/client/user-client.constants';
 import { ChatValidationService } from '../validation/chat-validation.service';
@@ -45,7 +40,10 @@ export class ChatMemberService {
 
     if (isParticipant) {
       this.logger.warn({ chatId, userId }, 'User already in chat');
-      throw new ConflictException('User already is a participant of the chat');
+      throw new RpcException({
+        message: 'User already is a participant of the chat',
+        statusCode: 409,
+      });
     }
 
     try {
@@ -60,7 +58,7 @@ export class ChatMemberService {
     } catch (e) {
       if (e instanceof PrismaClientKnownRequestError && e.code === 'P2003') {
         this.logger.warn({ chatId, userId }, 'User not found');
-        throw new NotFoundException('User not found');
+        throw new RpcException({ message: 'User not found', statusCode: 404 });
       }
       throw e;
     }
@@ -141,7 +139,10 @@ export class ChatMemberService {
         { chatId, userId },
         'User is not a participant of the chat',
       );
-      throw new NotFoundException('User is not a participant of the chat');
+      throw new RpcException({
+        message: 'User is not a participant of the chat',
+        statusCode: 404,
+      });
     }
 
     const chatUser = await this.chatRepo.updateChatRole(
@@ -155,3 +156,4 @@ export class ChatMemberService {
     return chatUser;
   }
 }
+

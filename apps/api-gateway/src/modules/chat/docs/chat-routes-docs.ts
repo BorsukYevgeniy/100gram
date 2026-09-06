@@ -17,8 +17,8 @@ import {
   CreateGroupChatDto,
   CreatePrivateChatDto,
   PrivateChatResponseDto,
-} from '../../../../../../libs/contracts/src/chat/dto';
-import { UpdateGroupChatDto } from '../../../../../../libs/contracts/src/chat/dto/update-group-chat.dto';
+} from '@app/contractschat/dto';
+import { UpdateGroupChatDto } from '@app/contractschat/dto/update-group-chat.dto';
 import { ApiVerifiedAuthDocs } from '../../../common/decorators/docs/auth';
 import { ApiPaginationDocs } from '../../../common/decorators/docs/pagination';
 import { ApiUserNotFoundResponse } from '../../user/docs/shared';
@@ -192,3 +192,4 @@ export class ChatRoutesDocs {
     );
   }
 }
+

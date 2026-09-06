@@ -1,10 +1,10 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { ClientProxy } from '@nestjs/microservices';
 import { firstValueFrom } from 'rxjs';
-import { BlockUserDto } from '@app/contracts//blocked-user/dto';
-import { BlockedUser } from '@app/contracts//blocked-user/interface';
-import { BlockedUserPattern } from '@app/contracts//blocked-user/pattern';
-import { UnblockUserPayload } from '@app/contracts//blocked-user/payload';
+import { BlockUserDto } from '@app/contracts/blocked-user/dto';
+import { BlockedUser } from '@app/contracts/blocked-user/interface';
+import { BlockedUserPattern } from '@app/contracts/blocked-user/pattern';
+import { UnblockUserPayload } from '@app/contracts/blocked-user/payload';
 import { USER_CLIENT } from '../../../common/client/user/user-client.constants';
 
 @Injectable()
@@ -46,3 +46,4 @@ export class BlockedUserService {
     return this.send<BlockedUser[], number>(BlockedUserPattern.UNBLOCK, userId);
   }
 }
+

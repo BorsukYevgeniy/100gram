@@ -1,8 +1,8 @@
 import { Injectable } from '@nestjs/common';
-import { CreateChannelDto } from '@app/contracts//chat/dto/create-channel.dto';
-import { CreateGroupChatDto } from '@app/contracts//chat/dto/create-group-chat.dto';
-import { UpdateGroupChatDto } from '@app/contracts//chat/dto/update-group-chat.dto';
-import { MyChat } from '@app/contracts//chat/types/chat.types';
+import { CreateChannelDto } from '@app/contracts/chat/dto/create-channel.dto';
+import { CreateGroupChatDto } from '@app/contracts/chat/dto/create-group-chat.dto';
+import { UpdateGroupChatDto } from '@app/contracts/chat/dto/update-group-chat.dto';
+import { MyChat } from '@app/contracts/chat/types/chat.types';
 import { Chat } from '../../../../generated/prisma/client';
 import { ChatRole, ChatType } from '../../../../generated/prisma/enums';
 import { PrismaService } from '../../../infra/prisma/prisma.service';
@@ -146,3 +146,4 @@ export class ChatRepository {
     });
   }
 }
+
