@@ -40,6 +40,15 @@
         "tsConfigPath": "libs/contracts/tsconfig.lib.json"
       }
     },
+    "files": {
+      "type": "application",
+      "root": "apps/files",
+      "entryFile": "main",
+      "sourceRoot": "apps/files/src",
+      "compilerOptions": {
+        "tsConfigPath": "apps/files/tsconfig.app.json"
+      }
+    },
     "user": {
       "type": "application",
       "root": "apps/user",

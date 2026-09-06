@@ -22,7 +22,7 @@ export class UserController {
   constructor(private readonly userService: UserService) {}
 
   @ApiUserRoutesDocs.GetById()
-  // @UseGuards(AuthGuard)
+  @UseGuards(AuthGuard)
   @Get(':userId')
   async getById(
     @Param('userId', ParseIntPipe) userId: number,
