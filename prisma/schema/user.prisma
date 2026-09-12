@@ -1,11 +1,11 @@
 model User {
-  id          Int      @id @default(autoincrement())
-  email       String   @unique
+  id          Int     @id @default(autoincrement())
+  email       String  @unique
   nickname    String
   description String?
   password    String
-  avatar      String?
-  createdAt   DateTime @default(now()) @db.Timestamptz()
+
+  createdAt DateTime @default(now()) @db.Timestamptz()
 
   role     Role     @default(USER)
   provider Provider @default(LOCAL)
@@ -21,9 +21,10 @@ model User {
   messages    Message[]
   chatToUsers ChatToUser[]
   tokens      Token[]
-  // Chats where the user is the owner
-  files       File[]
   reactions   ReactionToMessage[]
+
+  avatarName String? @unique
+  avatar     File?   @relation("UserAvatar", fields: [avatarName], references: [name], onDelete: SetNull)
 
   blockedUsers BlockedUser[] @relation("Blocker")
   blockedBy    BlockedUser[] @relation("Blocked")

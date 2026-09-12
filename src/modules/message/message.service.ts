@@ -1,7 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaClientKnownRequestError } from '@prisma/client/runtime/client';
 import { PinoLogger } from 'nestjs-pino';
-import { ChatType } from '../../../generated/prisma/enums';
+import { ChatType, FileType } from '../../../generated/prisma/enums';
 import { PaginationDto } from '../../common/dto/pagination.dto';
 import { AccessTokenPayload } from '../../common/types';
 import { CacheService } from '../cache/cache.service';
@@ -85,13 +85,16 @@ export class MessageService {
     dto: CreateMessageDto,
     files: Express.Multer.File[],
   ): Promise<MessageFiles> {
-    const createdFiles = await this.fileService.createFiles(files, userId);
+    const createdFiles = await this.fileService.createFiles(
+      files,
+      FileType.ATTACHMENT,
+    );
 
     return this.createInternal(
       userId,
       chatId,
       dto,
-      createdFiles.map(({ id }) => id),
+      createdFiles.map(({ name }) => name),
       'http',
     );
   }
@@ -100,16 +103,16 @@ export class MessageService {
     userId: number,
     chatId: number,
     dto: CreateMessageDto,
-    fileIds: number[],
+    filenames: string[],
   ): Promise<MessageFiles> {
-    return this.createInternal(userId, chatId, dto, fileIds, 'ws');
+    return this.createInternal(userId, chatId, dto, filenames, 'ws');
   }
 
   private async createInternal(
     userId: number,
     chatId: number,
     dto: CreateMessageDto,
-    fileIds: number[],
+    filenames: string[],
     provider: 'http' | 'ws',
   ): Promise<MessageFiles> {
     const { chatType } = await this.chatRepo.findChatType(chatId);
@@ -122,7 +125,7 @@ export class MessageService {
         userId,
         chatId,
         dto,
-        fileIds,
+        filenames,
       );
 
       this.logger.info(
@@ -130,7 +133,7 @@ export class MessageService {
           messageId: message.id,
           chatId,
           userId,
-          fileIds,
+          fileIds: filenames,
           provider,
         },
         'Message created',
@@ -145,7 +148,7 @@ export class MessageService {
           case 'P2018':
             if (provider === 'ws') {
               this.logger.warn(
-                { fileIds },
+                { filenames },
                 'Files not found while creating message',
               );
               throw new NotFoundException('Files not found');
@@ -180,15 +183,14 @@ export class MessageService {
   ): Promise<MessageFiles> {
     const createdFiles = await this.fileService.createFiles(
       files,
-      user.id,
-      messageId,
+      FileType.ATTACHMENT,
     );
 
     return this.updateInternal(
       user,
       messageId,
       dto,
-      createdFiles.map(({ id }) => id),
+      createdFiles.map(({ name }) => name),
       'http',
     );
   }
@@ -197,16 +199,16 @@ export class MessageService {
     user: AccessTokenPayload,
     messageId: number,
     dto: UpdateMessageDto,
-    fileIds: number[],
+    filenames: string[],
   ): Promise<MessageFiles> {
-    return this.updateInternal(user, messageId, dto, fileIds, 'ws');
+    return this.updateInternal(user, messageId, dto, filenames, 'ws');
   }
 
   private async updateInternal(
     user: AccessTokenPayload,
     messageId: number,
     dto: UpdateMessageDto,
-    fileIds: number[],
+    filenames: string[],
     transport: 'http' | 'ws',
   ) {
     await this.messageValidator.validateMessageOwnership(user, messageId);
@@ -215,7 +217,7 @@ export class MessageService {
       const message = await this.messageRepository.update(
         messageId,
         dto,
-        fileIds,
+        filenames,
       );
 
       this.logger.info(
@@ -227,7 +229,10 @@ export class MessageService {
       return message;
     } catch (e) {
       if (e instanceof PrismaClientKnownRequestError && e.code === 'P2018') {
-        this.logger.warn({ fileIds }, 'Files not found while updating message');
+        this.logger.warn(
+          { filenames },
+          'Files not found while updating message',
+        );
         throw new NotFoundException('Files not found');
       }
       throw e;

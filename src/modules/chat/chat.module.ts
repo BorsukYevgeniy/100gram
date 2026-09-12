@@ -1,9 +1,8 @@
 import { Module } from '@nestjs/common';
-import { FileStorageModule } from '../../infra/file/storage.module';
 import { CacheModule } from '../cache/cache.module';
+import { FileModule } from '../file/file.module';
 import { MessageModule } from '../message/message.module';
 import { TokenModule } from '../token/token.module';
-import { ChatAvatarFileService } from './chat-avatar/chat-avatar-file.service';
 import { ChatAvatarController } from './chat-avatar/chat-avatar.controller';
 import { ChatAvatarService } from './chat-avatar/chat-avatar.service';
 import { ChatMemberController } from './chat-member/chat-member.controller';
@@ -22,7 +21,7 @@ import { ChatGateway } from './ws/chat.gateway';
     ChatValidationModule,
     ChatRepositoryModule,
     TokenModule,
-    FileStorageModule,
+    FileModule,
     MessageModule,
     CacheModule,
     ChatMemberRepositoryModule,
@@ -37,7 +36,6 @@ import { ChatGateway } from './ws/chat.gateway';
     ChatGateway,
     ChatService,
     ChatAvatarService,
-    ChatAvatarFileService,
     ChatMemberService,
     ChatMessageService,
   ],

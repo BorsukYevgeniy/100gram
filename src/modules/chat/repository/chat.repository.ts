@@ -104,11 +104,24 @@ export class ChatRepository {
     });
   }
 
-  async updateAvatar(chatId: number, avatar?: string) {
+  async updateAvatar(chatId: number, avatar: string) {
     return this.prisma.chat.update({
       where: { id: chatId, chatType: ChatType.GROUP },
       data: {
-        avatar,
+        avatar: {
+          connect: { name: avatar },
+        },
+      },
+    });
+  }
+
+  async deleteAvatar(chatId: number) {
+    return this.prisma.chat.update({
+      where: { id: chatId, chatType: ChatType.GROUP },
+      data: {
+        avatar: {
+          disconnect: true,
+        },
       },
     });
   }
@@ -133,7 +146,7 @@ export class ChatRepository {
       select: {
         id: true,
         title: true,
-        avatar: true,
+        avatarName: true,
         lastMessage: { select: { text: true, createdAt: true } },
       },
     });

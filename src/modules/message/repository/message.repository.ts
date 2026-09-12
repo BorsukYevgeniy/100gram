@@ -30,7 +30,7 @@ export class MessageRepository {
     userId: number,
     chatId: number,
     { replyId, text }: CreateMessageDto,
-    fileIds: number[] = [],
+    filenames: string[] = [],
   ): Promise<MessageFiles> {
     return this.prisma.$transaction(async (p) => {
       const msg = await p.message.create({
@@ -40,7 +40,7 @@ export class MessageRepository {
           chat: { connect: { id: chatId } },
           ...(replyId && { reply: { connect: { id: replyId } } }),
           files: {
-            connect: fileIds.map((id) => ({ id })),
+            connect: filenames.map((name) => ({ name })),
           },
         },
         include: { files: true },
@@ -65,14 +65,14 @@ export class MessageRepository {
   async update(
     id: number,
     dto: UpdateMessageDto,
-    fileIds: number[],
+    filenames: string[],
   ): Promise<MessageFiles> {
     return this.prisma.message.update({
       where: { id },
       data: {
         text: dto.text,
-        ...(fileIds.length !== 0 && {
-          files: { connect: fileIds.map((id) => ({ id })) },
+        ...(filenames.length !== 0 && {
+          files: { connect: filenames.map((name) => ({ name })) },
         }),
       },
       include: { files: true },

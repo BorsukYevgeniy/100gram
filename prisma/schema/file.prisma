@@ -1,11 +1,20 @@
 model File {
-  id        Int      @id @default(autoincrement())
-  name      String   @unique
+  name String @id
+
+  fileType FileType
+
   createdAt DateTime @default(now()) @db.Timestamptz
 
+  // Attachments
   messageId Int?
   message   Message? @relation(fields: [messageId], references: [id], onDelete: SetNull)
 
-  userId Int?
-  user   User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+  userAvatar User? @relation("UserAvatar")
+  chatAvatar Chat? @relation("ChatAvatar")
+}
+
+enum FileType {
+  ATTACHMENT
+  USER_AVATAR
+  CHAT_AVATAR
 }

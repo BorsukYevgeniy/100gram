@@ -5,10 +5,8 @@ import {
   UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
-import { File } from '../../../generated/prisma/client';
-import { CurrentUser } from '../../common/decorators/routes/user.decorator';
+import { File, FileType } from '../../../generated/prisma/client';
 import { MessageFilesInterceptor } from '../../common/interceptor/message-files.interceptor';
-import { AccessTokenPayload } from '../../common/types';
 import { VerifiedUserGuard } from '../auth/guards/verified-user.guard';
 import { FileDocs } from './docs';
 import { FileService } from './file.service';
@@ -22,10 +20,7 @@ export class FileController {
   @FileDocs.UploadFile()
   @Post('upload')
   @UseInterceptors(MessageFilesInterceptor)
-  async upload(
-    @UploadedFiles() files: Express.Multer.File[],
-    @CurrentUser() user: AccessTokenPayload,
-  ): Promise<File[]> {
-    return this.fileService.createFiles(files, user.id);
+  async upload(@UploadedFiles() files: Express.Multer.File[]): Promise<File[]> {
+    return this.fileService.createFiles(files, FileType.ATTACHMENT);
   }
 }

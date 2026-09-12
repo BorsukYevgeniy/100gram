@@ -57,13 +57,13 @@ export class ChatGateway {
     @MessageBody() payload: WsCreateMessageDto,
     @WsCurrentUser() user: AccessTokenPayload,
   ) {
-    const { chatId, fileIds, ...dto } = payload;
+    const { chatId, filenames, ...dto } = payload;
 
     const message = await this.messageService.createFromWs(
       user.id,
       chatId,
       dto,
-      fileIds,
+      filenames,
     );
 
     this.server.to(`chat-${chatId}`).emit('chatCreatedMessage', message);
@@ -76,13 +76,13 @@ export class ChatGateway {
     payload: WsUpdateMessageDto,
     @WsCurrentUser() user: AccessTokenPayload,
   ) {
-    const { chatId, fileIds, messageId, ...dto } = payload;
+    const { chatId, filenames, messageId, ...dto } = payload;
 
     const message = await this.messageService.updateFromWs(
       user,
       messageId,
       dto,
-      fileIds,
+      filenames,
     );
 
     this.server.to(`chat-${chatId}`).emit('chatUpdatedMessage', message);

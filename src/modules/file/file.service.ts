@@ -1,40 +1,37 @@
-import { Injectable, OnModuleInit } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { randomUUID } from 'crypto';
 
-import { File } from '../../../generated/prisma/client';
+import { File, FileType } from '../../../generated/prisma/client';
 import { FileRepository } from './file.repository';
 
 import { PinoLogger } from 'nestjs-pino';
-import { extname, resolve } from 'path';
-import { LocalFileStorage } from '../../infra/file/file.storage';
+import { extname } from 'path';
+import { MinioService } from '../../infra/minio/minio.service';
 
 @Injectable()
-export class FileService implements OnModuleInit {
-  private MESSAGE_FILE_DIR_PATH: string = resolve(
-    __dirname,
-    '..',
-    '..',
-    '..',
-    'files',
-    'messages',
-  );
-
+export class FileService {
   constructor(
     private readonly fileRepo: FileRepository,
-    private readonly fileStorage: LocalFileStorage,
+    private readonly minio: MinioService,
     private readonly logger: PinoLogger,
   ) {
     logger.setContext(FileService.name);
   }
 
-  async onModuleInit() {
-    await this.fileStorage.mkdir(this.MESSAGE_FILE_DIR_PATH);
+  private getKey(fileType: FileType) {
+    switch (fileType) {
+      case FileType.ATTACHMENT:
+        return 'attacments/';
+      case FileType.CHAT_AVATAR:
+        return 'avatars/chats/';
+      case FileType.USER_AVATAR:
+        return 'avatars/users/';
+    }
   }
 
   async createFiles(
     files: Express.Multer.File[],
-    userId: number,
-    messageId?: number,
+    fileType: FileType,
   ): Promise<File[]> {
     if (!files || files.length === 0) return [];
 
@@ -44,38 +41,50 @@ export class FileService implements OnModuleInit {
       const fileName = randomUUID().concat(extname(f.originalname));
 
       fileNames.push(fileName);
-      return this.fileStorage.write(
-        fileName,
-        this.MESSAGE_FILE_DIR_PATH,
-        f.buffer,
-      );
+      return this.minio.upload(this.getKey(fileType) + fileName, f.buffer);
     });
 
     try {
       await Promise.all(savePromises);
 
-      const files = this.fileRepo.createFiles(fileNames, userId, messageId);
+      const files = this.fileRepo.createFiles(fileNames, fileType);
 
-      this.logger.info({ fileNames, messageId }, 'Files saved successfuly');
+      this.logger.info({ fileNames, fileType }, 'Files saved successfuly');
       return files;
     } catch (e) {
       await Promise.all(
-        fileNames.map((f) =>
-          this.fileStorage.unlink(f, this.MESSAGE_FILE_DIR_PATH),
-        ),
+        fileNames.map((f) => this.minio.delete(this.getKey(fileType) + f)),
       );
       throw e;
+    }
+  }
+
+  async deleteFiles(filenames: string[], filesType: FileType) {
+    try {
+      await this.fileRepo.deleteFiles(filenames);
+
+      await Promise.all(
+        filenames.map((f) => {
+          return this.minio.delete(this.getKey(filesType) + f);
+        }),
+      );
+    } catch {
+      this.logger.error(
+        {
+          filenames,
+          filesType,
+        },
+        'Cannot delete files',
+      );
     }
   }
 
   async deleteUnusedFiles() {
     const unusedFiles = await this.fileRepo.findUnusedFiles();
 
-    const fileNames = unusedFiles.map(({ name }) => name);
-
     await Promise.all(
-      fileNames.map((f) =>
-        this.fileStorage.unlink(f, this.MESSAGE_FILE_DIR_PATH),
+      unusedFiles.map(({ fileType, name }) =>
+        this.minio.delete(this.getKey(fileType) + name),
       ),
     );
     const { count } = await this.fileRepo.deleteUnusedFiles();

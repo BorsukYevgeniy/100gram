@@ -23,5 +23,5 @@ export class WsCreateMessageDto extends CreateMessageDto {
   @IsArray()
   @IsInt({ each: true })
   @IsPositive({ each: true })
-  fileIds?: number[];
+  filenames?: string[];
 }

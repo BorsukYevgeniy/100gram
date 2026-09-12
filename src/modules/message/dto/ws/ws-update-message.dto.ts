@@ -33,5 +33,5 @@ export class WsUpdateMessageDto extends UpdateMessageDto {
   @IsArray()
   @IsInt({ each: true })
   @IsPositive({ each: true })
-  fileIds?: number[];
+  filenames?: string[];
 }

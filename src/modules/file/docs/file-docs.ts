@@ -14,8 +14,8 @@ export class FileDocs {
         summary: 'Upload file',
         description: 'Upload file in a server',
       }),
-      ApiFileUploadDocs('Files for uploading to server'),
-      ApiOkResponse({ description: 'Files updated successfully' }),
+      ApiFileUploadDocs('Files for message'),
+      ApiOkResponse({ description: 'Files uploaded successfully' }),
     );
   }
 }

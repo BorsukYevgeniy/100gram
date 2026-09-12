@@ -27,4 +27,10 @@ export const validationSchema = J.object({
   THROTTLE_LIMIT: J.number().positive().required(),
 
   REDIS_URL: J.string().uri().required(),
+
+  MINIO_ACCESS_KEY: J.string().required(),
+  MINIO_SECRET_KEY: J.string().required(),
+  MINIO_REGION: J.string().required(),
+  MINIO_ENDPOINT: J.string().uri().required(),
+  MINIO_BUCKET: J.string().required(),
 });

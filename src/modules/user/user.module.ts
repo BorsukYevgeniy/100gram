@@ -1,12 +1,11 @@
 import { Module } from '@nestjs/common';
 import { ScheduleModule } from '@nestjs/schedule';
-import { FileStorageModule } from '../../infra/file/storage.module';
 import { PrismaModule } from '../../infra/prisma/prisma.module';
 import { ChatMemberRepositoryModule } from '../chat/chat-member/repository/chat-member-repository.module';
 import { ChatModule } from '../chat/chat.module';
+import { FileModule } from '../file/file.module';
 import { TokenModule } from '../token/token.module';
 import { BlockedUserModule } from './blocked-user/blocked-user.module';
-import { UserAvatarFileService } from './user-avatar/user-avatar-file.service';
 import { UserAvatarController } from './user-avatar/user-avatar.controller';
 import { UserAvatarService } from './user-avatar/user-avatar.service';
 import { UserCleanupService } from './user-cleanup.service';
@@ -21,15 +20,14 @@ import { UserService } from './user.service';
     PrismaModule,
     TokenModule,
     ChatModule,
-    FileStorageModule,
     BlockedUserModule,
+    FileModule,
   ],
   controllers: [UserAvatarController, UserController],
   providers: [
     UserCleanupService,
     UserService,
     UserAvatarService,
-    UserAvatarFileService,
     UserRepository,
   ],
   exports: [UserService],

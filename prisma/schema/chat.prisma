@@ -1,6 +1,6 @@
 model Chat {
-  id          Int     @id @default(autoincrement())
-  avatar      String?
+  id Int @id @default(autoincrement())
+
   title       String?
   description String?
 
@@ -16,6 +16,9 @@ model Chat {
 
   membersCount Int     @default(1)
   inviteToken  String? @unique
+
+  avatarName String? @unique
+  avatar     File?   @relation("ChatAvatar", fields: [avatarName], references: [name], onDelete: SetNull)
 
   /**
    * Private chats dont have owner, avatar, inviteToken, title and description.

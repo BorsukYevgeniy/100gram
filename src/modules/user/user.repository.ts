@@ -110,11 +110,15 @@ export class UserRepository {
 
   async updateAvatar(
     userId: number,
-    avatar?: string,
+    avatar: string,
   ): Promise<UserNoCredOtpVCode> {
     return this.prisma.user.update({
       where: { id: userId },
-      data: { avatar },
+      data: {
+        avatar: {
+          connect: { name: avatar },
+        },
+      },
       omit: {
         email: true,
         password: true,
@@ -122,6 +126,17 @@ export class UserRepository {
         otpHash: true,
         otpExpiresAt: true,
         otpAttempts: true,
+      },
+    });
+  }
+
+  async deleteAvatar(userId: number) {
+    return this.prisma.user.update({
+      where: { id: userId },
+      data: {
+        avatar: {
+          disconnect: true,
+        },
       },
     });
   }

@@ -23,7 +23,7 @@ export class ChannelGroupChatResponseDto extends PrivateChatResponseDto {
     nullable: true,
     required: false,
   })
-  readonly avatar: string | null;
+  readonly avatarName: string | null;
 
   @ApiProperty({
     type: Number,
@@ -41,7 +41,7 @@ export class ChannelGroupChatResponseDto extends PrivateChatResponseDto {
     super(chat);
     this.title = chat.title;
     this.description = chat.description;
-    this.avatar = chat.avatar;
+    this.avatarName = chat.avatarName;
     this.membersCount = chat.membersCount;
     this.inviteToken = chat.inviteToken;
   }
