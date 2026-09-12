@@ -1,3 +1,11 @@
+import {
+  ChannelGroupChatResponseDto,
+  CreateChannelDto,
+  CreateGroupChatDto,
+  CreatePrivateChatDto,
+  PrivateChatResponseDto,
+} from '@app/contracts/chat/dto';
+import { UpdateGroupChatDto } from '@app/contracts/chat/dto/update-group-chat.dto';
 import { applyDecorators } from '@nestjs/common';
 import {
   ApiBadRequestResponse,
@@ -11,14 +19,6 @@ import {
   ApiParam,
   getSchemaPath,
 } from '@nestjs/swagger';
-import {
-  ChannelGroupChatResponseDto,
-  CreateChannelDto,
-  CreateGroupChatDto,
-  CreatePrivateChatDto,
-  PrivateChatResponseDto,
-} from '@app/contractschat/dto';
-import { UpdateGroupChatDto } from '@app/contractschat/dto/update-group-chat.dto';
 import { ApiVerifiedAuthDocs } from '../../../common/decorators/docs/auth';
 import { ApiPaginationDocs } from '../../../common/decorators/docs/pagination';
 import { ApiUserNotFoundResponse } from '../../user/docs/shared';
@@ -192,4 +192,3 @@ export class ChatRoutesDocs {
     );
   }
 }
-

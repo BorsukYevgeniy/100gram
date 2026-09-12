@@ -4,6 +4,7 @@ export const enum UserPattern {
   CREATE = 'user.create',
   FIND_BY_EMAIL = 'user.findByEmail',
   FIND_FULL_USER_BY_ID = 'user.findFullUserById',
+  UPDATE_AVATAR = 'user.updateAvatar',
   VERIFY = 'user.verify',
   GET_BY_VERIFICATION_CODE = 'user.getUserByVerificationCode',
   CREATE_GOOGLE_USER = 'user.createGoogleUser',

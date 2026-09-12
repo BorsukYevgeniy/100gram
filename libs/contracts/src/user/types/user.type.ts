@@ -13,7 +13,7 @@ export interface User {
   description: string;
   id: number;
   nickname: string;
-  avatar: string;
+  avatarName: string;
   createdAt: Date;
   role: Role;
   isVerified: boolean;

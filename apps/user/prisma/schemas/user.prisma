@@ -4,7 +4,7 @@ model User {
   nickname    String
   description String?
   password    String
-  avatar      String?
+  avatarName  String?
   createdAt   DateTime @default(now()) @db.Timestamptz()
 
   role     Role     @default(USER)

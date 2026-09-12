@@ -3,6 +3,7 @@ import { Inject, Injectable, OnModuleInit } from '@nestjs/common';
 import {
   CreateBucketCommand,
   DeleteObjectCommand,
+  GetObjectCommand,
   HeadBucketCommand,
   PutObjectCommand,
   S3Client,
@@ -41,6 +42,17 @@ export class MinioService implements OnModuleInit {
         Key: key,
       }),
     );
+  }
+
+  async get(key: string): Promise<string> {
+    const { Body } = await this.minioClient.send(
+      new GetObjectCommand({
+        Bucket: this.config.bucket,
+        Key: key,
+      }),
+    );
+
+    return await Body.transformToString('base64');
   }
 
   async onModuleInit() {

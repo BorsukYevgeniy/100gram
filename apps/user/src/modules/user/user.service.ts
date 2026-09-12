@@ -152,4 +152,14 @@ export class UserService {
     await this.userRepository.updatePassword(userId, newPassword);
     this.logger.info({ userId }, 'Password reseted');
   }
+
+  async updateAvatar(
+    userId: number,
+    newAvatarName?: string,
+  ): Promise<UserNoCredOtpVCode> {
+    const user = await this.userRepository.updateAvatar(userId, newAvatarName);
+
+    this.logger.info({ userId, newAvatarName }, 'Avatar updated');
+    return user;
+  }
 }

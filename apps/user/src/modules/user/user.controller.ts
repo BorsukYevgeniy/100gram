@@ -9,6 +9,7 @@ import {
 } from '@app/contracts/user/payload';
 import { UserNoCredOtpVCode } from '@app/contracts/user/types';
 import { MessagePattern, Payload } from '@nestjs/microservices';
+import { UpdateAvatarPayload } from '../../../../../libs/contracts/src/user/payload/update-avatar.payload';
 import { User } from '../../../generated/prisma/browser';
 
 @Controller('users')
@@ -57,6 +58,13 @@ export class UserController {
   @MessagePattern(UserPattern.CREATE_GOOGLE_USER)
   async createGoogleUser(@Payload() dto: CreateUserDto): Promise<User> {
     return this.userService.createGoogleUser(dto);
+  }
+
+  @MessagePattern(UserPattern.UPDATE_AVATAR)
+  async updateAvatar(
+    @Payload() { userId, newAvatarName }: UpdateAvatarPayload,
+  ): Promise<UserNoCredOtpVCode> {
+    return this.userService.updateAvatar(userId, newAvatarName);
   }
 
   @MessagePattern(UserPattern.ADD_OTP_TO_USER)

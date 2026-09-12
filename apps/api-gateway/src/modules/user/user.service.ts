@@ -8,6 +8,7 @@ import { User, UserNoCredOtpVCode } from '@app/contracts/user/types';
 import { Inject, Injectable } from '@nestjs/common';
 import { ClientProxy } from '@nestjs/microservices';
 import { firstValueFrom } from 'rxjs';
+import { UpdateAvatarPayload } from '../../../../../libs/contracts/src/user/payload/update-avatar.payload';
 import { USER_CLIENT } from '../../common/client/user/user-client.constants';
 
 @Injectable()
@@ -64,6 +65,16 @@ export class UserService {
 
   async createGoogleUser(dto: CreateUserDto): Promise<User> {
     return this.send<User, CreateUserDto>(UserPattern.CREATE_GOOGLE_USER, dto);
+  }
+
+  async updateAvatar(
+    userId: number,
+    newAvatarName?: string,
+  ): Promise<UserNoCredOtpVCode> {
+    return this.send<UserNoCredOtpVCode, UpdateAvatarPayload>(
+      UserPattern.UPDATE_AVATAR,
+      { userId, newAvatarName },
+    );
   }
 
   async addOtpToUser(

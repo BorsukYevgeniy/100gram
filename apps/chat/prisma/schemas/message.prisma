@@ -9,10 +9,9 @@ model Message {
 
   reactions ReactionToMessage[]
 
-  // files File[]
+  fileIds Int[]
 
   userId Int
-  // user   User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   chatId Int
   chat   Chat @relation("ChatMessages", fields: [chatId], references: [id], onDelete: Cascade)
