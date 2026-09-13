@@ -32,7 +32,12 @@ export class UserAvatarService {
 
       this.logger.info({ userId, newAvatarName }, 'Updated user avatar');
 
-      return { avatarUrl: 'avatars/users/'.concat(newAvatarName) };
+      return {
+        avatarUrl: this.fileService.getFileUrl(
+          newAvatarName,
+          FileType.USER_AVATAR,
+        ),
+      };
     } catch (e) {
       await this.fileService.deleteFiles([newAvatarName], FileType.USER_AVATAR);
       throw e;

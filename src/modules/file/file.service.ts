@@ -29,32 +29,42 @@ export class FileService {
     }
   }
 
+  getFileUrl(filename: string, filetype: FileType) {
+    return filename + this.getKey(filetype);
+  }
+
   async createFiles(
     files: Express.Multer.File[],
-    fileType: FileType,
+    filesType: FileType,
   ): Promise<File[]> {
     if (!files || files.length === 0) return [];
 
-    const fileNames = [];
+    const fileNames: string[] = [];
 
     const savePromises = files.map((f) => {
       const fileName = randomUUID().concat(extname(f.originalname));
 
       fileNames.push(fileName);
-      return this.minio.upload(this.getKey(fileType) + fileName, f.buffer);
+      return this.minio.upload(this.getFileUrl(fileName, filesType), f.buffer);
     });
 
     try {
       await Promise.all(savePromises);
 
-      const files = this.fileRepo.createFiles(fileNames, fileType);
+      const files = this.fileRepo.createFiles(fileNames, filesType);
 
-      this.logger.info({ fileNames, fileType }, 'Files saved successfuly');
+      this.logger.debug(
+        { fileNames, fileType: filesType },
+        'Files saved successfuly',
+      );
       return files;
     } catch (e) {
       await Promise.all(
-        fileNames.map((f) => this.minio.delete(this.getKey(fileType) + f)),
+        fileNames.map((f) => this.minio.delete(this.getFileUrl(f, filesType))),
       );
+
+      this.logger.error({ fileNames, filesType }, 'Cannot create files');
+
       throw e;
     }
   }
@@ -65,10 +75,12 @@ export class FileService {
 
       await Promise.all(
         filenames.map((f) => {
-          return this.minio.delete(this.getKey(filesType) + f);
+          return this.minio.delete(this.getFileUrl(f, filesType));
         }),
       );
-    } catch {
+
+      this.logger.debug({ filenames, filesType }, 'Files deleted');
+    } catch (e) {
       this.logger.error(
         {
           filenames,
@@ -76,6 +88,8 @@ export class FileService {
         },
         'Cannot delete files',
       );
+
+      throw e;
     }
   }
 
@@ -84,7 +98,7 @@ export class FileService {
 
     await Promise.all(
       unusedFiles.map(({ fileType, name }) =>
-        this.minio.delete(this.getKey(fileType) + name),
+        this.minio.delete(this.getFileUrl(name, fileType)),
       ),
     );
     const { count } = await this.fileRepo.deleteUnusedFiles();

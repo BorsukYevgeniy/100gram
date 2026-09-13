@@ -38,7 +38,12 @@ export class ChatAvatarService {
 
       this.logger.info({ chatId, newAvatarName }, 'Updated chat avatar');
 
-      return { avatarUrl: '/avatars/chats/'.concat(newAvatarName) };
+      return {
+        avatarUrl: this.fileService.getFileUrl(
+          newAvatarName,
+          FileType.CHAT_AVATAR,
+        ),
+      };
     } catch (e) {
       await this.fileService.deleteFiles([newAvatarName], FileType.CHAT_AVATAR);
       throw e;
