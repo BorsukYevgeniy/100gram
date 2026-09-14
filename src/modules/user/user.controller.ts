@@ -6,9 +6,7 @@ import {
   Patch,
   UseGuards,
 } from '@nestjs/common';
-import { Role } from '../../../generated/prisma/client';
 import { AccessTokenPayload } from '../../common/types';
-import { RequiredRoles } from '../auth/decorator/required-roles.decorator';
 import { AuthGuard } from '../auth/guards/auth.guard';
 import { AdminGuard } from '../auth/guards/roles.guard';
 import { UserService } from './user.service';
@@ -40,7 +38,6 @@ export class UserController {
   }
 
   @ApiUserRoutesDocs.AssignAdmin()
-  @RequiredRoles([Role.ADMIN])
   @UseGuards(AdminGuard)
   @Patch('assign-admin/:userId')
   async assignAdmin(
@@ -59,7 +56,6 @@ export class UserController {
   }
 
   @ApiUserRoutesDocs.DeleteUser()
-  @RequiredRoles([Role.ADMIN])
   @UseGuards(AdminGuard)
   @Delete(':userId')
   async deleteUserById(

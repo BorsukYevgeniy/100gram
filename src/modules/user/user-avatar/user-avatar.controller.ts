@@ -9,11 +9,9 @@ import {
   UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
-import { Role } from '../../../../generated/prisma/enums';
 import { CurrentUser } from '../../../common/decorators/routes/user.decorator';
 import { AvatarInterceptor } from '../../../common/interceptor/avatar.interceptor';
 import { AccessTokenPayload } from '../../../common/types';
-import { RequiredRoles } from '../../auth/decorator/required-roles.decorator';
 import { AdminGuard } from '../../auth/guards/roles.guard';
 import { VerifiedUserGuard } from '../../auth/guards/verified-user.guard';
 import { ApiUserAvatarControllerDocs, ApiUserAvatarRoutesDocs } from './docs';
@@ -34,6 +32,7 @@ export class UserAvatarController {
   ) {
     return this.userAvatarService.updateAvatar(user.id, file);
   }
+
   @ApiUserAvatarRoutesDocs.DeleteMyAvatar()
   @Delete('me/avatar')
   @HttpCode(HttpStatus.NO_CONTENT)
@@ -44,7 +43,6 @@ export class UserAvatarController {
   @ApiUserAvatarRoutesDocs.DeleteUserAvatar()
   @Delete(':userId/avatar')
   @HttpCode(HttpStatus.NO_CONTENT)
-  @RequiredRoles([Role.ADMIN])
   @UseGuards(AdminGuard)
   async deleteUserAvatar(@Param('userId') userId: number) {
     return this.userAvatarService.deleteAvatar(userId);
