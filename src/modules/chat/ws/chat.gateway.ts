@@ -19,6 +19,9 @@ import { HttpToWsExceptionsFilter } from './exception-filter/ws-exception.filter
 import { WsVerifiedAuthGuard } from './guard/ws-verified-auth.guard';
 import WsValidationPipe from './pipe/ws-validation.pipe';
 
+import { WsAddReactionDto } from '../../reaction/dto/ws/ws-add-reaction.dto';
+import { WsRemoveReactionDto } from '../../reaction/dto/ws/ws-remove-reaction.dto';
+import { ReactionService } from '../../reaction/reaction.service';
 import { ChatGatewayDocs } from './docs/chat-gateway-docs';
 
 @WebSocketGateway({
@@ -35,6 +38,7 @@ export class ChatGateway {
   constructor(
     private readonly chatValidator: ChatValidationService,
     private readonly messageService: MessageService,
+    private readonly reactionService: ReactionService,
   ) {}
 
   @WebSocketServer()
@@ -110,5 +114,39 @@ export class ChatGateway {
     await this.chatValidator.validateChatParticipation(user, chatId);
 
     client.leave(`chat-${chatId}`);
+  }
+
+  @SubscribeMessage('addReaction')
+  async handleAddingReaction(
+    @WsCurrentUser() { id }: AccessTokenPayload,
+    @MessageBody() { chatId, messageId, ...dto }: WsAddReactionDto,
+  ) {
+    const reaction = await this.reactionService.addReaction(id, messageId, dto);
+
+    this.server.to(`chat-${chatId}`).emit('chatAddedReaction', reaction);
+  }
+
+  @SubscribeMessage('updateReaction')
+  async handleUpdatingReaction(
+    @WsCurrentUser() { id }: AccessTokenPayload,
+    @MessageBody() { chatId, messageId, ...dto }: WsAddReactionDto,
+  ) {
+    const reaction = await this.reactionService.updateReaction(
+      id,
+      messageId,
+      dto,
+    );
+
+    this.server.to(`chat-${chatId}`).emit('chatUpdatedReaction', reaction);
+  }
+
+  @SubscribeMessage('deleteReaction')
+  async handleDeletingReaction(
+    @WsCurrentUser() { id }: AccessTokenPayload,
+    @MessageBody() { chatId, messageId }: WsRemoveReactionDto,
+  ) {
+    const reaction = await this.reactionService.removeReaction(id, messageId);
+
+    this.server.to(`chat-${chatId}`).emit('chatDeletedReaction', reaction);
   }
 }

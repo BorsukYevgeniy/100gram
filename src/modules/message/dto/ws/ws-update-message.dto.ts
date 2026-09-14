@@ -6,7 +6,7 @@ export class WsUpdateMessageDto extends UpdateMessageDto {
   @ApiProperty({
     type: Number,
     required: true,
-    description: 'ID of the chat where the message will be sent',
+    description: 'ID of the chat where the message will be updated',
     minimum: 0,
   })
   @IsInt()
@@ -16,7 +16,7 @@ export class WsUpdateMessageDto extends UpdateMessageDto {
   @ApiProperty({
     type: Number,
     required: true,
-    description: 'ID of the chat where the message will be sent',
+    description: 'ID of the chat where the message will be updated',
     minimum: 0,
   })
   @IsInt()
