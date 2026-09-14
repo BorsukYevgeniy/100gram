@@ -36,14 +36,14 @@ export class ChatService {
     this.logger.setContext(ChatService.name);
   }
 
-  private async generateInviteToken(): Promise<string> {
+  private generateInviteToken(): string {
     return randomBytes(16).toString('hex');
   }
 
   async createChannel(dto: CreateChannelDto, ownerId: number) {
     const inviteToken =
       dto.visibility === Visibility.PRIVATE
-        ? await this.generateInviteToken()
+        ? this.generateInviteToken()
         : undefined;
 
     const channel = await this.chatRepo.createChannel(
@@ -100,7 +100,7 @@ export class ChatService {
     try {
       const inviteToken =
         dto.visibility === Visibility.PRIVATE
-          ? await this.generateInviteToken()
+          ? this.generateInviteToken()
           : undefined;
 
       const chat = await this.chatRepo.createGroupChat(
@@ -128,9 +128,9 @@ export class ChatService {
         e instanceof PrismaClientKnownRequestError &&
         e.code === 'P2002'
       ) {
-        const newInviteToken = await this.generateInviteToken();
+        const newInviteToken = this.generateInviteToken();
         this.logger.warn(
-          { chatId: undefined, ownerId, attemptInviteToken: newInviteToken },
+          { ownerId, attemptInviteToken: newInviteToken },
           'Invite token collision detected, retrying with new token',
         );
 
@@ -192,10 +192,7 @@ export class ChatService {
     await this.chatValidator.validateChatType(chatId, ChatType.GROUP);
     await this.chatValidator.validateOwner(user, chatId);
 
-    return this.chatRepo.updateInviteToken(
-      chatId,
-      await this.generateInviteToken(),
-    );
+    return this.chatRepo.updateInviteToken(chatId, this.generateInviteToken());
   }
 
   async findById(
@@ -218,6 +215,7 @@ export class ChatService {
 
   async updateGroupChat(id: number, dto: UpdateGroupChatDto): Promise<Chat> {
     await this.chatValidator.validateChatType(id, ChatType.GROUP);
+
     try {
       const chat = await this.chatRepo.updateGroupChat(id, dto);
 

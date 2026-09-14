@@ -14,7 +14,7 @@ import { CurrentUser } from '../../../common/decorators/routes/user.decorator';
 import { AvatarInterceptor } from '../../../common/interceptor/avatar.interceptor';
 import { AccessTokenPayload } from '../../../common/types';
 import { RequiredRoles } from '../../auth/decorator/required-roles.decorator';
-import { RolesGuard } from '../../auth/guards/roles.guard';
+import { AdminGuard } from '../../auth/guards/roles.guard';
 import { VerifiedUserGuard } from '../../auth/guards/verified-user.guard';
 import { ApiUserAvatarControllerDocs, ApiUserAvatarRoutesDocs } from './docs';
 import { UserAvatarService } from './user-avatar.service';
@@ -45,7 +45,7 @@ export class UserAvatarController {
   @Delete(':userId/avatar')
   @HttpCode(HttpStatus.NO_CONTENT)
   @RequiredRoles([Role.ADMIN])
-  @UseGuards(RolesGuard)
+  @UseGuards(AdminGuard)
   async deleteUserAvatar(@Param('userId') userId: number) {
     return this.userAvatarService.deleteAvatar(userId);
   }

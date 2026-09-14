@@ -28,7 +28,7 @@ export class CacheService {
     const versionKey = `chat:${chatId}:messages:version`;
 
     await this.redisClient.incr(versionKey);
-    return await this.redisClient.expire(versionKey, 60);
+    return this.redisClient.expire(versionKey, 60);
   }
 
   buildChatMessageKey(

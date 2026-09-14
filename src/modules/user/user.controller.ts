@@ -10,7 +10,7 @@ import { Role } from '../../../generated/prisma/client';
 import { AccessTokenPayload } from '../../common/types';
 import { RequiredRoles } from '../auth/decorator/required-roles.decorator';
 import { AuthGuard } from '../auth/guards/auth.guard';
-import { RolesGuard } from '../auth/guards/roles.guard';
+import { AdminGuard } from '../auth/guards/roles.guard';
 import { UserService } from './user.service';
 
 import { CurrentUser } from '../../common/decorators/routes/user.decorator';
@@ -41,7 +41,7 @@ export class UserController {
 
   @ApiUserRoutesDocs.AssignAdmin()
   @RequiredRoles([Role.ADMIN])
-  @UseGuards(RolesGuard)
+  @UseGuards(AdminGuard)
   @Patch('assign-admin/:userId')
   async assignAdmin(
     @Param('userId') userId: number,
@@ -60,7 +60,7 @@ export class UserController {
 
   @ApiUserRoutesDocs.DeleteUser()
   @RequiredRoles([Role.ADMIN])
-  @UseGuards(RolesGuard)
+  @UseGuards(AdminGuard)
   @Delete(':userId')
   async deleteUserById(
     @CurrentUser() user: AccessTokenPayload,

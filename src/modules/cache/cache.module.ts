@@ -12,22 +12,20 @@ import redisConfig from '../../config/redis.config';
     RedisModule.forRootAsync({
       imports: [ConfigModule.forFeature(redisConfig)],
       inject: [redisConfig.KEY, PinoLogger],
-      useFactory: (
-        config: ConfigType<typeof redisConfig>,
-        logger: PinoLogger,
-      ) => {
+      useFactory: (c: ConfigType<typeof redisConfig>, logger: PinoLogger) => {
         logger.setContext(RedisModule.name);
         return {
-          ...config,
+          ...c,
           onClientReady: (client: Redis | Cluster) => {
-            client.on('connect', () => logger.debug('Redis connected'));
+            client.on('connect', () => logger.debug('Connected to Redis'));
 
-            client.on('error', (err) =>
-              logger.fatal({ err }, 'Cannot connect to Redis'),
-            );
+            client.on('error', (err) => {
+              logger.fatal({ err }, 'Cannot connect to Redis');
+              throw err;
+            });
 
             client.on('reconnecting', (ms) =>
-              logger.warn({ ms }, 'Redis reconnecting '),
+              logger.warn({ ms }, 'Redis reconnecting'),
             );
 
             client.on('close', () => logger.debug('Redis connection closed'));

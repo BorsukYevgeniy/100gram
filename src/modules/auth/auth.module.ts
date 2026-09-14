@@ -25,7 +25,7 @@ import { GoogleStrategy } from './strategies/google.strategy';
     ThrottlerModule.forRootAsync({
       imports: [ConfigModule.forFeature(throttlerConfig)],
       inject: [throttlerConfig.KEY],
-      useFactory: (config: ConfigType<typeof throttlerConfig>) => config,
+      useFactory: (c: ConfigType<typeof throttlerConfig>) => c,
     }),
   ],
   controllers: [AuthController],

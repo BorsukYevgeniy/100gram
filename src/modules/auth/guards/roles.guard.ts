@@ -4,29 +4,21 @@ import {
   Injectable,
   UnauthorizedException,
 } from '@nestjs/common';
-import { Reflector } from '@nestjs/core';
-
 import { PinoLogger } from 'nestjs-pino';
+import { Role } from '../../../../generated/prisma/enums';
 import { AuthRequest } from '../../../common/types';
 import { TokenService } from '../../token/token.service';
-import { RequiredRoles } from '../decorator/required-roles.decorator';
 
 @Injectable()
-export class RolesGuard implements CanActivate {
+export class AdminGuard implements CanActivate {
   constructor(
-    private readonly reflector: Reflector,
     private readonly tokenService: TokenService,
     private readonly logger: PinoLogger,
   ) {
-    this.logger.setContext(RolesGuard.name);
+    this.logger.setContext(AdminGuard.name);
   }
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
-    const requieredRoles = this.reflector.get(
-      RequiredRoles,
-      context.getHandler(),
-    );
-
     const req = context.switchToHttp().getRequest<AuthRequest>();
 
     const accessToken = req.cookies.access_token;
@@ -54,11 +46,7 @@ export class RolesGuard implements CanActivate {
         isVerified: payload.isVerified,
       });
 
-      if (!requieredRoles) {
-        return true;
-      }
-
-      return requieredRoles.includes(payload.role);
+      return payload.role === Role.ADMIN;
     } catch {
       throw new UnauthorizedException(
         'You must be authorized to access this resource',
