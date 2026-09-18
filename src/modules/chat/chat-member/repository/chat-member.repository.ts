@@ -21,7 +21,7 @@ export class ChatMemberRepository {
   }
 
   async addUserToChat(chatId: number, userId: number) {
-    return await this.prisma.$transaction([
+    return this.prisma.$transaction([
       this.prisma.chatToUser.create({
         data: { chatId, userId },
       }),
@@ -153,3 +153,4 @@ export class ChatMemberRepository {
     });
   }
 }
+

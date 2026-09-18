@@ -61,9 +61,9 @@ export class AuthService {
       'User registered successfully',
     );
 
-    await this.mailService.sendVerificationMail(email, verificationCode);
+    this.mailService.sendVerificationMail(email, verificationCode);
 
-    return await this.tokenService.generateTokens(id, role, isVerified);
+    return this.tokenService.generateTokens(id, role, isVerified);
   }
 
   async login(dto: LoginDto): Promise<TokenPair> {
@@ -94,7 +94,7 @@ export class AuthService {
       'User logged in successfully',
     );
 
-    return await this.tokenService.generateTokens(
+    return this.tokenService.generateTokens(
       user.id,
       user.role as Role,
       user.isVerified,
@@ -114,7 +114,7 @@ export class AuthService {
       'User logged in by id successfully',
     );
 
-    return await this.tokenService.generateTokens(
+    return this.tokenService.generateTokens(
       user.id,
       user.role as Role,
       user.isVerified,
@@ -147,7 +147,7 @@ export class AuthService {
 
     this.logger.info({ userId: id, role, isVerified }, 'Token refreshed');
 
-    return await this.tokenService.update(id, role, isVerified, token);
+    return this.tokenService.update(id, role, isVerified, token);
   }
 
   async verifyUser(verificationCode: string): Promise<UserNoCredOtpVCode> {
@@ -172,7 +172,7 @@ export class AuthService {
       'User verified',
     );
 
-    return await this.userService.verify(verificationCode);
+    return this.userService.verify(verificationCode);
   }
 
   async validateGoogleUser(googleUser: CreateUserDto) {
@@ -218,7 +218,7 @@ export class AuthService {
       email,
     });
 
-    return await this.mailService.sendVerificationMail(email, verificationCode);
+    await this.mailService.sendVerificationMail(email, verificationCode);
   }
 
   async sendOtp(userId: number) {

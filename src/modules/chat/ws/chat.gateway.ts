@@ -2,6 +2,9 @@ import { UseFilters, UseGuards, UsePipes } from '@nestjs/common';
 import {
   ConnectedSocket,
   MessageBody,
+  OnGatewayConnection,
+  OnGatewayDisconnect,
+  OnGatewayInit,
   SubscribeMessage,
   WebSocketGateway,
   WebSocketServer,
@@ -19,6 +22,7 @@ import { HttpToWsExceptionsFilter } from './exception-filter/ws-exception.filter
 import { WsVerifiedAuthGuard } from './guard/ws-verified-auth.guard';
 import WsValidationPipe from './pipe/ws-validation.pipe';
 
+import { PinoLogger } from 'nestjs-pino';
 import { WsAddReactionDto } from '../../reaction/dto/ws/ws-add-reaction.dto';
 import { WsRemoveReactionDto } from '../../reaction/dto/ws/ws-remove-reaction.dto';
 import { ReactionService } from '../../reaction/reaction.service';
@@ -34,12 +38,32 @@ import { ChatGatewayDocs } from './docs/chat-gateway-docs';
 @UseGuards(WsVerifiedAuthGuard)
 @UsePipes(WsValidationPipe)
 @UseFilters(HttpToWsExceptionsFilter)
-export class ChatGateway {
+export class ChatGateway
+  implements
+    OnGatewayInit<Server>,
+    OnGatewayConnection<Socket>,
+    OnGatewayDisconnect<Socket>
+{
   constructor(
     private readonly chatValidator: ChatValidationService,
     private readonly messageService: MessageService,
     private readonly reactionService: ReactionService,
+    private readonly logger: PinoLogger,
   ) {}
+
+  afterInit() {
+    this.logger.debug(
+      `WebSocket initialized on ws://localhost:${process.env.PORT}`,
+    );
+  }
+
+  handleConnection(client: Socket) {
+    this.logger.debug({ clientId: client.id }, 'Client  connected');
+  }
+
+  handleDisconnect(client: Socket) {
+    this.logger.debug({ clientId: client.id }, 'Client  disconnected');
+  }
 
   @WebSocketServer()
   server: Server;

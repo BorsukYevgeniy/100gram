@@ -8,6 +8,7 @@ export class UserCleanupService {
 
   @Cron('0 0 */3 * *')
   async deleteUnverifiedUsers() {
-    return await this.userService.deleteUnverifiedUsers();
+    return this.userService.deleteUnverifiedUsers();
   }
 }
+

@@ -12,10 +12,15 @@ export class MailService {
   }
 
   async sendMail(to: string, subject: string, html: string) {
-    await this.mailerService.sendMail({
-      to,
-      subject,
-      html,
-    });
+    try {
+      await this.mailerService.sendMail({
+        to,
+        subject,
+        html,
+      });
+    } catch (e) {
+      this.logger.error({ to, e }, 'Cannot send email');
+      throw e;
+    }
   }
 }
