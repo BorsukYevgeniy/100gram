@@ -26,7 +26,7 @@ import { validationSchema } from './config/schemas/validation.schema';
     LoggerModule.forRootAsync({
       imports: [ConfigModule.forFeature(pinoConfig)],
       inject: [pinoConfig.KEY],
-      useFactory: (config: ConfigType<typeof pinoConfig>) => config,
+      useFactory: (c: ConfigType<typeof pinoConfig>) => c,
     }),
     FileModule,
   ],

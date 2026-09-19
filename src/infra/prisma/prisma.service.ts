@@ -19,11 +19,12 @@ export class PrismaService
   private readonly logger = new Logger(PrismaService.name);
 
   constructor(
-    @Inject(databaseConfig.KEY) config: ConfigType<typeof databaseConfig>,
+    @Inject(databaseConfig.KEY)
+    { databaseUrl }: ConfigType<typeof databaseConfig>,
   ) {
     super({
       adapter: new PrismaPg({
-        connectionString: config.databaseUrl,
+        connectionString: databaseUrl,
       }),
     });
   }

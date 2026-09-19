@@ -10,7 +10,7 @@ import smtpConfig from '../../config/smtp.config';
     MailerModule.forRootAsync({
       imports: [ConfigModule.forFeature(smtpConfig)],
       inject: [smtpConfig.KEY],
-      useFactory: (config: ConfigType<typeof smtpConfig>) => config,
+      useFactory: (c: ConfigType<typeof smtpConfig>) => c,
     }),
   ],
   providers: [MailService],

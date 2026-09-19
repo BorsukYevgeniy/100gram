@@ -9,11 +9,11 @@ import { AuthService } from '../auth.service';
 @Injectable()
 export class GoogleStrategy extends PassportStrategy(Strategy) {
   constructor(
-    @Inject(googleOauthConfig.KEY) config: ConfigType<typeof googleOauthConfig>,
+    @Inject(googleOauthConfig.KEY) c: ConfigType<typeof googleOauthConfig>,
     private readonly authService: AuthService,
     private readonly logger: PinoLogger,
   ) {
-    super(config);
+    super(c);
     logger.setContext(GoogleStrategy.name);
   }
 
