@@ -9,6 +9,7 @@ import { CreateUserDto } from '../user/dto/create-user.dto';
 import { UserService } from '../user/user.service';
 
 import { ConfigType } from '@nestjs/config';
+import { JsonWebTokenError } from '@nestjs/jwt';
 import { compare, hash } from 'bcryptjs';
 import { randomInt } from 'crypto';
 import { PinoLogger } from 'nestjs-pino';
@@ -43,9 +44,7 @@ export class AuthService {
         { email: dto.email },
         'Attempt to register already existing user',
       );
-      throw new BadRequestException(
-        'User with this credentials already exists',
-      );
+      throw new BadRequestException('Invalid data');
     }
 
     const hashedPassword = await hash(dto.password, this.config.passwordSalt);
@@ -132,22 +131,33 @@ export class AuthService {
   }
 
   async refresh(token: string): Promise<TokenPair> {
-    const { id } = await this.tokenService.verifyRefreshToken(token);
+    try {
+      const { id } = await this.tokenService.verifyRefreshToken(token);
 
-    const userTokens = await this.tokenService.getUserTokens(id);
+      const userTokens = await this.tokenService.getUserTokens(id);
+      const isTokenValid = userTokens.some((u) => u.token === token);
 
-    const isTokenValid = userTokens.some((u) => u.token === token);
+      if (!isTokenValid) {
+        this.logger.warn({ userId: id }, 'Invalid refresh token');
+        throw new UnauthorizedException(
+          'You must be authorized to access this resource',
+        );
+      }
 
-    if (!isTokenValid) {
-      this.logger.warn({ userId: id }, 'Invalid refresh token');
-      throw new UnauthorizedException('Invalid refresh token');
+      const { role, isVerified } = await this.userService.findFullUserById(id);
+
+      this.logger.info({ userId: id, role, isVerified }, 'Token refreshed');
+
+      return this.tokenService.update(id, role, isVerified, token);
+    } catch (e) {
+      if (e instanceof JsonWebTokenError) {
+        console.log(e);
+        throw new UnauthorizedException(
+          'You must be authorized to access this resource',
+        );
+      }
+      throw e;
     }
-
-    const { role, isVerified } = await this.userService.findFullUserById(id);
-
-    this.logger.info({ userId: id, role, isVerified }, 'Token refreshed');
-
-    return this.tokenService.update(id, role, isVerified, token);
   }
 
   async verifyUser(verificationCode: string): Promise<UserNoCredOtpVCode> {

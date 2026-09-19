@@ -75,14 +75,19 @@ export class AuthController {
     @Req() req: AuthRequest,
     @Res() res: Response,
   ): Promise<void> {
-    await this.authService.logout(req.cookies.refresh_token, user.id);
+    const refreshTokenCookie = req.cookies.refresh_token;
+
+    if (!refreshTokenCookie)
+      throw new UnauthorizedException('Refresh token is missing');
+
+    await this.authService.logout(refreshTokenCookie, user.id);
     this.clearTokenCookie(res);
   }
 
   @AuthRoutesDocs.LogoutAll()
   @Post('logout-all')
   @UseGuards(AuthGuard)
-  @HttpCode(HttpStatus.OK)
+  @HttpCode(HttpStatus.NO_CONTENT)
   async logoutAll(
     @CurrentUser() user: AccessTokenPayload,
     @Res() res: Response,
@@ -102,7 +107,6 @@ export class AuthController {
 
   @AuthRoutesDocs.Refresh()
   @Post('refresh')
-  @UseGuards(AuthGuard)
   @HttpCode(HttpStatus.OK)
   async refresh(@Req() req: AuthRequest, @Res() res: Response): Promise<void> {
     const refreshTokenCookie = req.cookies.refresh_token;
@@ -167,6 +171,6 @@ export class AuthController {
 
   private clearTokenCookie(res: Response) {
     res.clearCookie('access_token');
-    res.clearCookie('refresh_token').status(200).end();
+    res.clearCookie('refresh_token').status(204).end();
   }
 }
