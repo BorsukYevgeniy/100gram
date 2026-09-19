@@ -116,4 +116,13 @@ export class ChatController {
   ) {
     return this.chatService.delete(user, chatId);
   }
+
+  @ChatRoutesDocs.JoinToChat()
+  @Post('join/:chatId')
+  async join(
+    @Param('chatId') chatId: number,
+    @CurrentUser() user: AccessTokenPayload,
+  ) {
+    return this.chatService.joinToChat(chatId, user);
+  }
 }

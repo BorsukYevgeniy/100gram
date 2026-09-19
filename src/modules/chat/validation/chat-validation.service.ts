@@ -5,7 +5,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { PinoLogger } from 'nestjs-pino';
-import { ChatType, Role } from '../../../../generated/prisma/enums';
+import { ChatType, Role, Visibility } from '../../../../generated/prisma/enums';
 import { AccessTokenPayload } from '../../../common/types';
 import { BlockedUserService } from '../../user/blocked-user/blocked-user.service';
 import { ChatMemberRepository } from '../chat-member/repository/chat-member.repository';
@@ -36,8 +36,11 @@ export class ChatValidationService {
     }
   }
 
-  async validateChatType(chatId: number, expectedType: ChatType) {
-    this.logger.debug({ chatId, expectedType }, 'Validating chat type');
+  async validateChatType(chatId: number, ...expectedTypes: ChatType[]) {
+    this.logger.debug(
+      { chatId, expectedType: expectedTypes },
+      'Validating chat type',
+    );
 
     const chat = await this.chatRepo.getById(chatId);
 
@@ -46,12 +49,37 @@ export class ChatValidationService {
       throw new NotFoundException('Chat not found');
     }
 
-    if (chat.chatType !== expectedType) {
+    if (expectedTypes.includes(chat.chatType)) {
       this.logger.warn(
-        { chatId, expectedType, actualType: chat.chatType },
+        { chatId, expectedType: expectedTypes, actualType: chat.chatType },
         'Chat has invalid type',
       );
-      throw new BadRequestException(`Chat is not of type ${expectedType}`);
+      throw new BadRequestException(`Chat is not of types ${expectedTypes}`);
+    }
+    return chat;
+  }
+
+  async validateChatVisibility(chatId: number, expectedVisibility: Visibility) {
+    this.logger.debug(
+      { chatId, expectedVisibility },
+      'Validating chat visibility',
+    );
+
+    const chat = await this.chatRepo.getById(chatId);
+
+    if (!chat) {
+      this.logger.warn({ chatId }, 'Chat not found');
+      throw new NotFoundException('Chat not found');
+    }
+
+    if (expectedVisibility.includes(chat.visibility)) {
+      this.logger.warn(
+        { chatId, expectedVisibility, actualVisibilty: chat.visibility },
+        'Chat has invalid visiblity',
+      );
+      throw new BadRequestException(
+        `Chat is not of visibility ${expectedVisibility}`,
+      );
     }
     return chat;
   }

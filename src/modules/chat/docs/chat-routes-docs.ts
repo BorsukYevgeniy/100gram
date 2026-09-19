@@ -13,7 +13,7 @@ import {
 } from '@nestjs/swagger';
 import { ApiVerifiedAuthDocs } from '../../../common/decorators/docs/auth';
 import { ApiPaginationDocs } from '../../../common/decorators/docs/pagination';
-import { ApiUserNotFoundResponse } from '../../user/docs/shared';
+import { ApiUserIdDocs, ApiUserNotFoundResponse } from '../../user/docs/shared';
 import { ChannelGroupChatResponseDto } from '../dto/channel-group-chat-response.dto';
 import { CreateChannelDto } from '../dto/create-channel.dto';
 import { CreateGroupChatDto } from '../dto/create-group-chat.dto';
@@ -187,6 +187,21 @@ export class ChatRoutesDocs {
       ApiVerifiedAuthDocs(),
       ApiYouMustBeChatOwnerResponse(),
       ApiChatIdDocs(),
+    );
+  }
+
+  static JoinToChat() {
+    return applyDecorators(
+      ApiOperation({
+        summary: 'Join to chat',
+        description: 'Adds you in public chat',
+      }),
+      ApiOkResponse({ description: 'User added' }),
+      ApiUserIdDocs(),
+      ApiConflictResponse({
+        description: 'User already is a participant of the chat',
+      }),
+      ApiChatMustBeGroupResponse(),
     );
   }
 }

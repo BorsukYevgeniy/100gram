@@ -18,6 +18,7 @@ import { randomBytes } from 'crypto';
 import { ChatToUser } from '../../../generated/prisma/browser';
 import { PaginationDto } from '../../common/dto/pagination.dto';
 import { CacheService } from '../cache/cache.service';
+import { ChatMemberService } from './chat-member/chat-member.service';
 import { ChatMemberRepository } from './chat-member/repository/chat-member.repository';
 import { ChannelGroupChatResponseDto } from './dto/channel-group-chat-response.dto';
 import { CreateChannelDto } from './dto/create-channel.dto';
@@ -30,6 +31,7 @@ export class ChatService {
     private readonly chatRepo: ChatRepository,
     private readonly chatUserRepo: ChatMemberRepository,
     private readonly chatValidator: ChatValidationService,
+    private readonly chatUserService: ChatMemberService,
     private readonly cache: CacheService,
     private readonly logger: PinoLogger,
   ) {
@@ -315,5 +317,17 @@ export class ChatService {
     );
 
     return result;
+  }
+
+  async joinToChat(chatId: number, user: AccessTokenPayload) {
+    await this.chatValidator.validateChatType(
+      chatId,
+      ChatType.GROUP,
+      ChatType.CHANNEL,
+    );
+
+    await this.chatValidator.validateChatVisibility(chatId, Visibility.PUBLIC);
+
+    return this.chatUserService.addUserToChat(chatId, user.id);
   }
 }
