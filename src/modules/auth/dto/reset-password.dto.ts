@@ -5,7 +5,6 @@ import { Trim } from '../../../common/decorators/validation/trim.decorator';
 export class ResetPasswordDto {
   @ApiProperty({
     type: Number,
-
     description: 'Code that you can give on your email',
     required: true,
     minimum: 100_000,

@@ -2,20 +2,25 @@ import { ValidationPipe } from '@nestjs/common';
 import { ConfigModule, ConfigType } from '@nestjs/config';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import { Test, TestingModule } from '@nestjs/testing';
+import { hashSync } from 'bcryptjs';
 import cookieParser from 'cookie-parser';
+import { randomInt } from 'crypto';
 import { LoggerModule } from 'nestjs-pino';
 import request from 'supertest';
+import authConfig from '../src/config/auth.config';
 import databaseConfig from '../src/config/database.config';
 import pinoConfig from '../src/config/pino.config';
 import { PrismaModule } from '../src/infra/prisma/prisma.module';
 import { PrismaService } from '../src/infra/prisma/prisma.service';
 import { AuthModule } from '../src/modules/auth/auth.module';
 import { LoginDto } from '../src/modules/auth/dto/login.dto';
+import { ResetPasswordDto } from '../src/modules/auth/dto/reset-password.dto';
 import { CreateUserDto } from '../src/modules/user/dto/create-user.dto';
 
 describe('AuthController (e2e)', () => {
   let app: NestExpressApplication;
   let prisma: PrismaService;
+  let passwordSalt: number;
 
   beforeAll(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
@@ -36,6 +41,11 @@ describe('AuthController (e2e)', () => {
     }).compile();
 
     app = moduleFixture.createNestApplication();
+
+    const authConf = app.get<ConfigType<typeof authConfig>>(authConfig.KEY);
+
+    passwordSalt = authConf.passwordSalt;
+
     prisma = app.get<PrismaService>(PrismaService);
 
     app.useGlobalPipes(
@@ -151,7 +161,7 @@ describe('AuthController (e2e)', () => {
     });
   });
 
-  describe('POST /auth/refresh', () => {
+  describe('POST /auth/refresh - Should refresh pair of tokens', () => {
     it('200 OK - Should refresh pair of tokens', async () => {
       const { headers } = await request(app.getHttpServer())
         .post('/auth/refresh')
@@ -166,6 +176,134 @@ describe('AuthController (e2e)', () => {
         .post('/auth/refresh')
         .set('Cookie', 'refresh_token=1')
         .expect(401);
+    });
+  });
+
+  describe('POST /auth/verify - Should verify a user', () => {
+    it('POST /auth/verify - 200 OK - Should verify user', async () => {
+      const { verificationCode } = await prisma.user.findUnique({
+        where: { email: 'user@gmail.com' },
+      });
+
+      await request(app.getHttpServer())
+        .post(`/auth/verify/${verificationCode}`)
+        .expect(200);
+    });
+
+    it('POST /auth/verify - 400 BAD REQUEST - Should return 400 because user is already verified', async () => {
+      const { verificationCode } = await prisma.user.findUnique({
+        where: { email: 'user@gmail.com' },
+      });
+
+      await request(app.getHttpServer())
+        .post(`/auth/verify/${verificationCode}`)
+        .expect(400);
+    });
+
+    it('POST /auth/verify - 404 NOT FOUND - Should return 404 if user does not exist', async () => {
+      await request(app.getHttpServer())
+        .post('/auth/verify/00000000-0000-0000-0000-000000000000')
+        .expect(404);
+    });
+  });
+
+  describe('POST /auth/resend-verification-email - Should resend verification email', () => {
+    it('POST /auth/resend-verification-email - 200 OK - Should resend verification email', async () => {
+      await request(app.getHttpServer())
+        .post('/auth/resend-verification-email')
+        .set('Cookie', [`access_token=${accessToken}`])
+        .expect(200);
+    });
+
+    it('POST /auth/resend-verification-email - 401 UNAUTHORIZED - Should return 401 because user is unauthorized', async () => {
+      await request(app.getHttpServer())
+        .post('/auth/resend-verification-email')
+        .expect(401);
+    });
+  });
+
+  describe('POST /auth/send-otp-email - Should send email with otp', () => {
+    it('POST /auth/send-otp-email - 200 OK - Should send email with otp', async () => {
+      await request(app.getHttpServer())
+        .post('/auth/send-otp-email')
+        .set('Cookie', [`access_token=${accessToken}`])
+        .expect(200);
+    });
+
+    it('POST /auth/send-otp-email - 401 UNAUTHORIZED - Should return 401 because user is unauthorized', async () => {
+      await request(app.getHttpServer())
+        .post('/auth/send-otp-email')
+        .expect(401);
+    });
+  });
+
+  const otp = randomInt(100_000, 1_000_000);
+  describe('POST /auth/reset-password - Should reset password', () => {
+    it.each<[string, 200 | 400 | 401, ResetPasswordDto]>([
+      [
+        'POST /auth/reset-password - 201 CREATED - Should reset password of user',
+        200,
+        {
+          code: otp,
+          newPassword: 'strongPassword',
+        },
+      ],
+      [
+        'POST /auth/reset-password - 400 BAD REQUEST - Should return 400 http code because code is invalid',
+        400,
+        {
+          code: 123_56,
+          newPassword: 'veryStrongPassword',
+        },
+      ],
+      [
+        'POST /auth/reset-password - 400 BAD REQUEST - Should return 400 http code because newPassword is invalid',
+        400,
+        {
+          code: 123_456,
+          newPassword: '1234',
+        },
+      ],
+      [
+        'POST /auth/reset-password - 400 BAD REQUEST - Should return 400 http code because dto isnt valid',
+        400,
+        {
+          code: 123,
+          newPassword: '123',
+        },
+      ],
+      [
+        'POST /auth/reset-password - 400 BAD REQUEST - Should return 401 http code because user is unauthorized',
+        401,
+        {
+          code: 123_456,
+          newPassword: 'veryStrongPassword',
+        },
+      ],
+    ])('%s', async (_, statusCode, dto) => {
+      const r = request(app.getHttpServer())
+        .post('/auth/reset-password')
+        .send(dto)
+        .expect(statusCode);
+
+      switch (statusCode) {
+        case 200: {
+          await prisma.user.updateMany({
+            where: { tokens: { some: { token: refreshToken } } },
+            data: { otpHash: hashSync(otp.toString(), passwordSalt) },
+          });
+
+          await r.set('Cookie', [`access_token=${accessToken}`]);
+
+          break;
+        }
+        case 401:
+          await r;
+          break;
+        case 400:
+          await r.set('Cookie', [`access_token=${accessToken}`]);
+          break;
+      }
     });
   });
 
@@ -200,34 +338,6 @@ describe('AuthController (e2e)', () => {
         .post('/auth/logout-all')
         .set('Cookie', 'access_token=1')
         .expect(401);
-    });
-  });
-
-  describe('POST /auth/verify', () => {
-    it('should verify user', async () => {
-      const { verificationCode } = await prisma.user.findUnique({
-        where: { email: 'user@gmail.com' },
-      });
-
-      await request(app.getHttpServer())
-        .post(`/auth/verify/${verificationCode}`)
-        .expect(200);
-    });
-
-    it('should return 400 if user is already verified', async () => {
-      const { verificationCode } = await prisma.user.findUnique({
-        where: { email: 'user@gmail.com' },
-      });
-
-      await request(app.getHttpServer())
-        .post(`/auth/verify/${verificationCode}`)
-        .expect(400);
-    });
-
-    it('should return 404 if user does not exist', async () => {
-      await request(app.getHttpServer())
-        .post('/auth/verify/00000000-0000-0000-0000-000000000000')
-        .expect(404);
     });
   });
 
