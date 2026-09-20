@@ -1,6 +1,7 @@
 import {
   CanActivate,
   ExecutionContext,
+  ForbiddenException,
   Injectable,
   UnauthorizedException,
 } from '@nestjs/common';
@@ -46,8 +47,16 @@ export class AdminGuard implements CanActivate {
         isVerified: payload.isVerified,
       });
 
-      return payload.role === Role.ADMIN;
-    } catch {
+      if (payload.role !== Role.ADMIN)
+        throw new ForbiddenException(
+          'You must be an administator to access this resource',
+        );
+
+      return true;
+    } catch (e) {
+      if (e instanceof ForbiddenException) {
+        throw e;
+      }
       throw new UnauthorizedException(
         'You must be authorized to access this resource',
       );

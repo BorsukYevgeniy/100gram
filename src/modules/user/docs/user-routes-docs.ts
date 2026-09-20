@@ -1,5 +1,9 @@
 import { applyDecorators } from '@nestjs/common';
-import { ApiOkResponse, ApiOperation } from '@nestjs/swagger';
+import {
+  ApiConflictResponse,
+  ApiOkResponse,
+  ApiOperation,
+} from '@nestjs/swagger';
 import { ApiAdminAuthDocs } from '../../../common/decorators/docs/auth';
 import { ApiUserIdDocs } from './shared';
 
@@ -34,6 +38,7 @@ export class ApiUserRoutesDocs {
       ApiOkResponse({ description: 'Admin assigned successfully' }),
       ApiUserIdDocs(),
       ApiAdminAuthDocs(),
+      ApiConflictResponse({ description: 'Admin must be a verified user' }),
     );
   }
 

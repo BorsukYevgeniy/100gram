@@ -60,10 +60,10 @@ export class UserRepository {
     });
   }
 
-  async assingAdmin(id: number): Promise<UserNoCredOtpVCode> {
+  async updateUserRole(id: number, role: Role): Promise<UserNoCredOtpVCode> {
     return this.prisma.user.update({
       where: { id },
-      data: { role: Role.ADMIN },
+      data: { role },
       omit: {
         email: true,
         verificationCode: true,

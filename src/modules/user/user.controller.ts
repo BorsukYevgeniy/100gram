@@ -22,15 +22,6 @@ import { ApiUserControllerDocs, ApiUserRoutesDocs } from './docs';
 export class UserController {
   constructor(private readonly userService: UserService) {}
 
-  @ApiUserRoutesDocs.GetById()
-  @UseGuards(AuthGuard)
-  @Get(':userId')
-  async getById(
-    @Param('userId', ParseIntPipe) userId: number,
-  ): Promise<UserNoCredOtpVCode> {
-    return this.userService.findById(userId);
-  }
-
   @ApiUserRoutesDocs.GetMe()
   @UseGuards(AuthGuard)
   @Get('me')
@@ -38,6 +29,15 @@ export class UserController {
     @CurrentUser() user: AccessTokenPayload,
   ): Promise<UserNoCredOtpVCode> {
     return this.userService.findById(user.id);
+  }
+
+  @ApiUserRoutesDocs.GetById()
+  @UseGuards(AuthGuard)
+  @Get(':userId')
+  async getById(
+    @Param('userId', ParseIntPipe) userId: number,
+  ): Promise<UserNoCredOtpVCode> {
+    return this.userService.findById(userId);
   }
 
   @ApiUserRoutesDocs.AssignAdmin()

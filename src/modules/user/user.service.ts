@@ -1,7 +1,11 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  ConflictException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { PrismaClientKnownRequestError } from '@prisma/client/runtime/client';
 import { PinoLogger } from 'nestjs-pino';
-import { User } from '../../../generated/prisma/client';
+import { Role, User } from '../../../generated/prisma/client';
 import { AccessTokenPayload } from '../../common/types';
 import { ChatMemberRepository } from '../chat/chat-member/repository/chat-member.repository';
 import { ChatService } from '../chat/chat.service';
@@ -62,15 +66,23 @@ export class UserService {
     return user;
   }
 
-  async assignAdmin(id: number): Promise<UserNoCredOtpVCode> {
+  async assignAdmin(userId: number): Promise<UserNoCredOtpVCode> {
     try {
-      const admin = await this.userRepository.assingAdmin(id);
+      const admin = await this.userRepository.updateUserRole(
+        userId,
+        Role.ADMIN,
+      );
 
-      this.logger.info({ userId: id }, 'User assigned as admin successfully');
+      if (!admin.isVerified) {
+        await this.userRepository.updateUserRole(userId, Role.USER);
+        throw new ConflictException('Admin must be a verified user');
+      }
+
+      this.logger.info({ userId }, 'User assigned as admin successfully');
       return admin;
     } catch (e) {
       if (e instanceof PrismaClientKnownRequestError && e.code === 'P2025') {
-        this.logger.warn({ userId: id }, "User doesn't exist");
+        this.logger.warn({ userId }, "User doesn't exist");
         throw new NotFoundException('User not found');
       }
       throw e;
@@ -85,12 +97,21 @@ export class UserService {
 
     // Delete user if he dont have chats where he is owner
     if (!chats || chats.length === 0) {
-      const deletedUser = await this.userRepository.delete(userId);
-      this.logger.info(
-        { userId: deletedUser.id },
-        'User deleted (no owned chats)',
-      );
-      return deletedUser;
+      try {
+        const deletedUser = await this.userRepository.delete(userId);
+
+        this.logger.info(
+          { userId: deletedUser.id },
+          'User deleted (no owned chats)',
+        );
+        return deletedUser;
+      } catch (e) {
+        if (e instanceof PrismaClientKnownRequestError && e.code === 'P2025') {
+          this.logger.warn({ userId }, 'User not found');
+          throw new NotFoundException('User not found');
+        }
+        throw e;
+      }
     }
 
     // Find new owner for every chat where user is owner
