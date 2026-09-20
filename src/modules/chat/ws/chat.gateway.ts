@@ -1,4 +1,4 @@
-import { UseFilters, UseGuards, UsePipes } from '@nestjs/common';
+import { Inject, UseFilters, UseGuards, UsePipes } from '@nestjs/common';
 import {
   ConnectedSocket,
   MessageBody,
@@ -22,7 +22,9 @@ import { HttpToWsExceptionsFilter } from './exception-filter/ws-exception.filter
 import { WsVerifiedAuthGuard } from './guard/ws-verified-auth.guard';
 import WsValidationPipe from './pipe/ws-validation.pipe';
 
+import { ConfigType } from '@nestjs/config';
 import { PinoLogger } from 'nestjs-pino';
+import appConfig from '../../../config/app.config';
 import { WsAddReactionDto } from '../../reaction/dto/ws/ws-add-reaction.dto';
 import { WsRemoveReactionDto } from '../../reaction/dto/ws/ws-remove-reaction.dto';
 import { ReactionService } from '../../reaction/reaction.service';
@@ -48,12 +50,14 @@ export class ChatGateway
     private readonly chatValidator: ChatValidationService,
     private readonly messageService: MessageService,
     private readonly reactionService: ReactionService,
+    @Inject(appConfig.KEY)
+    private readonly appConf: ConfigType<typeof appConfig>,
     private readonly logger: PinoLogger,
   ) {}
 
   afterInit() {
     this.logger.debug(
-      `WebSocket initialized on ws://localhost:${process.env.PORT}`,
+      `WebSocket initialized on ws://localhost:${this.appConf.appPort}`,
     );
   }
 

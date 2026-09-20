@@ -1,4 +1,6 @@
 import { Module } from '@nestjs/common';
+import { ConfigModule } from '@nestjs/config';
+import appConfig from '../../config/app.config';
 import { CacheModule } from '../cache/cache.module';
 import { FileModule } from '../file/file.module';
 import { MessageModule } from '../message/message.module';
@@ -27,6 +29,7 @@ import { ChatGateway } from './ws/chat.gateway';
     CacheModule,
     ReactionModule,
     ChatMemberRepositoryModule,
+    ConfigModule.forFeature(appConfig),
   ],
   controllers: [
     ChatMemberController,
