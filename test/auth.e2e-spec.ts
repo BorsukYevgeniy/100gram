@@ -180,21 +180,22 @@ describe('AuthController (e2e)', () => {
   });
 
   describe('POST /auth/verify - Should verify a user', () => {
-    it('POST /auth/verify - 200 OK - Should verify user', async () => {
-      const { verificationCode } = await prisma.user.findUnique({
-        where: { email: 'user@gmail.com' },
-      });
+    let verificationCode: string;
+    beforeAll(async () => {
+      verificationCode = (
+        await prisma.user.findUnique({
+          where: { email: 'user@gmail.com' },
+        })
+      ).verificationCode;
+    });
 
+    it('POST /auth/verify - 200 OK - Should verify user', async () => {
       await request(app.getHttpServer())
         .post(`/auth/verify/${verificationCode}`)
         .expect(200);
     });
 
     it('POST /auth/verify - 400 BAD REQUEST - Should return 400 because user is already verified', async () => {
-      const { verificationCode } = await prisma.user.findUnique({
-        where: { email: 'user@gmail.com' },
-      });
-
       await request(app.getHttpServer())
         .post(`/auth/verify/${verificationCode}`)
         .expect(400);
@@ -239,15 +240,37 @@ describe('AuthController (e2e)', () => {
 
   const otp = randomInt(100_000, 1_000_000);
   describe('POST /auth/reset-password - Should reset password', () => {
-    it.each<[string, 200 | 400 | 401, ResetPasswordDto]>([
-      [
-        'POST /auth/reset-password - 201 CREATED - Should reset password of user',
-        200,
-        {
+    beforeAll(async () => {
+      await prisma.user.updateMany({
+        where: { tokens: { some: { token: refreshToken } } },
+        data: { otpHash: hashSync(otp.toString(), passwordSalt) },
+      });
+    });
+
+    it('POST /auth/reset-password - 400 BAD REQUEST - Should return 400 code because otp is invalid', async () => {
+      await request(app.getHttpServer())
+        .post('/auth/reset-password')
+        .send({
+          code: otp + 1,
+          newPassword: 'strongPassword',
+        })
+        .set('Cookie', [`access_token=${accessToken}`])
+        .expect(400);
+    });
+
+    it('POST /auth/reset-password - 200 OK - Should reset password of user', async () => {
+      await request(app.getHttpServer())
+        .post('/auth/reset-password')
+        .send({
           code: otp,
           newPassword: 'strongPassword',
-        },
-      ],
+        })
+        .expect(200)
+        .set('Cookie', [`access_token=${accessToken}`]);
+    });
+
+    // Tests for dto validation and authorization of user
+    it.each<[string, 400 | 401, ResetPasswordDto]>([
       [
         'POST /auth/reset-password - 400 BAD REQUEST - Should return 400 http code because code is invalid',
         400,
@@ -286,24 +309,9 @@ describe('AuthController (e2e)', () => {
         .send(dto)
         .expect(statusCode);
 
-      switch (statusCode) {
-        case 200: {
-          await prisma.user.updateMany({
-            where: { tokens: { some: { token: refreshToken } } },
-            data: { otpHash: hashSync(otp.toString(), passwordSalt) },
-          });
-
-          await r.set('Cookie', [`access_token=${accessToken}`]);
-
-          break;
-        }
-        case 401:
-          await r;
-          break;
-        case 400:
-          await r.set('Cookie', [`access_token=${accessToken}`]);
-          break;
-      }
+      statusCode === 400
+        ? await r.set('Cookie', [`access_token=${accessToken}`])
+        : await r;
     });
   });
 
