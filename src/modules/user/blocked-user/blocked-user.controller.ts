@@ -3,6 +3,7 @@ import {
   Delete,
   Get,
   Param,
+  ParseIntPipe,
   Post,
   UseGuards,
 } from '@nestjs/common';
@@ -26,7 +27,7 @@ export class BlockedUserController {
   @ApiBlockedUserRouterDocs.BlockUser()
   @Post('block/:blockedId')
   async blockUser(
-    @Param('blockedId') blockedId: number,
+    @Param('blockedId', ParseIntPipe) blockedId: number,
     @CurrentUser() user: AccessTokenPayload,
   ) {
     return this.blockedUserService.blockUser(user.id, blockedId);
@@ -35,7 +36,7 @@ export class BlockedUserController {
   @ApiBlockedUserRouterDocs.UnBlockUser()
   @Delete('block/:blockedId')
   async unblockUser(
-    @Param('blockedId') blockedId: number,
+    @Param('blockedId', ParseIntPipe) blockedId: number,
     @CurrentUser() user: AccessTokenPayload,
   ) {
     return this.blockedUserService.unblockUser(user.id, blockedId);

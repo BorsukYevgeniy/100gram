@@ -4,6 +4,7 @@ import {
   HttpCode,
   HttpStatus,
   Param,
+  ParseIntPipe,
   Patch,
   UploadedFile,
   UseGuards,
@@ -44,7 +45,7 @@ export class UserAvatarController {
   @Delete(':userId/avatar')
   @HttpCode(HttpStatus.NO_CONTENT)
   @UseGuards(AdminGuard)
-  async deleteUserAvatar(@Param('userId') userId: number) {
+  async deleteUserAvatar(@Param('userId', ParseIntPipe) userId: number) {
     return this.userAvatarService.deleteAvatar(userId);
   }
 }

@@ -4,6 +4,7 @@ import {
   Delete,
   Get,
   Param,
+  ParseIntPipe,
   Patch,
   Post,
   Query,
@@ -75,7 +76,7 @@ export class ChatController {
   @Patch(':chatId/invite-token')
   async updateInviteToken(
     @CurrentUser() user: AccessTokenPayload,
-    @Param('chatId') chatId: number,
+    @Param('chatId', ParseIntPipe) chatId: number,
   ) {
     return this.chatService.updateInviteToken(user, chatId);
   }
@@ -84,7 +85,7 @@ export class ChatController {
   @Get(':chatId')
   async findOne(
     @CurrentUser() user: AccessTokenPayload,
-    @Param('chatId') id: number,
+    @Param('chatId', ParseIntPipe) id: number,
   ) {
     return this.chatService.findById(user, id);
   }
@@ -92,7 +93,7 @@ export class ChatController {
   @ChatRoutesDocs.UpdateOwner()
   @Patch(':chatId/owner/:ownerId')
   async updateOwner(
-    @Param('chatId') chatId: number,
+    @Param('chatId', ParseIntPipe) chatId: number,
     @Param('ownerId') ownerId: number,
     @CurrentUser() user: AccessTokenPayload,
   ) {
@@ -102,7 +103,7 @@ export class ChatController {
   @ChatRoutesDocs.UpdateGroupChat()
   @Patch(':chatId')
   async updateGroupChat(
-    @Param('chatId') chatId: number,
+    @Param('chatId', ParseIntPipe) chatId: number,
     @Body() updateChatDto: UpdateGroupChatDto,
   ) {
     return this.chatService.updateGroupChat(chatId, updateChatDto);
@@ -112,7 +113,7 @@ export class ChatController {
   @Delete(':chatId')
   async delete(
     @CurrentUser() user: AccessTokenPayload,
-    @Param('chatId') chatId: number,
+    @Param('chatId', ParseIntPipe) chatId: number,
   ) {
     return this.chatService.delete(user, chatId);
   }
@@ -120,7 +121,7 @@ export class ChatController {
   @ChatRoutesDocs.JoinToChat()
   @Post('join/:chatId')
   async join(
-    @Param('chatId') chatId: number,
+    @Param('chatId', ParseIntPipe) chatId: number,
     @CurrentUser() user: AccessTokenPayload,
   ) {
     return this.chatService.joinToChat(chatId, user);

@@ -3,6 +3,7 @@ import {
   Delete,
   Get,
   Param,
+  ParseIntPipe,
   Patch,
   UseGuards,
 } from '@nestjs/common';
@@ -24,7 +25,9 @@ export class UserController {
   @ApiUserRoutesDocs.GetById()
   @UseGuards(AuthGuard)
   @Get(':userId')
-  async getById(@Param('userId') userId: number): Promise<UserNoCredOtpVCode> {
+  async getById(
+    @Param('userId', ParseIntPipe) userId: number,
+  ): Promise<UserNoCredOtpVCode> {
     return this.userService.findById(userId);
   }
 
@@ -41,7 +44,7 @@ export class UserController {
   @UseGuards(AdminGuard)
   @Patch('assign-admin/:userId')
   async assignAdmin(
-    @Param('userId') userId: number,
+    @Param('userId', ParseIntPipe) userId: number,
   ): Promise<UserNoCredOtpVCode> {
     return this.userService.assignAdmin(userId);
   }
@@ -60,7 +63,7 @@ export class UserController {
   @Delete(':userId')
   async deleteUserById(
     @CurrentUser() user: AccessTokenPayload,
-    @Param('userId') userId: number,
+    @Param('userId', ParseIntPipe) userId: number,
   ): Promise<UserNoCredOtpVCode> {
     return this.userService.delete(user, userId);
   }

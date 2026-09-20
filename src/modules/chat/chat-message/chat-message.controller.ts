@@ -3,6 +3,7 @@ import {
   Controller,
   Get,
   Param,
+  ParseIntPipe,
   Post,
   Query,
   UploadedFiles,
@@ -30,7 +31,7 @@ export class ChatMessageController {
   @Get()
   async getAllMessagesInChat(
     @CurrentUser() user: AccessTokenPayload,
-    @Param('chatId') chatId: number,
+    @Param('chatId', ParseIntPipe) chatId: number,
     @Query() paginationDto: PaginationDto,
   ): Promise<PaginatedMessageFiles> {
     return this.chatMessageService.getAllMessagesInChat(
@@ -45,7 +46,7 @@ export class ChatMessageController {
   @UseInterceptors(MessageFilesInterceptor)
   async create(
     @CurrentUser() user: AccessTokenPayload,
-    @Param('chatId') chatId: number,
+    @Param('chatId', ParseIntPipe) chatId: number,
     @Body() createMessageDto: CreateMessageDto,
     @UploadedFiles() files: Express.Multer.File[],
   ): Promise<Message> {

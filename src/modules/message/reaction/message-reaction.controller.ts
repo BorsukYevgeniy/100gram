@@ -3,6 +3,7 @@ import {
   Controller,
   Delete,
   Param,
+  ParseIntPipe,
   Patch,
   Post,
   UseGuards,
@@ -28,7 +29,7 @@ export class MessageReactionController {
   @Post()
   async addReaction(
     @CurrentUser() user: AccessTokenPayload,
-    @Param('messageId') messageId: number,
+    @Param('messageId', ParseIntPipe) messageId: number,
     @Body() dto: AddReactionDto,
   ) {
     return this.reactionService.addReaction(user.id, messageId, dto);
@@ -38,7 +39,7 @@ export class MessageReactionController {
   @Patch()
   async updateReaction(
     @CurrentUser() user: AccessTokenPayload,
-    @Param('messageId') messageId: number,
+    @Param('messageId', ParseIntPipe) messageId: number,
     @Body() dto: UpdateReactionDto,
   ) {
     return this.reactionService.updateReaction(user.id, messageId, dto);
@@ -48,7 +49,7 @@ export class MessageReactionController {
   @Delete()
   async removeReaction(
     @CurrentUser() user: AccessTokenPayload,
-    @Param('messageId') messageId: number,
+    @Param('messageId', ParseIntPipe) messageId: number,
   ) {
     return this.reactionService.removeReaction(user.id, messageId);
   }

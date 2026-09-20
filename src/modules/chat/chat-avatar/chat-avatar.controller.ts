@@ -4,6 +4,7 @@ import {
   HttpCode,
   HttpStatus,
   Param,
+  ParseIntPipe,
   Patch,
   UploadedFile,
   UseGuards,
@@ -27,7 +28,7 @@ export class ChatAvatarController {
   @Patch('avatar')
   @UseInterceptors(AvatarInterceptor)
   async updateAvatar(
-    @Param('chatId') chatId: number,
+    @Param('chatId', ParseIntPipe) chatId: number,
     @CurrentUser() user: AccessTokenPayload,
     @UploadedFile() file: Express.Multer.File,
   ) {
@@ -38,7 +39,7 @@ export class ChatAvatarController {
   @Delete('avatar')
   @HttpCode(HttpStatus.NO_CONTENT)
   async deleteAvatar(
-    @Param('chatId') chatId: number,
+    @Param('chatId', ParseIntPipe) chatId: number,
     @CurrentUser() user: AccessTokenPayload,
   ) {
     return this.chatAvatarService.deleteAvatar(chatId, user);

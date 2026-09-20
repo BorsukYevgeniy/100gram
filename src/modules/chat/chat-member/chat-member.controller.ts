@@ -4,6 +4,7 @@ import {
   Delete,
   Get,
   Param,
+  ParseIntPipe,
   Patch,
   Post,
   Query,
@@ -28,7 +29,7 @@ export class ChatMemberController {
   @Get()
   async getUsersInChat(
     @CurrentUser() user: AccessTokenPayload,
-    @Param('chatId') chatId: number,
+    @Param('chatId', ParseIntPipe) chatId: number,
     @Query() paginationDto: PaginationDto,
   ): Promise<PaginatedUserNoCredOtpVCode> {
     return this.chatMemberService.getUsersInChat(user, chatId, paginationDto);
@@ -37,8 +38,8 @@ export class ChatMemberController {
   @ChatMemberRoutesDocs.AddUserToChat()
   @Post(':userId')
   async addUserToChat(
-    @Param('chatId') chatId: number,
-    @Param('userId') userId: number,
+    @Param('chatId', ParseIntPipe) chatId: number,
+    @Param('userId', ParseIntPipe) userId: number,
   ) {
     return this.chatMemberService.addUserToChat(chatId, userId);
   }
@@ -46,8 +47,8 @@ export class ChatMemberController {
   @ChatMemberRoutesDocs.DeleteUserFromChat()
   @Delete(':userId')
   async deleteUserFromChat(
-    @Param('chatId') chatId: number,
-    @Param('userId') userId: number,
+    @Param('chatId', ParseIntPipe) chatId: number,
+    @Param('userId', ParseIntPipe) userId: number,
     @CurrentUser() currentUser: AccessTokenPayload,
   ) {
     return this.chatMemberService.deleteUserFromChat(
@@ -60,8 +61,8 @@ export class ChatMemberController {
   @ChatMemberRoutesDocs.UpdateUserRole()
   @Patch(':userId/role')
   async updateUserRole(
-    @Param('chatId') chatId: number,
-    @Param('userId') userId: number,
+    @Param('chatId', ParseIntPipe) chatId: number,
+    @Param('userId', ParseIntPipe) userId: number,
     @Body() dto: UpdateRoleDto,
     @CurrentUser() currentUser: AccessTokenPayload,
   ) {
