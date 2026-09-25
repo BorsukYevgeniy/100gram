@@ -13,6 +13,11 @@ import pinoConfig from '../src/config/pino.config';
 import { PrismaService } from '../src/infra/prisma/prisma.service';
 import { AuthModule } from '../src/modules/auth/auth.module';
 import { UserModule } from '../src/modules/user/user.module';
+import {
+  forbiddenResponse,
+  unauthorizedResponse,
+  userNotFoundResponse,
+} from './const/response.const';
 
 const userResponse = {
   createdAt: expect.any(String),
@@ -26,22 +31,6 @@ const userResponse = {
   provider: Provider.LOCAL,
 };
 const adminResponse = { ...userResponse, role: Role.ADMIN, isVerified: true };
-const unauthorizedResponse = {
-  error: 'Unauthorized',
-  message: 'You must be authorized to access this resource',
-  statusCode: 401,
-};
-
-const forbiddenResponse = {
-  error: 'Forbidden',
-  message: 'You must be an administator to access this resource',
-  statusCode: 403,
-};
-const notFoundResponse = {
-  error: 'Not Found',
-  message: 'User not found',
-  statusCode: 404,
-};
 
 describe('UserController (e2e)', () => {
   let app: NestExpressApplication;
@@ -165,7 +154,7 @@ describe('UserController (e2e)', () => {
         .set('Cookie', [`access_token=${userAccessToken}`])
         .expect(404);
 
-      expect(body).toEqual(notFoundResponse);
+      expect(body).toEqual(userNotFoundResponse);
     });
   });
 
@@ -212,7 +201,7 @@ describe('UserController (e2e)', () => {
         .set('Cookie', [`access_token=${adminAccessToken}`])
         .expect(404);
 
-      expect(body).toEqual(notFoundResponse);
+      expect(body).toEqual(userNotFoundResponse);
     });
 
     it('PATCH /users/assign-admin/:userId - 409 CONFLICT - Should return 409 code because user isnt verified', async () => {
@@ -276,7 +265,7 @@ describe('UserController (e2e)', () => {
         .set('Cookie', [`access_token=${adminAccessToken}`])
         .expect(404);
 
-      expect(body).toEqual(notFoundResponse);
+      expect(body).toEqual(userNotFoundResponse);
     });
   });
 
@@ -304,7 +293,7 @@ describe('UserController (e2e)', () => {
         .set('Cookie', [`access_token=${adminAccessToken}`])
         .expect(404);
 
-      expect(body).toEqual(notFoundResponse);
+      expect(body).toEqual(userNotFoundResponse);
     });
   });
 

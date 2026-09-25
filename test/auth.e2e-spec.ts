@@ -16,6 +16,10 @@ import { AuthModule } from '../src/modules/auth/auth.module';
 import { LoginDto } from '../src/modules/auth/dto/login.dto';
 import { ResetPasswordDto } from '../src/modules/auth/dto/reset-password.dto';
 import { CreateUserDto } from '../src/modules/user/dto/create-user.dto';
+import {
+  unauthorizedResponse,
+  userNotFoundResponse,
+} from './const/response.const';
 
 describe('AuthController (e2e)', () => {
   let app: NestExpressApplication;
@@ -172,10 +176,12 @@ describe('AuthController (e2e)', () => {
     });
 
     it('401 UNAUTHORIZED - Should return 401 code because token is invalid', async () => {
-      await request(app.getHttpServer())
+      const { body } = await request(app.getHttpServer())
         .post('/auth/refresh')
         .set('Cookie', 'refresh_token=1')
         .expect(401);
+
+      expect(body).toEqual(unauthorizedResponse);
     });
   });
 
@@ -202,9 +208,11 @@ describe('AuthController (e2e)', () => {
     });
 
     it('POST /auth/verify - 404 NOT FOUND - Should return 404 if user does not exist', async () => {
-      await request(app.getHttpServer())
+      const { body } = await request(app.getHttpServer())
         .post('/auth/verify/00000000-0000-0000-0000-000000000000')
         .expect(404);
+
+      expect(body).toEqual(userNotFoundResponse);
     });
   });
 
@@ -217,9 +225,11 @@ describe('AuthController (e2e)', () => {
     });
 
     it('POST /auth/resend-verification-email - 401 UNAUTHORIZED - Should return 401 because user is unauthorized', async () => {
-      await request(app.getHttpServer())
+      const { body } = await request(app.getHttpServer())
         .post('/auth/resend-verification-email')
         .expect(401);
+
+      expect(body).toEqual(unauthorizedResponse);
     });
   });
 
@@ -232,9 +242,11 @@ describe('AuthController (e2e)', () => {
     });
 
     it('POST /auth/send-otp-email - 401 UNAUTHORIZED - Should return 401 because user is unauthorized', async () => {
-      await request(app.getHttpServer())
+      const { body } = await request(app.getHttpServer())
         .post('/auth/send-otp-email')
         .expect(401);
+
+      expect(body).toEqual(unauthorizedResponse);
     });
   });
 
@@ -309,9 +321,14 @@ describe('AuthController (e2e)', () => {
         .send(dto)
         .expect(statusCode);
 
-      statusCode === 400
-        ? await r.set('Cookie', [`access_token=${accessToken}`])
-        : await r;
+      const response =
+        statusCode === 400
+          ? await r.set('Cookie', [`access_token=${accessToken}`])
+          : await r;
+
+      if (statusCode === 401) {
+        expect(response.body).toEqual(unauthorizedResponse);
+      }
     });
   });
 
@@ -326,10 +343,12 @@ describe('AuthController (e2e)', () => {
     });
 
     it('401 UNAUTHORIZED - Should return 401 code because client is unauthorized', async () => {
-      await request(app.getHttpServer())
+      const { body } = await request(app.getHttpServer())
         .post('/auth/logout')
         .set('Cookie', 'refresh_token=1')
         .expect(401);
+
+      expect(body).toEqual(unauthorizedResponse);
     });
   });
 
@@ -342,10 +361,12 @@ describe('AuthController (e2e)', () => {
     });
 
     it('401 UNAUTHORIZED - Should return 401 code because client is unauthorized', async () => {
-      await request(app.getHttpServer())
+      const { body } = await request(app.getHttpServer())
         .post('/auth/logout-all')
         .set('Cookie', 'access_token=1')
         .expect(401);
+
+      expect(body).toEqual(unauthorizedResponse);
     });
   });
 
