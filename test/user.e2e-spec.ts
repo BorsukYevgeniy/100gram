@@ -71,7 +71,7 @@ describe('UserController (e2e)', () => {
   }, 10_000);
 
   let adminAccessToken: string, userAccessToken: string;
-  let adminId: number, userId: number;
+  let userId: number;
 
   beforeAll(async () => {
     await prisma.user.deleteMany({});
@@ -79,7 +79,7 @@ describe('UserController (e2e)', () => {
 
     const hashedPassword = hashSync('password', passwordSalt);
 
-    const [user, admin] = await Promise.all([
+    const [user] = await Promise.all([
       prisma.user.create({
         data: {
           email: 'user@gmail.com',
@@ -120,7 +120,6 @@ describe('UserController (e2e)', () => {
     userAccessToken = userHeaders['set-cookie'][0].split('=')[1].split(';')[0];
 
     userId = user.id;
-    adminId = admin.id;
   }, 15_000);
 
   describe('GET /users/:userId - Should return user by id', () => {
@@ -217,6 +216,13 @@ describe('UserController (e2e)', () => {
       });
     });
 
+    it('PATCH /users/assign-admin/:userId - 400 BAD REQUEST - Should return 400 code because user id isnt number', async () => {
+      await request(app.getHttpServer())
+        .patch('/users/assign-admin/userId')
+        .set('Cookie', [`access_token=${adminAccessToken}`])
+        .expect(400);
+    });
+
     it('PATCH /users/assign-admin/:userId - 200 OK - Should assign user to admin', async () => {
       await prisma.user.update({
         where: { id: userId },
@@ -248,6 +254,13 @@ describe('UserController (e2e)', () => {
         .expect(403);
 
       expect(body).toEqual(adminForbiddenResponse);
+    });
+
+    it('DELETE /users/:userId - 400 BAD REQUEST - Should return 400 code because user id isnt number', async () => {
+      await request(app.getHttpServer())
+        .delete('/users/userId')
+        .set('Cookie', [`access_token=${adminAccessToken}`])
+        .expect(400);
     });
 
     it('DELETE /users/:userId - 204 OK - Should delete user by id', async () => {

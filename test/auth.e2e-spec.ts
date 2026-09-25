@@ -61,11 +61,11 @@ describe('AuthController (e2e)', () => {
     app.use(cookieParser());
     app.useLogger(false);
 
-    await prisma.user.deleteMany();
-    await prisma.token.deleteMany();
+    await prisma.user.deleteMany({});
+    await prisma.token.deleteMany({});
 
     await app.init();
-  }, 10_000);
+  });
 
   describe('POST /auth/register - Should register a new user', () => {
     it.each<[string, 201 | 400, CreateUserDto]>([
@@ -371,8 +371,8 @@ describe('AuthController (e2e)', () => {
   });
 
   afterAll(async () => {
-    await prisma.user.deleteMany();
-    await prisma.token.deleteMany();
+    await prisma.user.deleteMany({});
+    await prisma.token.deleteMany({});
     await app.close();
   });
 });
