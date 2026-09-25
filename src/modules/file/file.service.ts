@@ -21,7 +21,7 @@ export class FileService {
   private getKey(fileType: FileType) {
     switch (fileType) {
       case FileType.ATTACHMENT:
-        return 'attacments/';
+        return 'attachments/';
       case FileType.CHAT_AVATAR:
         return 'avatars/chats/';
       case FileType.USER_AVATAR:
@@ -30,7 +30,7 @@ export class FileService {
   }
 
   getFileUrl(filename: string, filetype: FileType) {
-    return filename + this.getKey(filetype);
+    return this.getKey(filetype) + filename;
   }
 
   async createFiles(

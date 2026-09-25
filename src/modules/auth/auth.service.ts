@@ -151,7 +151,6 @@ export class AuthService {
       return this.tokenService.update(id, role, isVerified, token);
     } catch (e) {
       if (e instanceof JsonWebTokenError) {
-        console.log(e);
         throw new UnauthorizedException(
           'You must be authorized to access this resource',
         );

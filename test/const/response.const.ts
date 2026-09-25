@@ -4,9 +4,15 @@ export const unauthorizedResponse = {
   statusCode: 401,
 };
 
-export const forbiddenResponse = {
+export const adminForbiddenResponse = {
   error: 'Forbidden',
   message: 'You must be an administator to access this resource',
+  statusCode: 403,
+};
+
+export const verifiedForbiddenResponse = {
+  error: 'Forbidden',
+  message: 'You must be a verified user to access this resource',
   statusCode: 403,
 };
 

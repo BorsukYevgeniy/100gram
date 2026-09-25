@@ -14,7 +14,7 @@ import { PrismaService } from '../src/infra/prisma/prisma.service';
 import { AuthModule } from '../src/modules/auth/auth.module';
 import { UserModule } from '../src/modules/user/user.module';
 import {
-  forbiddenResponse,
+  adminForbiddenResponse,
   unauthorizedResponse,
   userNotFoundResponse,
 } from './const/response.const';
@@ -192,7 +192,7 @@ describe('UserController (e2e)', () => {
         .set('Cookie', [`access_token=${userAccessToken}`])
         .expect(403);
 
-      expect(body).toEqual(forbiddenResponse);
+      expect(body).toEqual(adminForbiddenResponse);
     });
 
     it('PATCH /users/assign-admin/:userId - 404 NOT FOUND - Should return 404 code because user not found', async () => {
@@ -247,7 +247,7 @@ describe('UserController (e2e)', () => {
         .set('Cookie', [`access_token=${userAccessToken}`])
         .expect(403);
 
-      expect(body).toEqual(forbiddenResponse);
+      expect(body).toEqual(adminForbiddenResponse);
     });
 
     it('DELETE /users/:userId - 204 OK - Should delete user by id', async () => {

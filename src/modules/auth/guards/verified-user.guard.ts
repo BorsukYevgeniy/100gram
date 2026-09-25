@@ -51,7 +51,11 @@ export class VerifiedUserGuard implements CanActivate {
         );
 
       return true;
-    } catch {
+    } catch (e) {
+      if (e instanceof ForbiddenException) {
+        throw e;
+      }
+
       throw new UnauthorizedException(
         'You must be authorized to access this resource',
       );
