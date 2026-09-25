@@ -11,6 +11,7 @@ import {
 } from '../../common/types';
 import { TokenRepository } from './token.repository';
 
+import { randomUUID } from 'crypto';
 import jwtConfig from '../../config/jwt.config';
 
 @Injectable()
@@ -40,10 +41,13 @@ export class TokenService {
   }
 
   private async generateRefreshToken(userId: number): Promise<string> {
-    return this.jwtService.signAsync<RefreshTokenPayload>({ id: userId }, {
-      secret: this.config.jwtRefreshTokenSecret,
-      expiresIn: this.config.jwtRefreshTokenExpirationTime,
-    } as JwtSignOptions);
+    return this.jwtService.signAsync<RefreshTokenPayload>(
+      { id: userId, jti: randomUUID() },
+      {
+        secret: this.config.jwtRefreshTokenSecret,
+        expiresIn: this.config.jwtRefreshTokenExpirationTime,
+      } as JwtSignOptions,
+    );
   }
 
   async verifyAccessToken(token: string): Promise<AccessTokenPayload> {

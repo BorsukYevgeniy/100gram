@@ -14,7 +14,7 @@ import { validationSchema } from './config/schemas/validation.schema';
 @Module({
   imports: [
     ConfigModule.forRoot({
-      envFilePath: `.env${process.env.NODE_ENV}`,
+      envFilePath: `.env.${process.env.NODE_ENV}`,
       isGlobal: true,
       validationSchema: validationSchema,
     }),
