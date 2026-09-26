@@ -66,7 +66,7 @@ describe('UserAvatarController (e2e)', () => {
     await prisma.file.deleteMany({});
 
     await app.init();
-  }, 10_000);
+  });
 
   let adminAccessToken: string;
   let userAccessToken: string;

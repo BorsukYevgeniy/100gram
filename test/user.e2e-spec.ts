@@ -68,7 +68,7 @@ describe('UserController (e2e)', () => {
     app.useLogger(false);
 
     await app.init();
-  }, 10_000);
+  });
 
   let adminAccessToken: string, userAccessToken: string;
   let userId: number;
@@ -120,7 +120,7 @@ describe('UserController (e2e)', () => {
     userAccessToken = userHeaders['set-cookie'][0].split('=')[1].split(';')[0];
 
     userId = user.id;
-  }, 15_000);
+  });
 
   describe('GET /users/:userId - Should return user by id', () => {
     it('GET /users/:userId - 200 OK - Should return user searched by id', async () => {
