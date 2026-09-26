@@ -248,6 +248,8 @@ export class ChatService {
 
       return chat;
     } catch (e) {
+      console.log(1111111111111111111111111111111111);
+      console.log(e);
       if (e instanceof PrismaClientKnownRequestError && e.code === 'P2025') {
         this.logger.warn({ chatId }, 'Chat not found');
         throw new NotFoundException('Chat not found');

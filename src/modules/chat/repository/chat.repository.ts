@@ -20,7 +20,9 @@ export class ChatRepository {
       data: {
         chatType: ChatType.CHANNEL,
         ...dto,
-        owner: { connect: { id: ownerId } },
+        chatToUsers: {
+          create: { userId: ownerId, role: ChatRole.OWNER },
+        },
         inviteLink,
       },
     });
@@ -38,9 +40,11 @@ export class ChatRepository {
           create: [
             {
               userId: userId,
+              role: ChatRole.OWNER,
             },
             {
               userId: participantId,
+              role: ChatRole.OWNER,
             },
           ],
         },

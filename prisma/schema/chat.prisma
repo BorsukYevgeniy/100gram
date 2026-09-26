@@ -21,8 +21,9 @@ model Chat {
   avatar     File?   @relation("ChatAvatar", fields: [avatarName], references: [name], onDelete: SetNull)
 
   /**
-   * Private chats dont have owner, avatar, inviteToken, title and description.
+   * Private chats dont have avatar, inviteToken, title and description.
    * He's visibility is private by default and cant be changed.
+   * In Private chat 2 members are owners.
    */
 }
 

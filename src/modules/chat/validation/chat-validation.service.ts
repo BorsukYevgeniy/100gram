@@ -25,10 +25,10 @@ export class ChatValidationService {
 
     const owner = await this.chatUserRepo.findChatOwner(chatId);
 
-    // if (!chat) {
-    //   this.logger.warn({ chatId }, 'Chat not found');
-    //   throw new NotFoundException('Chat not found');
-    // }
+    if (!owner) {
+      this.logger.warn({ chatId }, 'Chat not found');
+      throw new NotFoundException('Chat not found');
+    }
 
     if (owner.userId !== user.id && user.role !== Role.ADMIN) {
       this.logger.warn({ userId: user.id, chatId }, 'User is not chat owner');
@@ -49,7 +49,7 @@ export class ChatValidationService {
       throw new NotFoundException('Chat not found');
     }
 
-    if (expectedTypes.includes(chat.chatType)) {
+    if (!expectedTypes.includes(chat.chatType)) {
       this.logger.warn(
         { chatId, expectedType: expectedTypes, actualType: chat.chatType },
         'Chat has invalid type',
@@ -72,7 +72,7 @@ export class ChatValidationService {
       throw new NotFoundException('Chat not found');
     }
 
-    if (expectedVisibility.includes(chat.visibility)) {
+    if (!expectedVisibility.includes(chat.visibility)) {
       this.logger.warn(
         { chatId, expectedVisibility, actualVisibilty: chat.visibility },
         'Chat has invalid visiblity',
