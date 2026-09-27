@@ -34,6 +34,7 @@ describe('ChatController (e2e)', () => {
   let guestId: number;
   let privateChatId: number;
   let groupChatId: number;
+  let channelId: number;
   let publicGroupId: number;
   let groupInviteToken: string;
 
@@ -389,6 +390,50 @@ describe('ChatController (e2e)', () => {
     });
   });
 
+  describe('POST /chats/channel - Should create a channel', () => {
+    it('POST /chats/channel - 401 UNAUTHORIZED - Should return 401 because user is unauthorized', async () => {
+      const { body } = await request(app.getHttpServer())
+        .post(`/chats/channel`)
+        .expect(401);
+
+      expect(body).toEqual(unauthorizedResponse);
+    });
+
+    it('POST /chats/channel - 403 FORBIDDEN - Should return 403 because user is not verified', async () => {
+      await request(app.getHttpServer())
+        .post(`/chats/channel`)
+        .set('Cookie', [`access_token=${unverifiedAccessToken}`])
+        .expect(403);
+    });
+
+    it('POST /chats/channel - 400 BAD REQUEST - Should return 400 because dto is invalid', async () => {
+      await request(app.getHttpServer())
+        .post('/chats/channel')
+        .send({ title: 'x', visibility: Visibility.PUBLIC })
+        .set('Cookie', [`access_token=${ownerAccessToken}`])
+        .expect(400);
+    });
+
+    it('POST /chats/channel - 201 CREATED - Should create a public channel', async () => {
+      const { body } = await request(app.getHttpServer())
+        .post('/chats/channel')
+        .send({ title: 'Public channel', visibility: Visibility.PUBLIC })
+        .set('Cookie', [`access_token=${ownerAccessToken}`])
+        .expect(201);
+
+      expect(body).toEqual(
+        expect.objectContaining({
+          id: expect.any(Number),
+          chatType: ChatType.CHANNEL,
+          visibility: Visibility.PUBLIC,
+          title: 'Public channel',
+        }),
+      );
+
+      channelId = body.id;
+    });
+  });
+
   describe('POST /chats/invite/:inviteToken - Should join a chat by invite token', () => {
     it('POST /chats/invite/:inviteToken - 401 UNAUTHORIZED - Should return 401 because user is unauthorized', async () => {
       const { body } = await request(app.getHttpServer())
@@ -431,7 +476,7 @@ describe('ChatController (e2e)', () => {
     });
   });
 
-  describe('PATCH /chats/:chatId - Should update a group chat', () => {
+  describe('PATCH /chats/:chatId - Should update a group chat and channel', () => {
     it('PATCH /chats/:chatId - 401 UNAUTHORIZED - Should return 401 because user is unauthorized', async () => {
       const { body } = await request(app.getHttpServer())
         .patch(`/chats/${groupChatId}`)
@@ -476,6 +521,26 @@ describe('ChatController (e2e)', () => {
           description: 'Updated description',
         }),
       );
+    });
+
+    it('PATCH /chats/:chatId - 200 OK - Should update the channel', async () => {
+      const { body } = await request(app.getHttpServer())
+        .patch(`/chats/${channelId}`)
+        .send({ title: 'Updated channel', description: 'Updated description' })
+        .set('Cookie', [`access_token=${ownerAccessToken}`])
+        .expect(200);
+
+      expect(body).toEqual({
+        avatarName: null,
+        chatType: ChatType.CHANNEL,
+        description: 'Updated description',
+        id: expect.any(Number),
+        inviteToken: null,
+        lastMessageId: null,
+        membersCount: 1,
+        title: 'Updated channel',
+        visibility: Visibility.PRIVATE,
+      });
     });
   });
 
@@ -645,48 +710,6 @@ describe('ChatController (e2e)', () => {
         .delete(`/chats/${groupChatId}`)
         .set('Cookie', [`access_token=${memberAccessToken}`])
         .expect(404);
-    });
-  });
-
-  describe('POST /chats/channel - Should create a channel', () => {
-    it('POST /chats/channel - 401 UNAUTHORIZED - Should return 401 because user is unauthorized', async () => {
-      const { body } = await request(app.getHttpServer())
-        .post(`/chats/channel`)
-        .expect(401);
-
-      expect(body).toEqual(unauthorizedResponse);
-    });
-
-    it('POST /chats/channel - 403 FORBIDDEN - Should return 403 because user is not verified', async () => {
-      await request(app.getHttpServer())
-        .post(`/chats/channel`)
-        .set('Cookie', [`access_token=${unverifiedAccessToken}`])
-        .expect(403);
-    });
-
-    it('POST /chats/channel - 400 BAD REQUEST - Should return 400 because dto is invalid', async () => {
-      await request(app.getHttpServer())
-        .post('/chats/channel')
-        .send({ title: 'x', visibility: Visibility.PUBLIC })
-        .set('Cookie', [`access_token=${ownerAccessToken}`])
-        .expect(400);
-    });
-
-    it('POST /chats/channel - 201 CREATED - Should create a public channel', async () => {
-      const { body } = await request(app.getHttpServer())
-        .post('/chats/channel')
-        .send({ title: 'Public channel', visibility: Visibility.PUBLIC })
-        .set('Cookie', [`access_token=${ownerAccessToken}`])
-        .expect(201);
-
-      expect(body).toEqual(
-        expect.objectContaining({
-          id: expect.any(Number),
-          chatType: ChatType.CHANNEL,
-          visibility: Visibility.PUBLIC,
-          title: 'Public channel',
-        }),
-      );
     });
   });
 

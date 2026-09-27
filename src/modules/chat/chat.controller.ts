@@ -106,7 +106,7 @@ export class ChatController {
     @Param('chatId', ParseIntPipe) chatId: number,
     @Body() updateChatDto: UpdateGroupChatDto,
   ) {
-    return this.chatService.updateGroupChat(chatId, updateChatDto);
+    return this.chatService.updateGroupChatOrChannel(chatId, updateChatDto);
   }
 
   @ChatRoutesDocs.DeleteChat()

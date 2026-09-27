@@ -215,17 +215,25 @@ export class ChatService {
     }
   }
 
-  async updateGroupChat(id: number, dto: UpdateGroupChatDto): Promise<Chat> {
-    await this.chatValidator.validateChatType(id, ChatType.GROUP);
+  async updateGroupChatOrChannel(
+    id: number,
+    dto: UpdateGroupChatDto,
+  ): Promise<Chat> {
+    const { chatType } = await this.chatValidator.validateChatType(
+      id,
+      ChatType.GROUP,
+      ChatType.CHANNEL,
+    );
 
     try {
-      const chat = await this.chatRepo.updateGroupChat(id, dto);
+      const chat = await this.chatRepo.updateGroupChatOrChannel(id, dto);
 
       this.logger.info(
         {
           chatId: id,
           title: dto.title,
           description: dto.description,
+          chatType,
         },
         'Chat updated',
       );

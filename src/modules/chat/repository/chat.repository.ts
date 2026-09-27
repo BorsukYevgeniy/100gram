@@ -83,9 +83,12 @@ export class ChatRepository {
     });
   }
 
-  async updateGroupChat(id: number, dto: UpdateGroupChatDto): Promise<Chat> {
+  async updateGroupChatOrChannel(
+    id: number,
+    dto: UpdateGroupChatDto,
+  ): Promise<Chat> {
     return this.prisma.chat.update({
-      where: { id, chatType: ChatType.GROUP },
+      where: { id },
       data: dto,
     });
   }

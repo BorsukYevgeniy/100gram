@@ -4,6 +4,7 @@ import {
   Delete,
   Get,
   Param,
+  ParseIntPipe,
   Patch,
   UploadedFiles,
   UseGuards,
@@ -29,7 +30,7 @@ export class MessageController {
   @Get(':id')
   async findOne(
     @CurrentUser() user: AccessTokenPayload,
-    @Param('id') messageId: number,
+    @Param('id', ParseIntPipe) messageId: number,
   ): Promise<Message> {
     return this.messageService.findById(user, messageId);
   }
@@ -39,7 +40,7 @@ export class MessageController {
   @UseInterceptors(MessageFilesInterceptor)
   async update(
     @CurrentUser() user: AccessTokenPayload,
-    @Param('id') messageId: number,
+    @Param('id', ParseIntPipe) messageId: number,
     @Body() updateMessageDto: UpdateMessageDto,
     @UploadedFiles() files: Express.Multer.File[],
   ): Promise<Message> {
@@ -50,7 +51,7 @@ export class MessageController {
   @Delete(':id')
   async delete(
     @CurrentUser() user: AccessTokenPayload,
-    @Param('id') messageId: number,
+    @Param('id', ParseIntPipe) messageId: number,
   ): Promise<Message> {
     return this.messageService.delete(user, messageId);
   }
