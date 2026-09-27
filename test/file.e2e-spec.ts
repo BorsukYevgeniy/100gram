@@ -97,23 +97,18 @@ describe('AuthController (e2e)', () => {
       }),
     ]);
 
-    const [{ headers: verUserHeaders }, { headers: unverUserHeaders }] =
-      await Promise.all([
-        //Login as verified user
+    const [verUserLogin, unverUserLogin] = await Promise.all(
+      [verUser, unverUser].map(({ email }) =>
         request(app.getHttpServer())
           .post('/auth/login')
-          .send({ email: verUser.email, password: 'password' }),
+          .send({ email, password: 'password' }),
+      ),
+    );
 
-        //Login as unverified user
-        request(app.getHttpServer())
-          .post('/auth/login')
-          .send({ email: unverUser.email, password: 'password' }),
-      ]);
-
-    verUserAccessToken = verUserHeaders['set-cookie'][0]
+    verUserAccessToken = verUserLogin.headers['set-cookie'][0]
       .split('=')[1]
       .split(';')[0];
-    unverUserAccessToken = unverUserHeaders['set-cookie'][0]
+    unverUserAccessToken = unverUserLogin.headers['set-cookie'][0]
       .split('=')[1]
       .split(';')[0];
   });

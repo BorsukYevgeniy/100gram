@@ -108,29 +108,24 @@ describe('UserAvatarController (e2e)', () => {
       }),
     ]);
 
-    const [
-      { headers: adminHeaders },
-      { headers: userHeaders },
-      { headers: unverUserHeaders },
-    ] = await Promise.all([
-      request(app.getHttpServer())
-        .post('/auth/login')
-        .send({ email: admin.email, password: 'password' }),
-      request(app.getHttpServer())
-        .post('/auth/login')
-        .send({ email: user.email, password: 'password' }),
-      request(app.getHttpServer())
-        .post('/auth/login')
-        .send({ email: unverUser.email, password: 'password' }),
-    ]);
+    const [adminLogin, userLogin, unverUserLogin] = await Promise.all(
+      [admin, user, unverUser].map(({ email }) =>
+        request(app.getHttpServer())
+          .post('/auth/login')
+          .send({ email, password: 'password' }),
+      ),
+    );
 
-    adminAccessToken = adminHeaders['set-cookie'][0]
+    adminAccessToken = adminLogin.headers['set-cookie'][0]
       .split('=')[1]
       .split(';')[0];
-    userAccessToken = userHeaders['set-cookie'][0].split('=')[1].split(';')[0];
-    unverUserAccessToken = unverUserHeaders['set-cookie'][0]
+    userAccessToken = userLogin.headers['set-cookie'][0]
       .split('=')[1]
       .split(';')[0];
+    unverUserAccessToken = unverUserLogin.headers['set-cookie'][0]
+      .split('=')[1]
+      .split(';')[0];
+
     userId = user.id;
   });
 

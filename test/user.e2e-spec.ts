@@ -101,23 +101,24 @@ describe('UserController (e2e)', () => {
       }),
     ]);
 
-    const [{ headers: adminHeaders }, { headers: userHeaders }] =
-      await Promise.all([
-        //Login as admin
-        request(app.getHttpServer())
-          .post('/auth/login')
-          .send({ email: 'admin@gmail.com', password: 'password' }),
+    const [adminLogin, userLogin] = await Promise.all([
+      //Login as admin
+      request(app.getHttpServer())
+        .post('/auth/login')
+        .send({ email: 'admin@gmail.com', password: 'password' }),
 
-        //Login as user
-        request(app.getHttpServer())
-          .post('/auth/login')
-          .send({ email: 'user@gmail.com', password: 'password' }),
-      ]);
+      //Login as user
+      request(app.getHttpServer())
+        .post('/auth/login')
+        .send({ email: 'user@gmail.com', password: 'password' }),
+    ]);
 
-    adminAccessToken = adminHeaders['set-cookie'][0]
+    adminAccessToken = adminLogin.headers['set-cookie'][0]
       .split('=')[1]
       .split(';')[0];
-    userAccessToken = userHeaders['set-cookie'][0].split('=')[1].split(';')[0];
+    userAccessToken = userLogin.headers['set-cookie'][0]
+      .split('=')[1]
+      .split(';')[0];
 
     userId = user.id;
   });
