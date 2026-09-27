@@ -10,9 +10,9 @@ import {
   Query,
   UseGuards,
 } from '@nestjs/common';
-import { CurrentUser } from '../../common/decorators/routes/user.decorator';
 import { PaginationDto } from '../../common/dto/pagination.dto';
 import { AccessTokenPayload } from '../../common/types';
+import { CurrentUser } from '../auth/decorator/current-user.decorator';
 import { VerifiedUserGuard } from '../auth/guards/verified-user.guard';
 import { ChatService } from './chat.service';
 import { ChatControllerDocs, ChatRoutesDocs } from './docs';

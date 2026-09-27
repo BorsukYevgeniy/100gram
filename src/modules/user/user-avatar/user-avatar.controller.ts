@@ -10,10 +10,10 @@ import {
   UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
-import { CurrentUser } from '../../../common/decorators/routes/user.decorator';
 import { AvatarInterceptor } from '../../../common/interceptor/avatar.interceptor';
 import { AccessTokenPayload } from '../../../common/types';
-import { AdminGuard } from '../../auth/guards/roles.guard';
+import { CurrentUser } from '../../auth/decorator/current-user.decorator';
+import { AdminGuard } from '../../auth/guards/admin.guard';
 import { VerifiedUserGuard } from '../../auth/guards/verified-user.guard';
 import { ApiUserAvatarControllerDocs, ApiUserAvatarRoutesDocs } from './docs';
 import { UserAvatarService } from './user-avatar.service';

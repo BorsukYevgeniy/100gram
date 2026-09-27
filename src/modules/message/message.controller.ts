@@ -11,9 +11,9 @@ import {
   UseInterceptors,
 } from '@nestjs/common';
 import { Message } from '../../../generated/prisma/client';
-import { CurrentUser } from '../../common/decorators/routes/user.decorator';
 import { MessageFilesInterceptor } from '../../common/interceptor/message-files.interceptor';
 import { AccessTokenPayload } from '../../common/types';
+import { CurrentUser } from '../auth/decorator/current-user.decorator';
 import { VerifiedUserGuard } from '../auth/guards/verified-user.guard';
 import { MessageControllerDocs } from './docs/message-controller-docs.decorator';
 import { MessageRoutesDocs } from './docs/message-routes-docs';

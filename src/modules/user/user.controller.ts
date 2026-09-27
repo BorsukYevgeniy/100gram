@@ -8,11 +8,11 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { AccessTokenPayload } from '../../common/types';
+import { AdminGuard } from '../auth/guards/admin.guard';
 import { AuthGuard } from '../auth/guards/auth.guard';
-import { AdminGuard } from '../auth/guards/roles.guard';
 import { UserService } from './user.service';
 
-import { CurrentUser } from '../../common/decorators/routes/user.decorator';
+import { CurrentUser } from '../auth/decorator/current-user.decorator';
 import { UserNoCredOtpVCode } from './types/user.types';
 
 import { ApiUserControllerDocs, ApiUserRoutesDocs } from './docs';

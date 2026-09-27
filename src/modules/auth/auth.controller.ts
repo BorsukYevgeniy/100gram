@@ -14,11 +14,11 @@ import {
 } from '@nestjs/common';
 import { ThrottlerGuard } from '@nestjs/throttler';
 import { Response } from 'express';
-import { CurrentUser } from '../../common/decorators/routes/user.decorator';
 import { AccessTokenPayload, AuthRequest, TokenPair } from '../../common/types';
 import { CreateUserDto } from '../user/dto/create-user.dto';
 import { UserNoCredOtpVCode } from '../user/types/user.types';
 import { AuthService } from './auth.service';
+import { CurrentUser } from './decorator/current-user.decorator';
 import { Public } from './decorator/public.decorator';
 import { AuthControllerDocs, AuthRoutesDocs } from './docs';
 import { LoginDto } from './dto/login.dto';

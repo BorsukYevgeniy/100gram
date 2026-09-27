@@ -10,9 +10,9 @@ import {
   Query,
   UseGuards,
 } from '@nestjs/common';
-import { CurrentUser } from '../../../common/decorators/routes/user.decorator';
 import { PaginationDto } from '../../../common/dto/pagination.dto';
 import { AccessTokenPayload } from '../../../common/types';
+import { CurrentUser } from '../../auth/decorator/current-user.decorator';
 import { VerifiedUserGuard } from '../../auth/guards/verified-user.guard';
 import { PaginatedUserNoCredOtpVCode } from '../../user/types/user.types';
 import { UpdateRoleDto } from '../dto/role/update-role.dto';

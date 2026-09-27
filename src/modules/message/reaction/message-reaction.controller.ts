@@ -8,8 +8,8 @@ import {
   Post,
   UseGuards,
 } from '@nestjs/common';
-import { CurrentUser } from '../../../common/decorators/routes/user.decorator';
 import { AccessTokenPayload } from '../../../common/types';
+import { CurrentUser } from '../../auth/decorator/current-user.decorator';
 import { VerifiedUserGuard } from '../../auth/guards/verified-user.guard';
 import { AddReactionDto } from '../../reaction/dto/add-reaction.dto';
 import { UpdateReactionDto } from '../../reaction/dto/update-reaction.dto';
