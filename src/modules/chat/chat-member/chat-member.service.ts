@@ -57,9 +57,18 @@ export class ChatMemberService {
     await this.chatValidator.validateChatType(chatId, ChatType.GROUP);
     await this.chatValidator.validateOwner(currentUser, chatId);
 
-    const chatUser = await this.chatRepo.deleteUserFromChat(chatId, userId);
-    this.logger.info({ userId, chatId }, 'Deleted user from group chat');
-    return chatUser;
+    try {
+      const chatUser = await this.chatRepo.deleteUserFromChat(chatId, userId);
+
+      this.logger.info({ userId, chatId }, 'Deleted user from group chat');
+      return chatUser;
+    } catch (e) {
+      if (e instanceof PrismaClientKnownRequestError && e.code === 'P2025') {
+        this.logger.warn({ chatId, userId }, 'User not found');
+        throw new NotFoundException('User is not a participant of the chat');
+      }
+      throw e;
+    }
   }
 
   async getUsersInChat(
