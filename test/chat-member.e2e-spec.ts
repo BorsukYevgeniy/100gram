@@ -432,12 +432,10 @@ describe('ChatMemberController (e2e)', () => {
     });
 
     it('DELETE /chats/:chatId/users/:userId - 404 NOT FOUND - Should return 404 because user is not participant of chat', async () => {
-      const { body } = await request(app.getHttpServer())
+      await request(app.getHttpServer())
         .delete(`/chats/${groupChatId}/users/9999999`)
         .set('Cookie', [`access_token=${ownerAccessToken}`])
         .expect(404);
-
-      console.log(body);
     });
 
     it('DELETE /chats/:chatId/users/:userId - 404 NOT FOUND - Should return 404 because chat doesnt exist', async () => {
