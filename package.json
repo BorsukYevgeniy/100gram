@@ -24,6 +24,7 @@
     "test:e2e:chat": "jest --config ./test/jest-e2e.json test/chat.e2e-spec.ts",
     "test:e2e:chat:avatar": "jest --config ./test/jest-e2e.json test/chat-avatar.e2e-spec.ts",
     "test:e2e:message": "jest --config ./test/jest-e2e.json test/message.e2e-spec.ts",
+    "test:e2e:message:reaction": "jest --config ./test/jest-e2e.json test/message-reaction.e2e-spec.ts",
     "test:e2e:chat:message": "jest --config ./test/jest-e2e.json test/chat-message.e2e-spec.ts",
     "test:e2e:chat:member": "jest --config ./test/jest-e2e.json test/chat-member.e2e-spec.ts",
     "test:e2e:blocked:user": "jest --config ./test/jest-e2e.json test/blocked-user.e2e-spec.ts",
