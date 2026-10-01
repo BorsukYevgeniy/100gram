@@ -1,7 +1,11 @@
 import * as J from 'joi';
 
 export const validationSchema = J.object({
-  DATABASE_URL: J.string().uri().required(),
+  POSTGRES_HOST: J.string().hostname().required(),
+  POSTGRES_PORT: J.number().port().required(),
+  POSTGRES_USER: J.string().required(),
+  POSTGRES_PASSWORD: J.string().required(),
+  POSTGRES_DB: J.string().required(),
 
   APP_PORT: J.number().port().required(),
   APP_URL: J.string().uri().required(),
@@ -25,7 +29,8 @@ export const validationSchema = J.object({
   THROTTLER_TTL: J.number().positive().required(),
   THROTTLER_LIMIT: J.number().positive().required(),
 
-  REDIS_URL: J.string().uri().required(),
+  REDIS_HOST: J.string().hostname().required(),
+  REDIS_PORT: J.number().port().required(),
 
   MINIO_ENDPOINT: J.string().uri().required(),
   MINIO_SECRET_KEY: J.string().required(),

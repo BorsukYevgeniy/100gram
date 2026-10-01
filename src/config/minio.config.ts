@@ -8,4 +8,5 @@ export default registerAs('minio', () => ({
     secretAccessKey: process.env.MINIO_SECRET_KEY,
   },
   bucket: process.env.MINIO_BUCKET,
+  forcePathStyle: true,
 }));

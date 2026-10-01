@@ -34,7 +34,8 @@
     "prisma:studio:test": "cross-env NODE_ENV=test prisma studio",
     "prisma:migrate:dev": "cross-env NODE_ENV=dev prisma migrate dev",
     "prisma:generate:dev": "cross-env NODE_ENV=dev prisma generate",
-    "prisma:studio:dev": "cross-env NODE_ENV=dev prisma studio"
+    "prisma:studio:dev": "cross-env NODE_ENV=dev prisma studio",
+    "docker:start:dev": "npm run prisma:generate:dev && npm run start:dev"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1131.0",
@@ -75,7 +76,7 @@
     "@types/cookie-parser": "^1.4.10",
     "@types/express": "^4.17.25",
     "@types/jest": "^30.0.0",
-    "@types/multer": "^2.1.0",
+    "@types/multer": "^2.3.0",
     "@types/node": "^25.7.0",
     "@types/nodemailer": "^8.0.0",
     "@types/passport-google-oauth20": "^2.0.17",
