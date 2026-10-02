@@ -105,8 +105,13 @@ export class ChatController {
   async updateGroupChat(
     @Param('chatId', ParseIntPipe) chatId: number,
     @Body() updateChatDto: UpdateGroupChatDto,
+    @CurrentUser() user: AccessTokenPayload,
   ) {
-    return this.chatService.updateGroupChatOrChannel(chatId, updateChatDto);
+    return this.chatService.updateGroupChatOrChannel(
+      chatId,
+      user,
+      updateChatDto,
+    );
   }
 
   @ChatRoutesDocs.DeleteChat()
@@ -125,5 +130,23 @@ export class ChatController {
     @CurrentUser() user: AccessTokenPayload,
   ) {
     return this.chatService.joinToChat(chatId, user);
+  }
+
+  @ChatRoutesDocs.PinChat()
+  @Patch(':chatId/pin')
+  async pinChat(
+    @Param('chatId', ParseIntPipe) chatId: number,
+    @CurrentUser() user: AccessTokenPayload,
+  ) {
+    return this.chatService.pinChat(user, chatId);
+  }
+
+  @ChatRoutesDocs.PinChat()
+  @Patch(':chatId/unpin')
+  async unpinChat(
+    @Param('chatId', ParseIntPipe) chatId: number,
+    @CurrentUser() user: AccessTokenPayload,
+  ) {
+    return this.chatService.unpinChat(user, chatId);
   }
 }

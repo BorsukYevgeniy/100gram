@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { ChatToUser } from '../../../../generated/prisma/browser';
 import { Chat } from '../../../../generated/prisma/client';
 import { ChatRole, ChatType } from '../../../../generated/prisma/enums';
 import { PrismaService } from '../../../infra/prisma/prisma.service';
@@ -138,31 +139,63 @@ export class ChatRepository {
     take: number,
     lastMessageIdCursor?: number,
   ): Promise<MyChat[]> {
-    return this.prisma.chat.findMany({
+    const r = await this.prisma.chat.findMany({
       where: {
         chatToUsers: {
           some: { userId },
         },
-
-        ...(lastMessageIdCursor && {
-          cursor: { lastMessageId: lastMessageIdCursor },
-        }),
       },
+      ...(lastMessageIdCursor && {
+        cursor: { lastMessageId: lastMessageIdCursor },
+      }),
       take,
       orderBy: { lastMessageId: 'desc' },
       select: {
         id: true,
         title: true,
         avatarName: true,
-        lastMessage: { select: { text: true, createdAt: true } },
+        lastMessage: {
+          select: {
+            text: true,
+            createdAt: true,
+          },
+        },
+        chatToUsers: {
+          where: { userId },
+          select: {
+            isPinned: true,
+          },
+        },
       },
     });
+
+    return r.map(({ avatarName, chatToUsers, id, title, lastMessage }) => ({
+      id: id,
+      title: title,
+      avatarName: avatarName,
+      lastMessage: lastMessage,
+      isPinned: chatToUsers[0]?.isPinned ?? false,
+    }));
   }
 
   async findChatType(chatId: number): Promise<{ chatType: ChatType }> {
     return this.prisma.chat.findUnique({
       where: { id: chatId },
       select: { chatType: true },
+    });
+  }
+
+  async pinChat(userId: number, chatId: number): Promise<ChatToUser> {
+    return this.prisma.chatToUser.update({
+      where: { chatId_userId: { chatId, userId } },
+      data: { isPinned: true },
+    });
+  }
+
+  async unpinChat(userId: number, chatId: number): Promise<ChatToUser> {
+    return this.prisma.chatToUser.update({
+      where: { chatId_userId: { chatId, userId } },
+      data: { isPinned: false },
     });
   }
 }

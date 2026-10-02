@@ -15,7 +15,7 @@ import { ChatRepository } from './repository/chat.repository';
 import { ChatValidationService } from './validation/chat-validation.service';
 
 import { randomBytes } from 'crypto';
-import { ChatToUser } from '../../../generated/prisma/browser';
+import { ChatToUser, Role } from '../../../generated/prisma/browser';
 import { PaginationDto } from '../../common/dto/pagination.dto';
 import { CacheService } from '../cache/cache.service';
 import { ChatMemberService } from './chat-member/chat-member.service';
@@ -201,7 +201,9 @@ export class ChatService {
     user: AccessTokenPayload,
     chatId: number,
   ): Promise<PrivateChatResponseDto | ChannelGroupChatResponseDto> {
-    await this.chatValidator.validateChatParticipation(user, chatId);
+    if (user.role !== Role.ADMIN) {
+      await this.chatValidator.validateChatParticipation(user, chatId);
+    }
 
     const chat = await this.chatRepo.getById(chatId);
 
@@ -216,21 +218,23 @@ export class ChatService {
   }
 
   async updateGroupChatOrChannel(
-    id: number,
+    chatId: number,
+    user: AccessTokenPayload,
     dto: UpdateGroupChatDto,
   ): Promise<Chat> {
     const { chatType } = await this.chatValidator.validateChatType(
-      id,
+      chatId,
       ChatType.GROUP,
       ChatType.CHANNEL,
     );
+    await this.chatValidator.validateOwner(user, chatId);
 
     try {
-      const chat = await this.chatRepo.updateGroupChatOrChannel(id, dto);
+      const chat = await this.chatRepo.updateGroupChatOrChannel(chatId, dto);
 
       this.logger.info(
         {
-          chatId: id,
+          chatId: chatId,
           title: dto.title,
           description: dto.description,
           chatType,
@@ -240,7 +244,7 @@ export class ChatService {
       return chat;
     } catch (e) {
       if (e instanceof PrismaClientKnownRequestError && e.code === 'P2025') {
-        this.logger.warn({ chatId: id }, 'Chat not found');
+        this.logger.warn({ chatId: chatId }, 'Chat not found');
         throw new NotFoundException('Chat not found');
       }
     }
@@ -337,5 +341,15 @@ export class ChatService {
     await this.chatValidator.validateChatVisibility(chatId, Visibility.PUBLIC);
 
     return this.chatUserService.addUserToChat(chatId, user.id);
+  }
+
+  async pinChat(user: AccessTokenPayload, chatId: number) {
+    await this.chatValidator.validateChatParticipation(user, chatId);
+    return this.chatRepo.pinChat(user.id, chatId);
+  }
+
+  async unpinChat(user: AccessTokenPayload, chatId: number) {
+    await this.chatValidator.validateChatParticipation(user, chatId);
+    return this.chatRepo.unpinChat(user.id, chatId);
   }
 }

@@ -5,6 +5,7 @@ import { PrivateChatResponseDto } from '../dto/private-chat-response.dto';
 
 export type MyChat = Pick<Chat, 'id' | 'title' | 'avatarName'> & {
   lastMessage: Pick<Message, 'text' | 'createdAt'>;
+  isPinned: boolean;
 };
 
 export type PaginatedMyChats = Paginated<'chats', MyChat>;

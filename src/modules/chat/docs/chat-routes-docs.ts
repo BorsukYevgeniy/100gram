@@ -113,7 +113,9 @@ export class ChatRoutesDocs {
         description: 'Update token for inviting users',
       }),
       ApiOkResponse({ description: 'Token updated successfully' }),
+      ApiChatMustBeGroupResponse(),
       ApiYouMustBeChatOwnerResponse(),
+      ApiVerifiedAuthDocs(),
       ApiChatIdDocs(),
     );
   }
@@ -202,6 +204,36 @@ export class ChatRoutesDocs {
         description: 'User already is a participant of the chat',
       }),
       ApiChatMustBeGroupResponse(),
+    );
+  }
+
+  static PinChat() {
+    return applyDecorators(
+      ApiOperation({
+        summary: 'Pin chat',
+        description: 'Pins the chat to the top of the list',
+      }),
+      ApiOkResponse({ description: 'Chat pinned successfully' }),
+      ApiVerifiedAuthDocs(),
+      ApiForbiddenResponse({
+        description: 'User is not a participant of the chat',
+      }),
+      ApiChatIdDocs(),
+    );
+  }
+
+  static UnpinChat() {
+    return applyDecorators(
+      ApiOperation({
+        summary: 'Unpin chat',
+        description: 'Unpins the chat from the top of the list',
+      }),
+      ApiOkResponse({ description: 'Chat unpinned successfully' }),
+      ApiVerifiedAuthDocs(),
+      ApiForbiddenResponse({
+        description: 'User is not a participant of the chat',
+      }),
+      ApiChatIdDocs(),
     );
   }
 }

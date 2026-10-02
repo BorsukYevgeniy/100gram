@@ -492,12 +492,12 @@ describe('ChatController (e2e)', () => {
         .expect(403);
     });
 
-    // it('PATCH /chats/:chatId - 403 FORBIDDEN - Should return 403 because user is not owner of chat', async () => {
-    //   await request(app.getHttpServer())
-    //     .patch(`/chats/${groupChatId}`)
-    //     .set('Cookie', [`access_token=${guestAccessToken}`])
-    //     .expect(403);
-    // });
+    it('PATCH /chats/:chatId - 403 FORBIDDEN - Should return 403 because user is not owner of chat', async () => {
+      await request(app.getHttpServer())
+        .patch(`/chats/${groupChatId}`)
+        .set('Cookie', [`access_token=${guestAccessToken}`])
+        .expect(403);
+    });
 
     it('PATCH /chats/:chatId - 400 BAD REQUEST - Should return 400 because chatId is invalid', async () => {
       await request(app.getHttpServer())
@@ -613,12 +613,120 @@ describe('ChatController (e2e)', () => {
       );
     });
 
-    // it('POST /chats/join/:chatId - 409 CONFLICT - Should return 409 if user already joined', async () => {
-    //   await request(app.getHttpServer())
-    //     .post(`/chats/join/${publicGroupId}`)
-    //     .set('Cookie', [`access_token=${guestAccessToken}`])
-    //     .expect(409);
-    // });
+    it('POST /chats/join/:chatId - 409 CONFLICT - Should return 409 if user already joined', async () => {
+      await request(app.getHttpServer())
+        .post(`/chats/join/${publicGroupId}`)
+        .set('Cookie', [`access_token=${guestAccessToken}`])
+        .expect(409);
+    });
+  });
+
+  describe('PATCH /chats/:chatId/pin - Should pin a chat', () => {
+    it('PATCH /chats/:chatId/pin - 401 UNAUTHORIZED - Should return 401 because user is unauthorized', async () => {
+      const { body } = await request(app.getHttpServer())
+        .patch(`/chats/${privateChatId}/pin`)
+        .expect(401);
+
+      expect(body).toEqual(unauthorizedResponse);
+    });
+
+    it('PATCH /chats/:chatId/pin - 403 FORBIDDEN - Should return 403 because user is not verified', async () => {
+      const { body } = await request(app.getHttpServer())
+        .patch(`/chats/${privateChatId}/pin`)
+        .set('Cookie', [`access_token=${unverifiedAccessToken}`])
+        .expect(403);
+
+      expect(body).toEqual(verifiedForbiddenResponse);
+    });
+
+    it('PATCH /chats/:chatId/pin - 400 BAD REQUEST - Should return 400 because chatId is invalid', async () => {
+      await request(app.getHttpServer())
+        .patch('/chats/invalid/pin')
+        .set('Cookie', [`access_token=${ownerAccessToken}`])
+        .expect(400);
+    });
+
+    it('PATCH /chats/:chatId/pin - 403 FORBIDDEN - Should return 403 because user is not a participant', async () => {
+      const { body } = await request(app.getHttpServer())
+        .patch(`/chats/${privateChatId}/pin`)
+        .set('Cookie', [`access_token=${guestAccessToken}`])
+        .expect(403);
+
+      expect(body).toEqual({
+        statusCode: 403,
+        message: 'User is not a participant of the chat',
+        error: 'Forbidden',
+      });
+    });
+
+    it('PATCH /chats/:chatId/pin - 200 OK - Should pin the chat for the participant', async () => {
+      const { body } = await request(app.getHttpServer())
+        .patch(`/chats/${privateChatId}/pin`)
+        .set('Cookie', [`access_token=${memberAccessToken}`])
+        .expect(200);
+
+      expect(body).toEqual(
+        expect.objectContaining({
+          chatId: privateChatId,
+          userId: memberId,
+          isPinned: true,
+        }),
+      );
+    });
+  });
+
+  describe('PATCH /chats/:chatId/unpin - Should unpin a chat', () => {
+    it('PATCH /chats/:chatId/unpin - 401 UNAUTHORIZED - Should return 401 because user is unauthorized', async () => {
+      const { body } = await request(app.getHttpServer())
+        .patch(`/chats/${privateChatId}/unpin`)
+        .expect(401);
+
+      expect(body).toEqual(unauthorizedResponse);
+    });
+
+    it('PATCH /chats/:chatId/unpin - 403 FORBIDDEN - Should return 403 because user is not verified', async () => {
+      const { body } = await request(app.getHttpServer())
+        .patch(`/chats/${privateChatId}/unpin`)
+        .set('Cookie', [`access_token=${unverifiedAccessToken}`])
+        .expect(403);
+
+      expect(body).toEqual(verifiedForbiddenResponse);
+    });
+
+    it('PATCH /chats/:chatId/unpin - 400 BAD REQUEST - Should return 400 because chatId is invalid', async () => {
+      await request(app.getHttpServer())
+        .patch('/chats/invalid/unpin')
+        .set('Cookie', [`access_token=${ownerAccessToken}`])
+        .expect(400);
+    });
+
+    it('PATCH /chats/:chatId/unpin - 403 FORBIDDEN - Should return 403 because user is not a participant', async () => {
+      const { body } = await request(app.getHttpServer())
+        .patch(`/chats/9999999/unpin`)
+        .set('Cookie', [`access_token=${guestAccessToken}`])
+        .expect(403);
+
+      expect(body).toEqual({
+        statusCode: 403,
+        message: 'User is not a participant of the chat',
+        error: 'Forbidden',
+      });
+    });
+
+    it('PATCH /chats/:chatId/unpin - 200 OK - Should unpin the chat for the participant', async () => {
+      const { body } = await request(app.getHttpServer())
+        .patch(`/chats/${privateChatId}/unpin`)
+        .set('Cookie', [`access_token=${memberAccessToken}`])
+        .expect(200);
+
+      expect(body).toEqual(
+        expect.objectContaining({
+          chatId: privateChatId,
+          userId: memberId,
+          isPinned: false,
+        }),
+      );
+    });
   });
 
   describe('PATCH /chats/:chatId/owner/:ownerId - Should update chat owner', () => {

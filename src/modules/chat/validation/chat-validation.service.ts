@@ -21,6 +21,14 @@ export class ChatValidationService {
   ) {}
 
   async validateOwner(user: AccessTokenPayload, chatId: number) {
+    if (user.role === Role.ADMIN) {
+      this.logger.debug(
+        { userId: user.id, chatId },
+        'Admin bypassed owner validation',
+      );
+      return;
+    }
+
     this.logger.debug({ userId: user.id, chatId }, 'Validating chat owner');
 
     const owner = await this.chatUserRepo.findChatOwner(chatId);
@@ -30,9 +38,9 @@ export class ChatValidationService {
       throw new NotFoundException('Chat not found');
     }
 
-    if (owner.userId !== user.id && user.role !== Role.ADMIN) {
+    if (owner.userId !== user.id) {
       this.logger.warn({ userId: user.id, chatId }, 'User is not chat owner');
-      throw new ForbiddenException();
+      throw new ForbiddenException('User is not chat owner');
     }
   }
 
@@ -98,15 +106,6 @@ export class ChatValidationService {
         'User is not a participant of the chat',
       );
       throw new ForbiddenException('User is not a participant of the chat');
-    }
-
-    if (user.role === Role.ADMIN) {
-      this.logger.debug(
-        { userId: user.id, chatId },
-        'Admin bypassed participation check',
-      );
-
-      return chatToUser;
     }
   }
 

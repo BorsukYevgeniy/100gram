@@ -4,6 +4,7 @@ model ChatToUser {
 
   role ChatRole @default(MEMBER)
 
+  isPinned    Boolean  @default(false)
   connectedAt DateTime @default(now()) @db.Timestamptz
 
   chat Chat @relation(fields: [chatId], references: [id], onDelete: Cascade)
