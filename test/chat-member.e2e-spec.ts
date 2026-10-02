@@ -387,6 +387,7 @@ describe('ChatMemberController (e2e)', () => {
         chatId: groupChatId,
         userId: memberId,
         role: ChatRole.MODERATOR,
+        isPinned: false,
         connectedAt: expect.any(String),
       });
     });
