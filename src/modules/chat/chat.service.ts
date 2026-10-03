@@ -201,11 +201,15 @@ export class ChatService {
     user: AccessTokenPayload,
     chatId: number,
   ): Promise<PrivateChatResponseDto | ChannelGroupChatResponseDto> {
+    const chat = await this.chatRepo.getById(chatId);
+
+    if (!chat) {
+      throw new NotFoundException('Chat not found');
+    }
+
     if (user.role !== Role.ADMIN) {
       await this.chatValidator.validateChatParticipation(user, chatId);
     }
-
-    const chat = await this.chatRepo.getById(chatId);
 
     switch (chat.chatType) {
       case ChatType.PRIVATE:

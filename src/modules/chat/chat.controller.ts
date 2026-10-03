@@ -94,7 +94,7 @@ export class ChatController {
   @Patch(':chatId/owner/:ownerId')
   async updateOwner(
     @Param('chatId', ParseIntPipe) chatId: number,
-    @Param('ownerId') ownerId: number,
+    @Param('ownerId', ParseIntPipe) ownerId: number,
     @CurrentUser() user: AccessTokenPayload,
   ) {
     return this.chatService.updateOwner(chatId, user, ownerId);
@@ -141,7 +141,7 @@ export class ChatController {
     return this.chatService.pinChat(user, chatId);
   }
 
-  @ChatRoutesDocs.PinChat()
+  @ChatRoutesDocs.UnpinChat()
   @Patch(':chatId/unpin')
   async unpinChat(
     @Param('chatId', ParseIntPipe) chatId: number,

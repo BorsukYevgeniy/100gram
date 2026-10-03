@@ -13,7 +13,7 @@ import {
 } from '@nestjs/swagger';
 import { ApiVerifiedAuthDocs } from '../../../common/decorators/docs/auth';
 import { ApiPaginationDocs } from '../../../common/decorators/docs/pagination';
-import { ApiUserIdDocs, ApiUserNotFoundResponse } from '../../user/docs/shared';
+import { ApiUserNotFoundResponse } from '../../user/docs/shared';
 import { ChannelGroupChatResponseDto } from '../dto/channel-group-chat-response.dto';
 import { CreateChannelDto } from '../dto/create-channel.dto';
 import { CreateGroupChatDto } from '../dto/create-group-chat.dto';
@@ -31,10 +31,9 @@ export class ChatRoutesDocs {
     return applyDecorators(
       ApiOperation({
         summary: 'Get my chats',
-        description: 'Return where chats you exist with pagination and caching',
+        description: 'Returns chats you belong to with pagination and caching',
       }),
       ApiOkResponse({ description: 'Chats fetched successfully' }),
-      ApiUserNotFoundResponse(),
       ApiPaginationDocs(),
     );
   }
@@ -93,10 +92,16 @@ export class ChatRoutesDocs {
     return applyDecorators(
       ApiOperation({
         summary: 'Add user by invite token',
-        description: 'Add user to chat by invite token',
+        description:
+          'Adds the authenticated user to a group chat by invite token',
       }),
       ApiOkResponse({ description: 'User added successfully' }),
-      ApiNotFoundResponse({ description: 'Token not found' }),
+      ApiNotFoundResponse({
+        description: 'Chat not found for this invite token',
+      }),
+      ApiConflictResponse({
+        description: 'User is already a participant of the chat',
+      }),
       ApiParam({
         name: 'inviteToken',
         type: String,
@@ -136,7 +141,7 @@ export class ChatRoutesDocs {
         },
       }),
       ApiForbiddenResponse({
-        description: 'You must be a participant of chat',
+        description: 'You must be a participant of the chat or an admin',
       }),
       ApiVerifiedAuthDocs(),
       ApiChatIdDocs(),
@@ -168,10 +173,12 @@ export class ChatRoutesDocs {
     return applyDecorators(
       ApiOperation({
         summary: 'Updating chat by ID',
-        description: 'Updated chat data by ID',
+        description: 'Updates a group chat or channel by ID',
       }),
       ApiOkResponse({ description: 'Chat updated successfully' }),
-      ApiChatMustBeGroupResponse(),
+      ApiBadRequestResponse({
+        description: 'Chat must be a group or a channel',
+      }),
       ApiYouMustBeChatOwnerResponse(),
       ApiVerifiedAuthDocs(),
       ApiBody({ type: UpdateGroupChatDto }),
@@ -196,14 +203,17 @@ export class ChatRoutesDocs {
     return applyDecorators(
       ApiOperation({
         summary: 'Join to chat',
-        description: 'Adds you in public chat',
+        description:
+          'Adds the authenticated user to a public group or channel',
       }),
-      ApiOkResponse({ description: 'User added' }),
-      ApiUserIdDocs(),
+      ApiOkResponse({ description: 'User added to chat successfully' }),
+      ApiChatIdDocs(),
       ApiConflictResponse({
         description: 'User already is a participant of the chat',
       }),
-      ApiChatMustBeGroupResponse(),
+      ApiBadRequestResponse({
+        description: 'Only public groups and channels can be joined',
+      }),
     );
   }
 
