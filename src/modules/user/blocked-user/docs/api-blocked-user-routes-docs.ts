@@ -1,5 +1,6 @@
 import { applyDecorators } from '@nestjs/common';
 import {
+  ApiBadRequestResponse,
   ApiCreatedResponse,
   ApiNotFoundResponse,
   ApiOkResponse,
@@ -8,15 +9,16 @@ import {
 } from '@nestjs/swagger';
 import { ApiUserNotFoundResponse } from '../../docs/shared';
 
-function ApiBlockedIdDocs() {
+function ApiBlockedIdDocs(description: string, notFoundDescription: string) {
   return applyDecorators(
     ApiParam({
       name: 'blockedId',
       type: Number,
-      description: 'The ID of the user which you want to block',
+      description,
       required: true,
+      schema: { minimum: 1 },
     }),
-    ApiNotFoundResponse({ description: 'Blocked user not found' }),
+    ApiNotFoundResponse({ description: notFoundDescription }),
   );
 }
 
@@ -39,7 +41,11 @@ export class ApiBlockedUserRouterDocs {
         description: 'Blocks a user by ID for the authenticated user',
       }),
       ApiCreatedResponse({ description: 'User blocked successfully' }),
-      ApiBlockedIdDocs(),
+      ApiBlockedIdDocs('ID of the user to block', 'User not found'),
+      ApiBadRequestResponse({
+        description:
+          'blockedId must be a positive integer and cannot be your own user ID',
+      }),
     );
   }
 
@@ -49,8 +55,15 @@ export class ApiBlockedUserRouterDocs {
         summary: 'Unblock user',
         description: 'Removes user from blocked list',
       }),
-      ApiOkResponse({ description: 'Blocked users fetched successfully' }),
-      ApiBlockedIdDocs(),
+      ApiOkResponse({ description: 'User unblocked successfully' }),
+      ApiBlockedIdDocs(
+        'ID of the user to unblock',
+        'User not found or is not in the blocked list',
+      ),
+      ApiBadRequestResponse({
+        description:
+          'blockedId must be a positive integer and cannot be your own user ID',
+      }),
     );
   }
 }

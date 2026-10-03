@@ -4,7 +4,7 @@ import {
   ApiOkResponse,
   ApiOperation,
 } from '@nestjs/swagger';
-import { ApiFileUploadDocs } from '../../../../common/decorators/docs/file';
+import { ApiAvatarUploadDocs } from '../../../../common/decorators/docs/file';
 
 export class ChatAvatarRoutes {
   static UpdateAvatar() {
@@ -13,7 +13,7 @@ export class ChatAvatarRoutes {
         summary: 'Update current chat avatar',
         description: 'Upload a new avatar image for the chat',
       }),
-      ApiFileUploadDocs('Avatar image file'),
+      ApiAvatarUploadDocs('Avatar image file'),
       ApiOkResponse({ description: 'Avatar updated successfully' }),
     );
   }

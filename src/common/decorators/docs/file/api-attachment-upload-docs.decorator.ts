@@ -18,6 +18,6 @@ export function ApiFileUploadDocs(description: string) {
         },
       },
     }),
-    ApiBadRequestResponse({ description: 'Invalid file type or size' }),
+    ApiBadRequestResponse({ description: 'Invalid file  size' }),
   );
 }
