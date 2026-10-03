@@ -1,5 +1,11 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsArray, IsInt, IsOptional, IsPositive } from 'class-validator';
+import {
+  IsArray,
+  IsInt,
+  IsOptional,
+  IsPositive,
+  IsString,
+} from 'class-validator';
 import { CreateMessageDto } from '../create-message.dto';
 
 export class WsCreateMessageDto extends CreateMessageDto {
@@ -7,21 +13,19 @@ export class WsCreateMessageDto extends CreateMessageDto {
     type: Number,
     required: true,
     description: 'ID of the chat where the message will be sent',
-    minimum: 0,
+    minimum: 1,
   })
   @IsInt()
   @IsPositive()
   chatId: number;
 
   @ApiProperty({
-    type: [Number],
+    type: [String],
     required: false,
-    description: 'IDs of the files to be attached to the message',
-    allOf: [{ minimum: 0 }],
+    description: 'Names of uploaded files to attach to the message',
   })
   @IsOptional()
   @IsArray()
-  @IsInt({ each: true })
-  @IsPositive({ each: true })
+  @IsString({ each: true })
   filenames?: string[];
 }

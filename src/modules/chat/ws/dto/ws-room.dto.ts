@@ -6,7 +6,7 @@ export class WsRoomDto {
     type: Number,
     required: true,
     description: 'ID of the chat where you will be connected',
-    minimum: 0,
+    minimum: 1,
   })
   @IsInt()
   @IsPositive()

@@ -7,7 +7,7 @@ import { Logger } from 'nestjs-pino';
 import { AppModule } from './app.module';
 import appConfig from './config/app.config';
 
-import { AsyncApiDocumentBuilder /*AsyncApiModule*/ } from 'nestjs-asyncapi';
+import { AsyncApiDocumentBuilder, AsyncApiModule } from 'nestjs-asyncapi';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -40,17 +40,17 @@ async function bootstrap() {
 The 100Gram WebSocket API.
 
 Authentication:
-A valid access_token and refresh_cookie cookie must be sent during the WebSocket handshake.
+A valid access_token cookie must be sent during the WebSocket handshake.
 `,
     )
     .setVersion('1.0')
     .build();
 
-  // await AsyncApiModule.setup(
-  //   '/ws-docs',
-  //   app,
-  //   AsyncApiModule.createDocument(app, asyncApiConfig),
-  // );
+  await AsyncApiModule.setup(
+    '/ws-docs',
+    app,
+    AsyncApiModule.createDocument(app, asyncApiConfig),
+  );
 
   await app.listen(appConf.appPort);
 }

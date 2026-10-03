@@ -27,6 +27,7 @@ import { PinoLogger } from 'nestjs-pino';
 import appConfig from '../../../config/app.config';
 import { WsAddReactionDto } from '../../reaction/dto/ws/ws-add-reaction.dto';
 import { WsRemoveReactionDto } from '../../reaction/dto/ws/ws-remove-reaction.dto';
+import { WsUpdateReactionDto } from '../../reaction/dto/ws/ws-update-reaction.dto';
 import { ReactionService } from '../../reaction/reaction.service';
 import { ChatGatewayDocs } from './docs/chat-gateway-docs';
 
@@ -75,7 +76,7 @@ export class ChatGateway
   @ChatGatewayDocs.JoinRoom()
   @SubscribeMessage('joinRoom')
   async handleJoinRoom(
-    @MessageBody() payload: { chatId: number },
+    @MessageBody() payload: WsRoomDto,
     @ConnectedSocket() client: Socket,
     @WsCurrentUser() user: AccessTokenPayload,
   ) {
@@ -95,7 +96,7 @@ export class ChatGateway
       user.id,
       chatId,
       dto,
-      filenames,
+      filenames ?? [],
     );
 
     this.server.to(`chat-${chatId}`).emit('chatCreatedMessage', message);
@@ -114,7 +115,7 @@ export class ChatGateway
       user,
       messageId,
       dto,
-      filenames,
+      filenames ?? [],
     );
 
     this.server.to(`chat-${chatId}`).emit('chatUpdatedMessage', message);
@@ -144,6 +145,7 @@ export class ChatGateway
     client.leave(`chat-${chatId}`);
   }
 
+  @ChatGatewayDocs.AddReaction()
   @SubscribeMessage('addReaction')
   async handleAddingReaction(
     @WsCurrentUser() { id }: AccessTokenPayload,
@@ -154,10 +156,11 @@ export class ChatGateway
     this.server.to(`chat-${chatId}`).emit('chatAddedReaction', reaction);
   }
 
+  @ChatGatewayDocs.UpdateReaction()
   @SubscribeMessage('updateReaction')
   async handleUpdatingReaction(
     @WsCurrentUser() { id }: AccessTokenPayload,
-    @MessageBody() { chatId, messageId, ...dto }: WsAddReactionDto,
+    @MessageBody() { chatId, messageId, ...dto }: WsUpdateReactionDto,
   ) {
     const reaction = await this.reactionService.updateReaction(
       id,
@@ -168,6 +171,7 @@ export class ChatGateway
     this.server.to(`chat-${chatId}`).emit('chatUpdatedReaction', reaction);
   }
 
+  @ChatGatewayDocs.DeleteReaction()
   @SubscribeMessage('deleteReaction')
   async handleDeletingReaction(
     @WsCurrentUser() { id }: AccessTokenPayload,

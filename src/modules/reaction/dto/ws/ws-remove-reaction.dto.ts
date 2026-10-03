@@ -5,8 +5,8 @@ export class WsRemoveReactionDto {
   @ApiProperty({
     type: Number,
     required: true,
-    description: 'ID of the chat where the message reaection will be removed',
-    minimum: 0,
+    description: 'ID of the chat containing the message',
+    minimum: 1,
   })
   @IsInt()
   @IsPositive()
@@ -15,8 +15,8 @@ export class WsRemoveReactionDto {
   @ApiProperty({
     type: Number,
     required: true,
-    description: 'ID of the chat where the message reaection will be removed',
-    minimum: 0,
+    description: 'ID of the message whose reaction will be removed',
+    minimum: 1,
   })
   @IsInt()
   @IsPositive()
