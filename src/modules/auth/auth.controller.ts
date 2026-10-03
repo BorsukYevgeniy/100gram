@@ -69,7 +69,7 @@ export class AuthController {
   @AuthRoutesDocs.Logout()
   @Post('logout')
   @UseGuards(AuthGuard)
-  @HttpCode(HttpStatus.OK)
+  @HttpCode(HttpStatus.NO_CONTENT)
   async logout(
     @CurrentUser() user: AccessTokenPayload,
     @Req() req: AuthRequest,

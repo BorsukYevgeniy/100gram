@@ -3,9 +3,13 @@ import {
   ApiBadRequestResponse,
   ApiBody,
   ApiCreatedResponse,
+  ApiCookieAuth,
   ApiNotFoundResponse,
+  ApiNoContentResponse,
   ApiOkResponse,
   ApiOperation,
+  ApiParam,
+  ApiResponse,
   ApiTooManyRequestsResponse,
   ApiUnauthorizedResponse as SwaggerApiUnauthorizedResponse,
 } from '@nestjs/swagger';
@@ -25,7 +29,8 @@ export class AuthRoutesDocs {
         summary: 'Google OAuth login',
         description: 'Redirects user to Google authentication page',
       }),
-      ApiOkResponse({
+      ApiResponse({
+        status: 302,
         description: 'Redirect to Google OAuth consent screen',
       }),
     );
@@ -78,7 +83,7 @@ export class AuthRoutesDocs {
         summary: 'Logout user',
         description: 'Logs out current session and clears cookies',
       }),
-      ApiOkResponse({ description: 'Logged out successfully' }),
+      ApiNoContentResponse({ description: 'Logged out successfully' }),
       ApiAuthDocs(),
     );
   }
@@ -89,7 +94,7 @@ export class AuthRoutesDocs {
         summary: 'Logout from all devices',
         description: 'Invalidates all user sessions',
       }),
-      ApiOkResponse({
+      ApiNoContentResponse({
         description: 'Logged out from all devices successfully',
       }),
       ApiAuthDocs(),
@@ -105,7 +110,18 @@ export class AuthRoutesDocs {
       ApiOkResponse({
         description: 'User verified successfully',
       }),
+      ApiParam({
+        name: 'verificationCode',
+        type: String,
+        format: 'uuid',
+        required: true,
+        description: 'UUID verification code sent to the user’s email',
+      }),
       ApiNotFoundResponse({ description: 'Invalid verification code' }),
+      ApiBadRequestResponse({
+        description:
+          'Verification code must be a UUID and the user must not already be verified',
+      }),
     );
   }
 
@@ -119,7 +135,7 @@ export class AuthRoutesDocs {
       SwaggerApiUnauthorizedResponse({
         description: 'Refresh token missing or invalid',
       }),
-      ApiAuthDocs(),
+      ApiCookieAuth('refresh_token'),
     );
   }
 
@@ -132,6 +148,7 @@ export class AuthRoutesDocs {
       ApiOkResponse({ description: 'Verification email sent' }),
       ApiAuthDocs(),
       ApiTooManyAttemptsResendEmailResponse(),
+      ApiBadRequestResponse({ description: 'User is already verified' }),
     );
   }
 
@@ -139,11 +156,26 @@ export class AuthRoutesDocs {
     return applyDecorators(
       ApiOperation({
         summary: 'Send OTP email',
-        description: 'Sends OTP code to user email for verification',
+        description:
+          'Sends a one-time code to the authenticated user’s email for password reset. Codes are sent only for local accounts.',
       }),
-      ApiOkResponse({ description: 'OTP sent (if email exists)' }),
+      ApiOkResponse({
+        description: 'Generic response returned whether or not an email is sent',
+        schema: {
+          type: 'object',
+          properties: {
+            message: {
+              type: 'string',
+              example: 'If email exists, OTP sent',
+            },
+          },
+          required: ['message'],
+        },
+      }),
       ApiAuthDocs(),
-      ApiTooManyAttemptsResendEmailResponse(),
+      ApiTooManyRequestsResponse({
+        description: 'Too many OTP email requests',
+      }),
     );
   }
 
@@ -151,11 +183,16 @@ export class AuthRoutesDocs {
     return applyDecorators(
       ApiOperation({
         summary: 'Reset password',
-        description: 'Allows authenticated user to reset password',
+        description:
+          'Resets the password of an authenticated local account using a valid, unexpired one-time code',
       }),
       ApiOkResponse({ description: 'Password reset successfully' }),
       ApiAuthDocs(),
       ApiBody({ type: ResetPasswordDto }),
+      ApiBadRequestResponse({
+        description:
+          'Invalid or expired OTP, invalid input, or password reset is not supported for this authentication provider',
+      }),
     );
   }
 }

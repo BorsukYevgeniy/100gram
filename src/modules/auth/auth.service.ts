@@ -267,7 +267,9 @@ export class AuthService {
         { userId },
         'Attempt to reset password to non-local user',
       );
-      return;
+      throw new BadRequestException(
+        'Password reset is not available for this authentication provider',
+      );
     }
 
     if (
