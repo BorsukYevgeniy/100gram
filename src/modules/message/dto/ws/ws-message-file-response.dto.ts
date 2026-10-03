@@ -5,7 +5,7 @@ export class WsMessageFileResponseDto {
   createdAt: Date;
   replyId: number;
   userId: number;
-
+  isPinned: boolean;
   files: {
     id: number;
     name: string;

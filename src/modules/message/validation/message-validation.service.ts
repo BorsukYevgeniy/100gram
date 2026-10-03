@@ -49,6 +49,35 @@ export class MessageValidationService {
     return message;
   }
 
+  async canUpdate(
+    user: AccessTokenPayload,
+    messageId: number,
+  ): Promise<MessageFiles> {
+    this.logger.debug(
+      { userId: user.id, messageId },
+      'Validating message ownership',
+    );
+
+    const message = await this.messageRepo.findById(messageId);
+
+    if (!message) {
+      this.logger.warn({ messageId }, 'Message not found');
+      throw new NotFoundException('Message not found');
+    }
+
+    if (message.userId !== user.id) {
+      this.logger.warn(
+        { userId: user.id, messageId },
+        'User is not message owner',
+      );
+      throw new ForbiddenException(
+        'You do not have permission to access this message',
+      );
+    }
+
+    return message;
+  }
+
   async canDelete(user: AccessTokenPayload, messageId: number): Promise<void> {
     this.logger.debug(
       { userId: user.id, messageId },

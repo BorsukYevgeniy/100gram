@@ -216,7 +216,7 @@ export class MessageService {
     filenames: string[],
     transport: 'http' | 'ws',
   ) {
-    await this.messageValidator.validateMessageOwnership(user, messageId);
+    await this.messageValidator.canUpdate(user, messageId);
 
     try {
       const message = await this.messageRepository.update(

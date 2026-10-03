@@ -16,7 +16,7 @@ export class WsUpdateMessageDto extends UpdateMessageDto {
   @ApiProperty({
     type: Number,
     required: true,
-    description: 'ID of the chat where the message will be updated',
+    description: 'ID of the message where the message will be updated',
     minimum: 0,
   })
   @IsInt()
@@ -24,7 +24,7 @@ export class WsUpdateMessageDto extends UpdateMessageDto {
   messageId: number;
 
   @ApiProperty({
-    type: [Number],
+    type: [String],
     required: false,
     description: 'IDs of the files to be attached to the message',
     allOf: [{ minimum: 0 }],

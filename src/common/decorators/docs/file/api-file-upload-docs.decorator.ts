@@ -9,12 +9,13 @@ export function ApiFileUploadDocs(description: string) {
       schema: {
         type: 'object',
         properties: {
-          file: {
-            type: 'string',
-            format: 'binary',
+          files: {
+            type: 'array',
+            items: { type: 'string', format: 'binary' },
+            maxItems: 5,
+            description: 'Optional attachments: up to 5 files, 200 MB per file',
           },
         },
-        required: ['file'],
       },
     }),
     ApiBadRequestResponse({ description: 'Invalid file type or size' }),

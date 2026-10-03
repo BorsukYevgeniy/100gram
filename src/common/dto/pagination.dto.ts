@@ -3,13 +3,11 @@ import { Type } from 'class-transformer';
 import { IsInt, IsOptional, IsPositive } from 'class-validator';
 
 export class PaginationDto {
-  // There cursor means that it is ID of smth resource.For example, in case of messages it will be message ID.
-
   @ApiProperty({
     type: Number,
-    description: 'ID of smth resource',
-    required: true,
-    minimum: 0,
+    description: 'ID used to continue pagination from the last item',
+    required: false,
+    minimum: 1,
   })
   @IsOptional()
   @Type(() => Number)
@@ -19,9 +17,10 @@ export class PaginationDto {
 
   @ApiProperty({
     type: Number,
-    description: 'Quantity of items of smth resource',
-    required: true,
+    description: 'Maximum number of items to return',
+    required: false,
     default: 10,
+    minimum: 1,
   })
   @Type(() => Number)
   @IsInt()

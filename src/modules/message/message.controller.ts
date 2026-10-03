@@ -27,20 +27,20 @@ export class MessageController {
   constructor(private readonly messageService: MessageService) {}
 
   @MessageRoutesDocs.GetById()
-  @Get(':id')
+  @Get(':messageId')
   async findOne(
     @CurrentUser() user: AccessTokenPayload,
-    @Param('id', ParseIntPipe) messageId: number,
+    @Param('messageId', ParseIntPipe) messageId: number,
   ): Promise<Message> {
     return this.messageService.findById(user, messageId);
   }
 
   @MessageRoutesDocs.Update()
-  @Patch(':id')
+  @Patch(':messageId')
   @UseInterceptors(MessageFilesInterceptor)
   async update(
     @CurrentUser() user: AccessTokenPayload,
-    @Param('id', ParseIntPipe) messageId: number,
+    @Param('messageId', ParseIntPipe) messageId: number,
     @Body() updateMessageDto: UpdateMessageDto,
     @UploadedFiles() files: Express.Multer.File[],
   ): Promise<Message> {
@@ -48,10 +48,10 @@ export class MessageController {
   }
 
   @MessageRoutesDocs.Delete()
-  @Delete(':id')
+  @Delete(':messageId')
   async delete(
     @CurrentUser() user: AccessTokenPayload,
-    @Param('id', ParseIntPipe) messageId: number,
+    @Param('messageId', ParseIntPipe) messageId: number,
   ): Promise<Message> {
     return this.messageService.delete(user, messageId);
   }
@@ -60,7 +60,7 @@ export class MessageController {
   @Patch(':id/pin')
   async pinMessage(
     @CurrentUser() user: AccessTokenPayload,
-    @Param('id', ParseIntPipe) messageId: number,
+    @Param('messageId', ParseIntPipe) messageId: number,
   ) {
     return this.messageService.pinMessage(user, messageId);
   }
@@ -69,7 +69,7 @@ export class MessageController {
   @Patch(':id/unpin')
   async unpinMessage(
     @CurrentUser() user: AccessTokenPayload,
-    @Param('id', ParseIntPipe) messageId: number,
+    @Param('messageId', ParseIntPipe) messageId: number,
   ) {
     return this.messageService.unpinMessage(user, messageId);
   }
