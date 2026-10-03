@@ -55,4 +55,22 @@ export class MessageController {
   ): Promise<Message> {
     return this.messageService.delete(user, messageId);
   }
+
+  @MessageRoutesDocs.Pin()
+  @Patch(':id/pin')
+  async pinMessage(
+    @CurrentUser() user: AccessTokenPayload,
+    @Param('id', ParseIntPipe) messageId: number,
+  ) {
+    return this.messageService.pinMessage(user, messageId);
+  }
+
+  @MessageRoutesDocs.Unpin()
+  @Patch(':id/unpin')
+  async unpinMessage(
+    @CurrentUser() user: AccessTokenPayload,
+    @Param('id', ParseIntPipe) messageId: number,
+  ) {
+    return this.messageService.unpinMessage(user, messageId);
+  }
 }

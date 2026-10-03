@@ -85,4 +85,18 @@ export class MessageRepository {
       include: { files: true },
     });
   }
+
+  async pinMessage(messageId: number) {
+    return this.prisma.message.update({
+      where: { id: messageId },
+      data: { isPinned: true },
+    });
+  }
+
+  async unpinMessage(messageId: number) {
+    return this.prisma.message.update({
+      where: { id: messageId },
+      data: { isPinned: false },
+    });
+  }
 }

@@ -189,12 +189,12 @@ describe('MessageController (e2e)', () => {
 
     it('GET /messages/:id - 404 NOT FOUND - Should return 404 if message does not exist', async () => {
       await request(app.getHttpServer())
-        .get('/messages/999999999')
+        .get('/messages/99999999')
         .set('Cookie', [`access_token=${ownerAccessToken}`])
         .expect(404);
     });
 
-    it('GET /messages/:id - 403 FORBIDDEN - Should return 403 because user is not the message owner', async () => {
+    it('GET /messages/:id - 403 FORBIDDEN - Should return 403 because user is not participant', async () => {
       await request(app.getHttpServer())
         .get(`/messages/${messageId}`)
         .set('Cookie', [`access_token=${outsiderAccessToken}`])
@@ -267,6 +267,131 @@ describe('MessageController (e2e)', () => {
           userId: ownerId,
           chatId: groupChatId,
           files: [],
+        }),
+      );
+    });
+  });
+
+  describe('PATCH /messages/:id/pin - Should pin a message', () => {
+    it('PATCH /messages/:id/pin - 401 UNAUTHORIZED - Should return 401 because user is unauthorized', async () => {
+      const { body } = await request(app.getHttpServer())
+        .patch(`/messages/${messageId}/pin`)
+        .expect(401);
+
+      expect(body).toEqual(unauthorizedResponse);
+    });
+
+    it('PATCH /messages/:id/pin - 403 FORBIDDEN - Should return 403 because user is unverified', async () => {
+      const { body } = await request(app.getHttpServer())
+        .patch(`/messages/${messageId}/pin`)
+        .set('Cookie', [`access_token=${unverifiedAccessToken}`])
+        .expect(403);
+
+      expect(body).toEqual(verifiedForbiddenResponse);
+    });
+
+    it('PATCH /messages/:id/pin - 400 BAD REQUEST - Should return 400 because message id is invalid', async () => {
+      await request(app.getHttpServer())
+        .patch('/messages/invalid/pin')
+        .set('Cookie', [`access_token=${ownerAccessToken}`])
+        .expect(400);
+    });
+
+    it('PATCH /messages/:id/pin - 404 NOT FOUND - Should return 404 if message does not exist', async () => {
+      await request(app.getHttpServer())
+        .patch('/messages/999999999/pin')
+        .set('Cookie', [`access_token=${ownerAccessToken}`])
+        .expect(404);
+    });
+
+    it('PATCH /messages/:id/pin - 403 FORBIDDEN - Should return 403 because user is not a participant', async () => {
+      const { body } = await request(app.getHttpServer())
+        .patch(`/messages/${messageId}/pin`)
+        .set('Cookie', [`access_token=${outsiderAccessToken}`])
+        .expect(403);
+
+      expect(body).toEqual({
+        statusCode: 403,
+        message: 'User is not a participant of the chat',
+        error: 'Forbidden',
+      });
+    });
+
+    it('PATCH /messages/:id/pin - 200 OK - Should pin the message for a participant', async () => {
+      const { body } = await request(app.getHttpServer())
+        .patch(`/messages/${messageId}/pin`)
+        .set('Cookie', [`access_token=${memberAccessToken}`])
+        .expect(200);
+
+      expect(body).toEqual(
+        expect.objectContaining({
+          id: messageId,
+          isPinned: true,
+        }),
+      );
+    });
+  });
+
+  describe('PATCH /messages/:id/unpin - Should unpin a message', () => {
+    it('PATCH /messages/:id/unpin - 401 UNAUTHORIZED - Should return 401 because user is unauthorized', async () => {
+      const { body } = await request(app.getHttpServer())
+        .patch(`/messages/${messageId}/unpin`)
+        .expect(401);
+
+      expect(body).toEqual(unauthorizedResponse);
+    });
+
+    it('PATCH /messages/:id/unpin - 403 FORBIDDEN - Should return 403 because user is unverified', async () => {
+      const { body } = await request(app.getHttpServer())
+        .patch(`/messages/${messageId}/unpin`)
+        .set('Cookie', [`access_token=${unverifiedAccessToken}`])
+        .expect(403);
+
+      expect(body).toEqual(verifiedForbiddenResponse);
+    });
+
+    it('PATCH /messages/:id/unpin - 400 BAD REQUEST - Should return 400 because message id is invalid', async () => {
+      await request(app.getHttpServer())
+        .patch('/messages/invalid/unpin')
+        .set('Cookie', [`access_token=${ownerAccessToken}`])
+        .expect(400);
+    });
+
+    it('PATCH /messages/:id/unpin - 404 NOT FOUND - Should return 404 if message does not exist', async () => {
+      await request(app.getHttpServer())
+        .patch('/messages/999999999/unpin')
+        .set('Cookie', [`access_token=${ownerAccessToken}`])
+        .expect(404);
+    });
+
+    it('PATCH /messages/:id/unpin - 403 FORBIDDEN - Should return 403 because user is not a participant', async () => {
+      const { body } = await request(app.getHttpServer())
+        .patch(`/messages/${messageId}/unpin`)
+        .set('Cookie', [`access_token=${outsiderAccessToken}`])
+        .expect(403);
+
+      expect(body).toEqual({
+        statusCode: 403,
+        message: 'User is not a participant of the chat',
+        error: 'Forbidden',
+      });
+    });
+
+    it('PATCH /messages/:id/unpin - 200 OK - Should unpin the message for a participant', async () => {
+      await prisma.message.update({
+        where: { id: messageId },
+        data: { isPinned: true },
+      });
+
+      const { body } = await request(app.getHttpServer())
+        .patch(`/messages/${messageId}/unpin`)
+        .set('Cookie', [`access_token=${memberAccessToken}`])
+        .expect(200);
+
+      expect(body).toEqual(
+        expect.objectContaining({
+          id: messageId,
+          isPinned: false,
         }),
       );
     });

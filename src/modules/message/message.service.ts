@@ -172,7 +172,12 @@ export class MessageService {
     user: AccessTokenPayload,
     messageId: number,
   ): Promise<MessageFiles> {
-    return this.messageValidator.validateMessageOwnership(user, messageId);
+    const msg = await this.messageRepository.findById(messageId);
+
+    if (!msg) throw new NotFoundException('Message not found');
+
+    await this.chatValidator.validateChatParticipation(user, msg.chatId);
+    return this.messageRepository.findById(messageId);
   }
 
   async update(
@@ -251,5 +256,23 @@ export class MessageService {
 
     await this.cache.incrChatMessageVersion(message.chatId);
     return message;
+  }
+
+  async pinMessage(user: AccessTokenPayload, messageId: number) {
+    const msg = await this.messageRepository.findById(messageId);
+
+    if (!msg) throw new NotFoundException('Message not found');
+
+    await this.chatValidator.validateChatParticipation(user, msg.chatId);
+    return this.messageRepository.pinMessage(messageId);
+  }
+
+  async unpinMessage(user: AccessTokenPayload, messageId: number) {
+    const msg = await this.messageRepository.findById(messageId);
+
+    if (!msg) throw new NotFoundException('Message not found');
+
+    await this.chatValidator.validateChatParticipation(user, msg.chatId);
+    return this.messageRepository.unpinMessage(messageId);
   }
 }

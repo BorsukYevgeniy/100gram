@@ -1,7 +1,16 @@
 import { applyDecorators } from '@nestjs/common';
-import { ApiOkResponse, ApiOperation } from '@nestjs/swagger';
+import {
+  ApiForbiddenResponse,
+  ApiOkResponse,
+  ApiOperation,
+} from '@nestjs/swagger';
 import { ApiFileUploadDocs } from '../../../common/decorators/docs/file';
 
+function ApiYouMustBeChatParticipantResponse() {
+  return ApiForbiddenResponse({
+    description: 'User is not a participant of the chat',
+  });
+}
 export class MessageRoutesDocs {
   static GetById() {
     return applyDecorators(
@@ -12,6 +21,7 @@ export class MessageRoutesDocs {
       ApiOkResponse({
         description: 'Message fetched successfully',
       }),
+      ApiYouMustBeChatParticipantResponse(),
     );
   }
 
@@ -25,6 +35,9 @@ export class MessageRoutesDocs {
         description: 'Message updated successfully',
       }),
       ApiFileUploadDocs('File for message'),
+      ApiForbiddenResponse({
+        description: 'You must be an owner of the message',
+      }),
     );
   }
 
@@ -37,6 +50,35 @@ export class MessageRoutesDocs {
       ApiOkResponse({
         description: 'Message deleted successfully',
       }),
+      ApiForbiddenResponse({
+        description: 'You do not have permission to delete this message',
+      }),
+    );
+  }
+
+  static Pin() {
+    return applyDecorators(
+      ApiOperation({
+        summary: 'Pin message',
+        description: 'Pins a message in the chat',
+      }),
+      ApiOkResponse({
+        description: 'Message pinned successfully',
+      }),
+      ApiYouMustBeChatParticipantResponse(),
+    );
+  }
+
+  static Unpin() {
+    return applyDecorators(
+      ApiOperation({
+        summary: 'Unpin message',
+        description: 'Unpins a message in the chat',
+      }),
+      ApiOkResponse({
+        description: 'Message unpinned successfully',
+      }),
+      ApiYouMustBeChatParticipantResponse(),
     );
   }
 }
