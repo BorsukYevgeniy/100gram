@@ -2,13 +2,19 @@ import { applyDecorators } from '@nestjs/common';
 import {
   ApiBody,
   ApiConflictResponse,
+  ApiCreatedResponse,
+  ApiForbiddenResponse,
   ApiNotFoundResponse,
   ApiOkResponse,
   ApiOperation,
 } from '@nestjs/swagger';
+import { ApiVerifiedAuthDocs } from '../../../../common/decorators/docs/auth';
 import { ApiPaginationDocs } from '../../../../common/decorators/docs/pagination';
 import { ApiUserIdDocs, ApiUserIdParamDocs } from '../../../user/docs/shared';
-import { ApiChatMustBeGroupResponse } from '../../docs/shared';
+import {
+  ApiChatMustBeGroupResponse,
+  ApiYouMustBeChatOwnerResponse,
+} from '../../docs/shared';
 import { UpdateRoleDto } from '../../dto/role/update-role.dto';
 
 function UserIsNotParticipantOfChatDocs() {
@@ -25,9 +31,14 @@ export class ChatMemberRoutesDocs {
     return applyDecorators(
       ApiOperation({
         summary: 'Fetch all users in chat',
-        description: 'Return all users in someone chat with pagination',
+        description:
+          'Returns the users who belong to the chat, ordered by user ID and paginated',
       }),
       ApiOkResponse({ description: 'Fetched users in chat' }),
+      ApiVerifiedAuthDocs(),
+      ApiForbiddenResponse({
+        description: 'User is not a participant of the chat',
+      }),
       ApiPaginationDocs(),
     );
   }
@@ -35,10 +46,10 @@ export class ChatMemberRoutesDocs {
   static AddUserToChat() {
     return applyDecorators(
       ApiOperation({
-        summary: 'Add users to chat',
-        description: 'Add a new user in someone chat',
+        summary: 'Add a user to a group chat',
+        description: 'Adds the specified user to the group chat',
       }),
-      ApiOkResponse({ description: 'User added' }),
+      ApiCreatedResponse({ description: 'User added to chat successfully' }),
       ApiUserIdDocs(),
       ApiConflictResponse({
         description: 'User already is a participant of the chat',
@@ -50,12 +61,15 @@ export class ChatMemberRoutesDocs {
   static DeleteUserFromChat() {
     return applyDecorators(
       ApiOperation({
-        summary: 'Delete users to chat',
-        description: 'Delete a user from someone chat',
+        summary: 'Remove a user from a group chat',
+        description:
+          'Removes the specified participant from the group chat. Only the chat owner or an admin can do this.',
       }),
-      ApiOkResponse({ description: 'User deleted' }),
+      ApiOkResponse({ description: 'User removed from chat successfully' }),
       UserIsNotParticipantOfChatDocs(),
       ApiChatMustBeGroupResponse(),
+      ApiYouMustBeChatOwnerResponse(),
+      ApiVerifiedAuthDocs(),
     );
   }
 
@@ -63,11 +77,14 @@ export class ChatMemberRoutesDocs {
     return applyDecorators(
       ApiOperation({
         summary: 'Update role of user in chat',
-        description: 'Update role of user in someone chat',
+        description:
+          'Updates the role of a chat participant. Only the chat owner or an admin can do this.',
       }),
-      ApiOkResponse({ description: 'Role updated' }),
+      ApiOkResponse({ description: 'User role updated successfully' }),
       UserIsNotParticipantOfChatDocs(),
       ApiBody({ type: UpdateRoleDto, required: true }),
+      ApiVerifiedAuthDocs(),
+      ApiYouMustBeChatOwnerResponse(),
     );
   }
 }
