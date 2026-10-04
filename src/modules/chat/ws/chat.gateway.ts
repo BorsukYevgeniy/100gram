@@ -148,10 +148,14 @@ export class ChatGateway
   @ChatGatewayDocs.AddReaction()
   @SubscribeMessage('addReaction')
   async handleAddingReaction(
-    @WsCurrentUser() { id }: AccessTokenPayload,
+    @WsCurrentUser() user: AccessTokenPayload,
     @MessageBody() { chatId, messageId, ...dto }: WsAddReactionDto,
   ) {
-    const reaction = await this.reactionService.addReaction(id, messageId, dto);
+    const reaction = await this.reactionService.addReaction(
+      user,
+      messageId,
+      dto,
+    );
 
     this.server.to(`chat-${chatId}`).emit('chatAddedReaction', reaction);
   }
@@ -159,11 +163,11 @@ export class ChatGateway
   @ChatGatewayDocs.UpdateReaction()
   @SubscribeMessage('updateReaction')
   async handleUpdatingReaction(
-    @WsCurrentUser() { id }: AccessTokenPayload,
+    @WsCurrentUser() user: AccessTokenPayload,
     @MessageBody() { chatId, messageId, ...dto }: WsUpdateReactionDto,
   ) {
     const reaction = await this.reactionService.updateReaction(
-      id,
+      user,
       messageId,
       dto,
     );
@@ -174,10 +178,10 @@ export class ChatGateway
   @ChatGatewayDocs.DeleteReaction()
   @SubscribeMessage('deleteReaction')
   async handleDeletingReaction(
-    @WsCurrentUser() { id }: AccessTokenPayload,
+    @WsCurrentUser() user: AccessTokenPayload,
     @MessageBody() { chatId, messageId }: WsRemoveReactionDto,
   ) {
-    const reaction = await this.reactionService.removeReaction(id, messageId);
+    const reaction = await this.reactionService.removeReaction(user, messageId);
 
     this.server.to(`chat-${chatId}`).emit('chatDeletedReaction', reaction);
   }

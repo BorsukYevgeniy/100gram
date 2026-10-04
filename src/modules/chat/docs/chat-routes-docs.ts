@@ -14,6 +14,7 @@ import {
 import { ApiVerifiedAuthDocs } from '../../../common/decorators/docs/auth';
 import { ApiPaginationDocs } from '../../../common/decorators/docs/pagination';
 import { ApiUserNotFoundResponse } from '../../user/docs/shared';
+import { AllowReactionDto } from '../dto/allow-reaction.dto';
 import { ChannelGroupChatResponseDto } from '../dto/channel-group-chat-response.dto';
 import { CreateChannelDto } from '../dto/create-channel.dto';
 import { CreateGroupChatDto } from '../dto/create-group-chat.dto';
@@ -22,7 +23,7 @@ import { PrivateChatResponseDto } from '../dto/private-chat-response.dto';
 import { UpdateGroupChatDto } from '../dto/update-group-chat.dto';
 import {
   ApiChatIdDocs,
-  ApiChatMustBeGroupResponse,
+  ApiChatMustBeGroupOrChannelResponse,
   ApiYouMustBeChatOwnerResponse,
 } from './shared';
 
@@ -118,7 +119,7 @@ export class ChatRoutesDocs {
         description: 'Update token for inviting users',
       }),
       ApiOkResponse({ description: 'Token updated successfully' }),
-      ApiChatMustBeGroupResponse(),
+      ApiChatMustBeGroupOrChannelResponse(),
       ApiYouMustBeChatOwnerResponse(),
       ApiVerifiedAuthDocs(),
       ApiChatIdDocs(),
@@ -155,7 +156,7 @@ export class ChatRoutesDocs {
         description: 'Setting new owner in chat by ID',
       }),
       ApiOkResponse({ description: 'Owner updated successfully' }),
-      ApiChatMustBeGroupResponse(),
+      ApiChatMustBeGroupOrChannelResponse(),
       ApiNotFoundResponse({ description: 'New owner not found' }),
       ApiYouMustBeChatOwnerResponse(),
       ApiVerifiedAuthDocs(),
@@ -203,8 +204,7 @@ export class ChatRoutesDocs {
     return applyDecorators(
       ApiOperation({
         summary: 'Join to chat',
-        description:
-          'Adds the authenticated user to a public group or channel',
+        description: 'Adds the authenticated user to a public group or channel',
       }),
       ApiOkResponse({ description: 'User added to chat successfully' }),
       ApiChatIdDocs(),
@@ -244,6 +244,23 @@ export class ChatRoutesDocs {
         description: 'User is not a participant of the chat',
       }),
       ApiChatIdDocs(),
+    );
+  }
+
+  static UpdateAllowedReactions() {
+    return applyDecorators(
+      ApiOperation({
+        summary: 'Update allowed reactions',
+        description: 'Update the list of reactions allowed in a group chat or channel',
+      }),
+      ApiOkResponse({ description: 'Allowed reactions updated successfully' }),
+      ApiBadRequestResponse({
+        description: 'Chat must be a group or a channel or reaction list is invalid',
+      }),
+      ApiYouMustBeChatOwnerResponse(),
+      ApiVerifiedAuthDocs(),
+      ApiChatIdDocs(),
+      ApiBody({ type: AllowReactionDto }),
     );
   }
 }

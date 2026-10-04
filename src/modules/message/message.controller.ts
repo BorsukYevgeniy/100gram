@@ -57,7 +57,7 @@ export class MessageController {
   }
 
   @MessageRoutesDocs.Pin()
-  @Patch(':id/pin')
+  @Patch(':messageId/pin')
   async pinMessage(
     @CurrentUser() user: AccessTokenPayload,
     @Param('messageId', ParseIntPipe) messageId: number,
@@ -66,7 +66,7 @@ export class MessageController {
   }
 
   @MessageRoutesDocs.Unpin()
-  @Patch(':id/unpin')
+  @Patch(':messageId/unpin')
   async unpinMessage(
     @CurrentUser() user: AccessTokenPayload,
     @Param('messageId', ParseIntPipe) messageId: number,

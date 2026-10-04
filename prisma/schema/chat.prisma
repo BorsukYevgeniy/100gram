@@ -20,10 +20,13 @@ model Chat {
   avatarName String? @unique
   avatar     File?   @relation("ChatAvatar", fields: [avatarName], references: [name], onDelete: SetNull)
 
+  allowedReactions Reaction[] @default([])
+
   /**
    * Private chats dont have avatar, inviteToken, title and description.
    * He's visibility is private by default and cant be changed.
    * In Private chat 2 members are owners.
+   * Private chat doesnt have allowed reaction. allowedReaction is empty by default and cant be changed.
    */
 }
 

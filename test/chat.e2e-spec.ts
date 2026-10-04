@@ -6,7 +6,7 @@ import { hashSync } from 'bcryptjs';
 import cookieParser from 'cookie-parser';
 import { LoggerModule } from 'nestjs-pino';
 import request from 'supertest';
-import { ChatType, Visibility } from '../generated/prisma/enums';
+import { ChatType, Reaction, Visibility } from '../generated/prisma/enums';
 import authConfig from '../src/config/auth.config';
 import databaseConfig from '../src/config/database.config';
 import pinoConfig from '../src/config/pino.config';
@@ -724,6 +724,56 @@ describe('ChatController (e2e)', () => {
           chatId: privateChatId,
           userId: memberId,
           isPinned: false,
+        }),
+      );
+    });
+  });
+
+  describe('PATCH /chats/:chatId/allowed-reactions - Should update allowed reactions', () => {
+    it('PATCH /chats/:chatId/allowed-reactions - 401 UNAUTHORIZED - Should return 401 because user is unauthorized', async () => {
+      const { body } = await request(app.getHttpServer())
+        .patch(`/chats/${groupChatId}/allowed-reactions`)
+        .send({ allowedReactions: [Reaction.LIKE] })
+        .expect(401);
+
+      expect(body).toEqual(unauthorizedResponse);
+    });
+
+    it('PATCH /chats/:chatId/allowed-reactions - 403 FORBIDDEN - Should return 403 because user is not verified', async () => {
+      await request(app.getHttpServer())
+        .patch(`/chats/${groupChatId}/allowed-reactions`)
+        .send({ allowedReactions: [Reaction.LIKE] })
+        .set('Cookie', [`access_token=${unverifiedAccessToken}`])
+        .expect(403);
+    });
+
+    it('PATCH /chats/:chatId/allowed-reactions - 403 FORBIDDEN - Should return 403 because user is not the owner', async () => {
+      await request(app.getHttpServer())
+        .patch(`/chats/${groupChatId}/allowed-reactions`)
+        .send({ allowedReactions: [Reaction.LIKE] })
+        .set('Cookie', [`access_token=${guestAccessToken}`])
+        .expect(403);
+    });
+
+    it('PATCH /chats/:chatId/allowed-reactions - 400 BAD REQUEST - Should return 400 because reaction list is invalid', async () => {
+      await request(app.getHttpServer())
+        .patch(`/chats/${groupChatId}/allowed-reactions`)
+        .send({ allowedReactions: ['INVALID'] })
+        .set('Cookie', [`access_token=${ownerAccessToken}`])
+        .expect(400);
+    });
+
+    it('PATCH /chats/:chatId/allowed-reactions - 200 OK - Should update the allowed reactions list', async () => {
+      const { body } = await request(app.getHttpServer())
+        .patch(`/chats/${groupChatId}/allowed-reactions`)
+        .send({ allowedReactions: [Reaction.LIKE, Reaction.HEART] })
+        .set('Cookie', [`access_token=${ownerAccessToken}`])
+        .expect(200);
+
+      expect(body).toEqual(
+        expect.objectContaining({
+          id: groupChatId,
+          allowedReactions: [Reaction.LIKE, Reaction.HEART],
         }),
       );
     });

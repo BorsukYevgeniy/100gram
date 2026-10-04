@@ -1,12 +1,10 @@
-import {
-  ForbiddenException,
-  Injectable,
-  NotFoundException,
-} from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaClientKnownRequestError } from '@prisma/client/runtime/client';
 import { PinoLogger } from 'nestjs-pino';
+import { AccessTokenPayload } from '../../common/types';
 import { ChatValidationService } from '../chat/validation/chat-validation.service';
 import { MessageRepository } from '../message/repository/message.repository';
+import { MessageFiles } from '../message/types/message.types';
 import { AddReactionDto } from './dto/add-reaction.dto';
 import { UpdateReactionDto } from './dto/update-reaction.dto';
 import { ReactionRepository } from './reaction.repository';
@@ -23,10 +21,13 @@ export class ReactionService {
   }
 
   private async validateReactionPermission(
-    userId: number,
+    user: AccessTokenPayload,
     messageId: number,
-  ): Promise<void> {
-    this.logger.debug({ userId, messageId }, 'Validating reaction permission');
+  ): Promise<MessageFiles> {
+    this.logger.debug(
+      { userId: user.id, messageId },
+      'Validating reaction permission',
+    );
     const msg = await this.messageRepo.findById(messageId);
 
     if (!msg) {
@@ -34,48 +35,55 @@ export class ReactionService {
       throw new NotFoundException('Message not found');
     }
 
-    const isParticipant = await this.chatValidator.checkChatParticipation(
-      userId,
-      msg.chatId,
-    );
+    await this.chatValidator.validateChatParticipation(user, msg.chatId);
 
-    if (!isParticipant) {
-      this.logger.warn({ userId }, 'User is not participant of the chat');
-      throw new ForbiddenException('User is not participant of the chat');
-    }
+    return msg;
   }
 
-  async addReaction(userId: number, messageId: number, dto: AddReactionDto) {
-    await this.validateReactionPermission(userId, messageId);
-
-    const reaction = await this.reactionRepo.addReaction(
-      userId,
-      messageId,
-      dto,
-    );
-
-    this.logger.info(
-      { userId, messageId, reaction: dto.reaction },
-      'Added reaction to message',
-    );
-
-    return reaction;
-  }
-
-  async updateReaction(
-    userId: number,
+  async addReaction(
+    user: AccessTokenPayload,
     messageId: number,
-    dto: UpdateReactionDto,
+    dto: AddReactionDto,
   ) {
     try {
-      const reaction = await this.reactionRepo.updateReaction(
-        userId,
+      const { chatId } = await this.validateReactionPermission(user, messageId);
+      await this.chatValidator.checkReactionAllowed(chatId, dto.reaction);
+
+      const reaction = await this.reactionRepo.addReaction(
+        user.id,
         messageId,
         dto,
       );
 
       this.logger.info(
-        { userId, messageId, reaction: dto.reaction },
+        { userId: user.id, messageId, reaction: dto.reaction },
+        'Added reaction to message',
+      );
+
+      return reaction;
+    } catch (e) {
+      console.log(e);
+      throw e;
+    }
+  }
+
+  async updateReaction(
+    user: AccessTokenPayload,
+    messageId: number,
+    dto: UpdateReactionDto,
+  ) {
+    const { chatId } = await this.validateReactionPermission(user, messageId);
+    await this.chatValidator.checkReactionAllowed(chatId, dto.reaction);
+
+    try {
+      const reaction = await this.reactionRepo.updateReaction(
+        user.id,
+        messageId,
+        dto,
+      );
+
+      this.logger.info(
+        { userId: user.id, messageId, reaction: dto.reaction },
         'Updated reaction of message',
       );
 
@@ -89,14 +97,19 @@ export class ReactionService {
     }
   }
 
-  async removeReaction(userId: number, messageId: number) {
+  async removeReaction(user: AccessTokenPayload, messageId: number) {
+    await this.validateReactionPermission(user, messageId);
+
     try {
       const reaction = await this.reactionRepo.removeReaction(
-        userId,
+        user.id,
         messageId,
       );
 
-      this.logger.info({ userId, messageId }, 'Deleted reaction to message');
+      this.logger.info(
+        { userId: user.id, messageId },
+        'Deleted reaction to message',
+      );
       return reaction;
     } catch (e) {
       if (e instanceof PrismaClientKnownRequestError && e.code === 'P2025') {

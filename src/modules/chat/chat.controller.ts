@@ -16,6 +16,7 @@ import { CurrentUser } from '../auth/decorator/current-user.decorator';
 import { VerifiedUserGuard } from '../auth/guards/verified-user.guard';
 import { ChatService } from './chat.service';
 import { ChatControllerDocs, ChatRoutesDocs } from './docs';
+import { AllowReactionDto } from './dto/allow-reaction.dto';
 import { CreateChannelDto } from './dto/create-channel.dto';
 import { CreateGroupChatDto } from './dto/create-group-chat.dto';
 import { CreatePrivateChatDto } from './dto/create-private-chat.dto';
@@ -148,5 +149,15 @@ export class ChatController {
     @CurrentUser() user: AccessTokenPayload,
   ) {
     return this.chatService.unpinChat(user, chatId);
+  }
+
+  @ChatRoutesDocs.UpdateAllowedReactions()
+  @Patch(':chatId/allowed-reactions')
+  async updateAllowedReactions(
+    @CurrentUser() user: AccessTokenPayload,
+    @Param('chatId', ParseIntPipe) chatId: number,
+    @Body() dto: AllowReactionDto,
+  ) {
+    return this.chatService.updateAllowedReactions(user, chatId, dto);
   }
 }

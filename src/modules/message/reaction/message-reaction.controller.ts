@@ -32,7 +32,7 @@ export class MessageReactionController {
     @Param('messageId', ParseIntPipe) messageId: number,
     @Body() dto: AddReactionDto,
   ) {
-    return this.reactionService.addReaction(user.id, messageId, dto);
+    return this.reactionService.addReaction(user, messageId, dto);
   }
 
   @MessageReactionRoutesDocs.UpdateReaction()
@@ -42,7 +42,7 @@ export class MessageReactionController {
     @Param('messageId', ParseIntPipe) messageId: number,
     @Body() dto: UpdateReactionDto,
   ) {
-    return this.reactionService.updateReaction(user.id, messageId, dto);
+    return this.reactionService.updateReaction(user, messageId, dto);
   }
 
   @MessageReactionRoutesDocs.DeleteReaction()
@@ -51,6 +51,6 @@ export class MessageReactionController {
     @CurrentUser() user: AccessTokenPayload,
     @Param('messageId', ParseIntPipe) messageId: number,
   ) {
-    return this.reactionService.removeReaction(user.id, messageId);
+    return this.reactionService.removeReaction(user, messageId);
   }
 }

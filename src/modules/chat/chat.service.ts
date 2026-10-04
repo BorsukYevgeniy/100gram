@@ -20,6 +20,7 @@ import { PaginationDto } from '../../common/dto/pagination.dto';
 import { CacheService } from '../cache/cache.service';
 import { ChatMemberService } from './chat-member/chat-member.service';
 import { ChatMemberRepository } from './chat-member/repository/chat-member.repository';
+import { AllowReactionDto } from './dto/allow-reaction.dto';
 import { ChannelGroupChatResponseDto } from './dto/channel-group-chat-response.dto';
 import { CreateChannelDto } from './dto/create-channel.dto';
 import { PrivateChatResponseDto } from './dto/private-chat-response.dto';
@@ -355,5 +356,21 @@ export class ChatService {
   async unpinChat(user: AccessTokenPayload, chatId: number) {
     await this.chatValidator.validateChatParticipation(user, chatId);
     return this.chatRepo.unpinChat(user.id, chatId);
+  }
+
+  async updateAllowedReactions(
+    user: AccessTokenPayload,
+    chatId: number,
+    dto: AllowReactionDto,
+  ) {
+    await this.chatValidator.validateChatType(
+      chatId,
+      ChatType.CHANNEL,
+      ChatType.GROUP,
+    );
+
+    await this.chatValidator.validateOwner(user, chatId);
+
+    return this.chatRepo.updateAllowedReaction(chatId, dto);
   }
 }

@@ -5,7 +5,12 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { PinoLogger } from 'nestjs-pino';
-import { ChatType, Role, Visibility } from '../../../../generated/prisma/enums';
+import {
+  ChatType,
+  Reaction,
+  Role,
+  Visibility,
+} from '../../../../generated/prisma/enums';
 import { AccessTokenPayload } from '../../../common/types';
 import { BlockedUserService } from '../../user/blocked-user/blocked-user.service';
 import { ChatMemberRepository } from '../chat-member/repository/chat-member.repository';
@@ -132,5 +137,27 @@ export class ChatValidationService {
 
     const usersInChat = await this.chatUserRepo.getChatUser(chatId, userId);
     return !!usersInChat;
+  }
+
+  async checkReactionAllowed(chatId: number, reaction: Reaction) {
+    this.logger.debug({ chatId, reaction }, 'Checking reaction allowed');
+
+    const chat = await this.chatRepo.getById(chatId);
+
+    if (!chat) {
+      this.logger.warn({ chatId }, 'Chat not found');
+      throw new NotFoundException('Chat not found');
+    }
+
+    if (
+      chat.allowedReactions.length > 0 &&
+      !chat.allowedReactions.includes(reaction)
+    ) {
+      this.logger.warn(
+        { chatId, reaction, allowedReactions: chat.allowedReactions },
+        'Reaction not allowed in this chat',
+      );
+      throw new ForbiddenException('Reaction not allowed in this chat');
+    }
   }
 }

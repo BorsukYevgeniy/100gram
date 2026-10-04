@@ -29,6 +29,7 @@ describe('MessageReactionController (e2e)', () => {
 
   let memberId: number;
   let messageId: number;
+  let restrictedMessageId: number;
   let groupChatId: number;
 
   beforeAll(async () => {
@@ -65,6 +66,8 @@ describe('MessageReactionController (e2e)', () => {
     await prisma.chatToUser.deleteMany({});
     await prisma.token.deleteMany({});
     await prisma.user.deleteMany({});
+    await prisma.reactionToMessage.deleteMany({});
+
     await app.init();
 
     const hashedPassword = hashSync('password', passwordSalt);
@@ -128,18 +131,28 @@ describe('MessageReactionController (e2e)', () => {
       data: {
         chatId: groupChatId,
         userId: memberId,
-        role: ChatRole.MEMBER,
+        role: ChatRole.OWNER,
       },
     });
 
-    const message = await prisma.message.create({
-      data: {
-        text: 'Message with reaction',
-        userId: memberId,
-        chatId: groupChatId,
-      },
-    });
+    const [message, restrictedMessage] = await Promise.all([
+      prisma.message.create({
+        data: {
+          text: 'Message with reaction',
+          userId: memberId,
+          chatId: groupChatId,
+        },
+      }),
+      prisma.message.create({
+        data: {
+          text: 'Restricted message',
+          userId: memberId,
+          chatId: groupChatId,
+        },
+      }),
+    ]);
     messageId = message.id;
+    restrictedMessageId = restrictedMessage.id;
   }, 10_000);
 
   describe('POST /messages/:messageId/reactions - Should add a reaction', () => {
@@ -309,11 +322,67 @@ describe('MessageReactionController (e2e)', () => {
     });
   });
 
+  describe('PATCH /chats/:chatId/allowed-reactions - Should restrict reactions in a chat', () => {
+    beforeAll(async () => {
+      await prisma.chat.update({
+        where: { id: groupChatId },
+        data: { allowedReactions: [Reaction.LIKE] },
+      });
+    });
+
+    it('POST /messages/:messageId/reactions - 403 FORBIDDEN - Should return 403 because the reaction is not allowed in the chat', async () => {
+      await request(app.getHttpServer())
+        .post(`/messages/${messageId}/reactions`)
+        .send({ reaction: Reaction.HEART })
+        .set('Cookie', [`access_token=${memberAccessToken}`])
+        .expect(403);
+    });
+
+    it('PATCH /messages/:messageId/reactions - 403 FORBIDDEN - Should return 403 because the reaction is not allowed in the chat', async () => {
+      await request(app.getHttpServer())
+        .patch(`/messages/${messageId}/reactions`)
+        .send({ reaction: Reaction.HEART })
+        .set('Cookie', [`access_token=${memberAccessToken}`])
+        .expect(403);
+    });
+
+    it('POST /messages/:messageId/reactions - 201 CREATED - Should add a reaction when it is allowed in the chat', async () => {
+      const { body } = await request(app.getHttpServer())
+        .post(`/messages/${messageId}/reactions`)
+        .send({ reaction: Reaction.LIKE })
+        .set('Cookie', [`access_token=${memberAccessToken}`])
+        .expect(201);
+
+      expect(body).toEqual({
+        messageId,
+        userId: memberId,
+        reaction: Reaction.LIKE,
+        createdAt: expect.any(String),
+      });
+    });
+
+    it('PATCH /messages/:messageId/reactions - 200 OK - Should update a reaction when it is allowed in the chat', async () => {
+      const { body } = await request(app.getHttpServer())
+        .patch(`/messages/${messageId}/reactions`)
+        .send({ reaction: Reaction.LIKE })
+        .set('Cookie', [`access_token=${memberAccessToken}`])
+        .expect(200);
+
+      expect(body).toEqual({
+        messageId,
+        userId: memberId,
+        reaction: Reaction.LIKE,
+        createdAt: expect.any(String),
+      });
+    });
+  });
+
   afterAll(async () => {
     await prisma.chat.deleteMany({});
     await prisma.chatToUser.deleteMany({});
     await prisma.token.deleteMany({});
     await prisma.user.deleteMany({});
+    await prisma.reactionToMessage.deleteMany({});
     await app.close();
   });
 });

@@ -12,7 +12,7 @@ import { ApiVerifiedAuthDocs } from '../../../../common/decorators/docs/auth';
 import { ApiPaginationDocs } from '../../../../common/decorators/docs/pagination';
 import { ApiUserIdDocs, ApiUserIdParamDocs } from '../../../user/docs/shared';
 import {
-  ApiChatMustBeGroupResponse,
+  ApiChatMustBeGroupOrChannelResponse,
   ApiYouMustBeChatOwnerResponse,
 } from '../../docs/shared';
 import { UpdateRoleDto } from '../../dto/role/update-role.dto';
@@ -54,7 +54,7 @@ export class ChatMemberRoutesDocs {
       ApiConflictResponse({
         description: 'User already is a participant of the chat',
       }),
-      ApiChatMustBeGroupResponse(),
+      ApiChatMustBeGroupOrChannelResponse(),
     );
   }
 
@@ -67,7 +67,7 @@ export class ChatMemberRoutesDocs {
       }),
       ApiOkResponse({ description: 'User removed from chat successfully' }),
       UserIsNotParticipantOfChatDocs(),
-      ApiChatMustBeGroupResponse(),
+      ApiChatMustBeGroupOrChannelResponse(),
       ApiYouMustBeChatOwnerResponse(),
       ApiVerifiedAuthDocs(),
     );

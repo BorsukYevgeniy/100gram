@@ -4,7 +4,7 @@ import { ApiTags } from '@nestjs/swagger';
 import { ApiVerifiedAuthDocs } from '../../../../common/decorators/docs/auth';
 import {
   ApiChatIdDocs,
-  ApiChatMustBeGroupResponse,
+  ApiChatMustBeGroupOrChannelResponse,
   ApiYouMustBeChatOwnerResponse,
 } from '../../docs/shared';
 
@@ -14,6 +14,6 @@ export function ChatAvatarControllerDocs() {
     ApiChatIdDocs(),
     ApiVerifiedAuthDocs(),
     ApiYouMustBeChatOwnerResponse(),
-    ApiChatMustBeGroupResponse(),
+    ApiChatMustBeGroupOrChannelResponse(),
   );
 }

@@ -3,6 +3,7 @@ import { ChatToUser } from '../../../../generated/prisma/browser';
 import { Chat } from '../../../../generated/prisma/client';
 import { ChatRole, ChatType } from '../../../../generated/prisma/enums';
 import { PrismaService } from '../../../infra/prisma/prisma.service';
+import { AllowReactionDto } from '../dto/allow-reaction.dto';
 import { CreateChannelDto } from '../dto/create-channel.dto';
 import { CreateGroupChatDto } from '../dto/create-group-chat.dto';
 import { UpdateGroupChatDto } from '../dto/update-group-chat.dto';
@@ -196,6 +197,13 @@ export class ChatRepository {
     return this.prisma.chatToUser.update({
       where: { chatId_userId: { chatId, userId } },
       data: { isPinned: false },
+    });
+  }
+
+  async updateAllowedReaction(chatId: number, dto: AllowReactionDto) {
+    return this.prisma.chat.update({
+      where: { id: chatId },
+      data: dto,
     });
   }
 }
