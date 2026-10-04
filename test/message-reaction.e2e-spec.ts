@@ -221,6 +221,14 @@ describe('MessageReactionController (e2e)', () => {
         createdAt: expect.any(String),
       });
     });
+
+    it('POST /messages/:messageId/reactions - 409 CONFLICT - Should return 409 code because reaction already added', async () => {
+      await request(app.getHttpServer())
+        .post(`/messages/${messageId}/reactions`)
+        .send({ reaction: Reaction.LIKE })
+        .set('Cookie', [`access_token=${memberAccessToken}`])
+        .expect(409);
+    });
   });
 
   describe('PATCH /messages/:messageId/reactions - Should update a reaction', () => {

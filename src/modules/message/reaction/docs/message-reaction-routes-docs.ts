@@ -1,5 +1,6 @@
 import { applyDecorators } from '@nestjs/common';
 import {
+  ApiConflictResponse,
   ApiCreatedResponse,
   ApiOkResponse,
   ApiOperation,
@@ -14,6 +15,9 @@ export class MessageReactionRoutesDocs {
           'Adds a new reaction from the authenticated user to the specified message',
       }),
       ApiCreatedResponse({ description: 'Reaction added successfully' }),
+      ApiConflictResponse({
+        description: 'Reaction already added',
+      }),
     );
   }
 

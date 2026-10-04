@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  ConflictException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { PrismaClientKnownRequestError } from '@prisma/client/runtime/client';
 import { PinoLogger } from 'nestjs-pino';
 import { AccessTokenPayload } from '../../common/types';
@@ -62,7 +66,13 @@ export class ReactionService {
 
       return reaction;
     } catch (e) {
-      console.log(e);
+      if (e instanceof PrismaClientKnownRequestError && e.code === 'P2002') {
+        this.logger.warn(
+          { messageId, userId: user.id, reaction: dto.reaction },
+          'Reaction already added',
+        );
+        throw new ConflictException('Reaction already added');
+      }
       throw e;
     }
   }
