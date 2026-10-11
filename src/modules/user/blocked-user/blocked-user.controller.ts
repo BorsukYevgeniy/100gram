@@ -22,7 +22,7 @@ export class BlockedUserController {
   @ApiBlockedUserRouterDocs.GetMyBlockedUsers()
   @Get('me/blocked')
   async getMyBlockedUsers(@CurrentUser() user: AccessTokenPayload) {
-    return this.blockedUserService.getMyBlockedUsers(user.id);
+    return this.blockedUserService.getMyBlockedUsers(user.userId);
   }
   @ApiBlockedUserRouterDocs.BlockUser()
   @Post('block/:blockedId')
@@ -30,7 +30,7 @@ export class BlockedUserController {
     @Param('blockedId', ParseIntPipe) blockedId: number,
     @CurrentUser() user: AccessTokenPayload,
   ) {
-    return this.blockedUserService.blockUser(user.id, blockedId);
+    return this.blockedUserService.blockUser(user.userId, blockedId);
   }
 
   @ApiBlockedUserRouterDocs.UnBlockUser()
@@ -39,6 +39,6 @@ export class BlockedUserController {
     @Param('blockedId', ParseIntPipe) blockedId: number,
     @CurrentUser() user: AccessTokenPayload,
   ) {
-    return this.blockedUserService.unblockUser(user.id, blockedId);
+    return this.blockedUserService.unblockUser(user.userId, blockedId);
   }
 }

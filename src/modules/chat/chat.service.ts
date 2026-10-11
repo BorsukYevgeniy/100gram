@@ -169,22 +169,25 @@ export class ChatService {
     }
 
     const isParticipant = await this.chatValidator.checkChatParticipation(
-      user.id,
+      user.userId,
       chat.id,
     );
 
     if (isParticipant) {
       this.logger.warn(
-        { chatId: chat.id, userId: user.id },
+        { chatId: chat.id, userId: user.userId },
         'User already in chat',
       );
       throw new ConflictException('User already is a participant of the chat');
     }
 
-    const chatUser = await this.chatUserRepo.addUserToChat(chat.id, user.id);
+    const chatUser = await this.chatUserRepo.addUserToChat(
+      chat.id,
+      user.userId,
+    );
 
     this.logger.info(
-      { chatId: chat.id, userId: user.id },
+      { chatId: chat.id, userId: user.userId },
       'User added to chat via invite token',
     );
 
@@ -209,7 +212,7 @@ export class ChatService {
     }
 
     if (user.role !== Role.ADMIN) {
-      await this.chatValidator.validateChatParticipation(user.id, chatId);
+      await this.chatValidator.validateChatParticipation(user.userId, chatId);
     }
 
     switch (chat.chatType) {
@@ -261,7 +264,7 @@ export class ChatService {
     try {
       const chat = await this.chatRepo.delete(chatId);
 
-      this.logger.info({ chatId, deletedBy: user.id }, 'Chat deleted');
+      this.logger.info({ chatId, deletedBy: user.userId }, 'Chat deleted');
 
       return chat;
     } catch (e) {
@@ -345,7 +348,7 @@ export class ChatService {
 
     await this.chatValidator.validateChatVisibility(chatId, Visibility.PUBLIC);
 
-    return this.chatUserService.addUserToChat(chatId, user.id);
+    return this.chatUserService.addUserToChat(chatId, user.userId);
   }
 
   async pinChat(userId: number, chatId: number) {

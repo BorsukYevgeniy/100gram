@@ -28,7 +28,7 @@ export class MessageReactionController {
   @MessageReactionRoutesDocs.AddReaction()
   @Post()
   async addReaction(
-    @CurrentUser() { id }: AccessTokenPayload,
+    @CurrentUser() { userId: id }: AccessTokenPayload,
     @Param('messageId', ParseIntPipe) messageId: number,
     @Body() dto: AddReactionDto,
   ) {
@@ -38,7 +38,7 @@ export class MessageReactionController {
   @MessageReactionRoutesDocs.UpdateReaction()
   @Patch()
   async updateReaction(
-    @CurrentUser() { id }: AccessTokenPayload,
+    @CurrentUser() { userId: id }: AccessTokenPayload,
     @Param('messageId', ParseIntPipe) messageId: number,
     @Body() dto: UpdateReactionDto,
   ) {
@@ -48,7 +48,7 @@ export class MessageReactionController {
   @MessageReactionRoutesDocs.DeleteReaction()
   @Delete()
   async removeReaction(
-    @CurrentUser() { id }: AccessTokenPayload,
+    @CurrentUser() { userId: id }: AccessTokenPayload,
     @Param('messageId', ParseIntPipe) messageId: number,
   ) {
     return this.reactionService.removeReaction(id, messageId);

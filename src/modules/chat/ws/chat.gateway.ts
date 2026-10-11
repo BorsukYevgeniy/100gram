@@ -78,7 +78,7 @@ export class ChatGateway
   async handleJoinRoom(
     @MessageBody() payload: WsRoomDto,
     @ConnectedSocket() client: Socket,
-    @WsCurrentUser() { id }: AccessTokenPayload,
+    @WsCurrentUser() { userId: id }: AccessTokenPayload,
   ) {
     await this.chatValidator.validateChatParticipation(id, payload.chatId);
     client.join(`chat-${payload.chatId}`);
@@ -93,7 +93,7 @@ export class ChatGateway
     const { chatId, filenames, ...dto } = payload;
 
     const message = await this.messageService.createFromWs(
-      user.id,
+      user.userId,
       chatId,
       dto,
       filenames ?? [],
@@ -138,7 +138,7 @@ export class ChatGateway
   async handleLeaveRoom(
     @MessageBody() { chatId }: WsRoomDto,
     @ConnectedSocket() client: Socket,
-    @WsCurrentUser() { id }: AccessTokenPayload,
+    @WsCurrentUser() { userId: id }: AccessTokenPayload,
   ) {
     await this.chatValidator.validateChatParticipation(id, chatId);
 
@@ -148,7 +148,7 @@ export class ChatGateway
   @ChatGatewayDocs.AddReaction()
   @SubscribeMessage('addReaction')
   async handleAddingReaction(
-    @WsCurrentUser() { id }: AccessTokenPayload,
+    @WsCurrentUser() { userId: id }: AccessTokenPayload,
     @MessageBody() { chatId, messageId, ...dto }: WsAddReactionDto,
   ) {
     const reaction = await this.reactionService.addReaction(id, messageId, dto);
@@ -159,7 +159,7 @@ export class ChatGateway
   @ChatGatewayDocs.UpdateReaction()
   @SubscribeMessage('updateReaction')
   async handleUpdatingReaction(
-    @WsCurrentUser() { id }: AccessTokenPayload,
+    @WsCurrentUser() { userId: id }: AccessTokenPayload,
     @MessageBody() { chatId, messageId, ...dto }: WsUpdateReactionDto,
   ) {
     const reaction = await this.reactionService.updateReaction(
@@ -174,7 +174,7 @@ export class ChatGateway
   @ChatGatewayDocs.DeleteReaction()
   @SubscribeMessage('deleteReaction')
   async handleDeletingReaction(
-    @WsCurrentUser() { id }: AccessTokenPayload,
+    @WsCurrentUser() { userId: id }: AccessTokenPayload,
     @MessageBody() { chatId, messageId }: WsRemoveReactionDto,
   ) {
     const reaction = await this.reactionService.removeReaction(id, messageId);

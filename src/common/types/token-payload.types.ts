@@ -1,12 +1,12 @@
 import { Role } from '../../../generated/prisma/enums';
 
 export type AccessTokenPayload = {
-  id: number;
+  userId: number;
   role: Role;
   isVerified: boolean;
 };
 
 export type RefreshTokenPayload = {
-  id: number;
+  userId: number;
   jti: string;
 };

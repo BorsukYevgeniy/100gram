@@ -28,7 +28,7 @@ export class ChatMemberController {
   @ChatMemberRoutesDocs.GetUsersInChat()
   @Get()
   async getUsersInChat(
-    @CurrentUser() { id }: AccessTokenPayload,
+    @CurrentUser() { userId: id }: AccessTokenPayload,
     @Param('chatId', ParseIntPipe) chatId: number,
     @Query() paginationDto: PaginationDto,
   ): Promise<PaginatedUserNoCredOtpVCode> {

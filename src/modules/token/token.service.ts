@@ -32,7 +32,7 @@ export class TokenService {
     isVerified: boolean,
   ): Promise<string> {
     return this.jwtService.signAsync<AccessTokenPayload>(
-      { id: userId, role, isVerified },
+      { userId, role, isVerified },
       {
         secret: this.config.jwtAccessTokenSecret,
         expiresIn: this.config.jwtAccessTokenExpirationTime,
@@ -42,7 +42,7 @@ export class TokenService {
 
   private async generateRefreshToken(userId: number): Promise<string> {
     return this.jwtService.signAsync<RefreshTokenPayload>(
-      { id: userId, jti: randomUUID() },
+      { userId, jti: randomUUID() },
       {
         secret: this.config.jwtRefreshTokenSecret,
         expiresIn: this.config.jwtRefreshTokenExpirationTime,
@@ -58,7 +58,7 @@ export class TokenService {
       },
     );
 
-    this.logger.debug({ userId: payload.id }, 'Access token verified');
+    this.logger.debug({ userId: payload.userId }, 'Access token verified');
 
     return payload;
   }
@@ -71,7 +71,7 @@ export class TokenService {
       },
     );
 
-    this.logger.debug({ userId: payload.id }, 'Refresh token verified');
+    this.logger.debug({ userId: payload.userId }, 'Refresh token verified');
 
     return payload;
   }

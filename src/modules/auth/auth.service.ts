@@ -132,7 +132,7 @@ export class AuthService {
 
   async refresh(token: string): Promise<TokenPair> {
     try {
-      const { id } = await this.tokenService.verifyRefreshToken(token);
+      const { userId: id } = await this.tokenService.verifyRefreshToken(token);
 
       const userTokens = await this.tokenService.getUserTokens(id);
       const isTokenValid = userTokens.some((u) => u.token === token);
@@ -212,18 +212,18 @@ export class AuthService {
   async resendVerificationMail(user: AccessTokenPayload) {
     if (user.isVerified) {
       this.logger.warn('Attempt to verify already verified user', {
-        userId: user.id,
+        userId: user.userId,
       });
 
       throw new BadRequestException('User already verified');
     }
 
     const { verificationCode, email } = await this.userService.findFullUserById(
-      user.id,
+      user.userId,
     );
 
     this.logger.info('Verification email resent successfully', {
-      userId: user.id,
+      userId: user.userId,
       email,
     });
 

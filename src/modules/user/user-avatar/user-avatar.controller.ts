@@ -31,14 +31,14 @@ export class UserAvatarController {
     @CurrentUser() user: AccessTokenPayload,
     @UploadedFile() file: Express.Multer.File,
   ) {
-    return this.userAvatarService.updateAvatar(user.id, file);
+    return this.userAvatarService.updateAvatar(user.userId, file);
   }
 
   @ApiUserAvatarRoutesDocs.DeleteMyAvatar()
   @Delete('me/avatar')
   @HttpCode(HttpStatus.NO_CONTENT)
   async deleteMyAvatar(@CurrentUser() user: AccessTokenPayload) {
-    return this.userAvatarService.deleteAvatar(user.id);
+    return this.userAvatarService.deleteAvatar(user.userId);
   }
 
   @ApiUserAvatarRoutesDocs.DeleteUserAvatar()

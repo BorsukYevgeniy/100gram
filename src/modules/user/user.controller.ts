@@ -28,7 +28,7 @@ export class UserController {
   async getMe(
     @CurrentUser() user: AccessTokenPayload,
   ): Promise<UserNoCredOtpVCode> {
-    return this.userService.findById(user.id);
+    return this.userService.findById(user.userId);
   }
 
   @ApiUserRoutesDocs.GetById()
@@ -55,7 +55,7 @@ export class UserController {
   async deleteMe(
     @CurrentUser() user: AccessTokenPayload,
   ): Promise<UserNoCredOtpVCode> {
-    return this.userService.delete(user, user.id);
+    return this.userService.delete(user, user.userId);
   }
 
   @ApiUserRoutesDocs.DeleteUser()

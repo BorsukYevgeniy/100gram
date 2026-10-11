@@ -40,7 +40,7 @@ export class AuthGuard implements CanActivate {
       req.user = payload;
 
       this.logger.info('User authenticated', {
-        id: payload.id,
+        id: payload.userId,
         role: payload.role,
         isVerified: payload.isVerified,
       });

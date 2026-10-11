@@ -223,7 +223,7 @@ export class MessageService {
       );
 
       this.logger.info(
-        { messageId, updatedBy: user.id, transport },
+        { messageId, updatedBy: user.userId, transport },
         'Message updated',
       );
 
@@ -249,7 +249,7 @@ export class MessageService {
 
     const message = await this.messageRepository.delete(messageId);
 
-    this.logger.info({ messageId, deletedBy: user.id }, 'Message deleted');
+    this.logger.info({ messageId, deletedBy: user.userId }, 'Message deleted');
 
     await this.cache.incrChatMessageVersion(message.chatId);
     return message;

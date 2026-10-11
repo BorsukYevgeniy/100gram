@@ -25,7 +25,7 @@ export class MessageValidationService {
     messageId: number,
   ): Promise<MessageFiles> {
     this.logger.debug(
-      { userId: user.id, messageId },
+      { userId: user.userId, messageId },
       'Validating message ownership',
     );
 
@@ -36,9 +36,9 @@ export class MessageValidationService {
       throw new NotFoundException('Message not found');
     }
 
-    if (message.userId !== user.id && user.role !== Role.ADMIN) {
+    if (message.userId !== user.userId && user.role !== Role.ADMIN) {
       this.logger.warn(
-        { userId: user.id, messageId },
+        { userId: user.userId, messageId },
         'User is not message owner',
       );
       throw new ForbiddenException(
@@ -54,7 +54,7 @@ export class MessageValidationService {
     messageId: number,
   ): Promise<MessageFiles> {
     this.logger.debug(
-      { userId: user.id, messageId },
+      { userId: user.userId, messageId },
       'Validating message ownership',
     );
 
@@ -65,9 +65,9 @@ export class MessageValidationService {
       throw new NotFoundException('Message not found');
     }
 
-    if (message.userId !== user.id) {
+    if (message.userId !== user.userId) {
       this.logger.warn(
-        { userId: user.id, messageId },
+        { userId: user.userId, messageId },
         'User is not message owner',
       );
       throw new ForbiddenException(
@@ -80,7 +80,7 @@ export class MessageValidationService {
 
   async canDelete(user: AccessTokenPayload, messageId: number): Promise<void> {
     this.logger.debug(
-      { userId: user.id, messageId },
+      { userId: user.userId, messageId },
       'Validating message deletion permissions',
     );
 
@@ -93,11 +93,11 @@ export class MessageValidationService {
 
     const chatRole = await this.chatUserRepo.getChatUser(
       message.chatId,
-      user.id,
+      user.userId,
     );
 
     const canDelete =
-      message.userId === user.id ||
+      message.userId === user.userId ||
       user.role === Role.ADMIN ||
       chatRole.role !== ChatRole.MEMBER;
 

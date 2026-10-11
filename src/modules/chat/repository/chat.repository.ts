@@ -41,7 +41,7 @@ export class ChatRepository {
         chatToUsers: {
           create: [
             {
-              userId: userId,
+              userId,
               role: ChatRole.OWNER,
             },
             {

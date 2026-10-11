@@ -45,7 +45,7 @@ export class AuthController {
     @Req() req: AuthRequest,
     @Res() res: Response,
   ): Promise<void> {
-    const tokens = await this.authService.loginById(req.user.id);
+    const tokens = await this.authService.loginById(req.user.userId);
 
     this.setTokenCookie(res, tokens);
   }
@@ -80,7 +80,7 @@ export class AuthController {
     if (!refreshTokenCookie)
       throw new UnauthorizedException('Refresh token is missing');
 
-    await this.authService.logout(refreshTokenCookie, user.id);
+    await this.authService.logout(refreshTokenCookie, user.userId);
     this.clearTokenCookie(res);
   }
 
@@ -92,7 +92,7 @@ export class AuthController {
     @CurrentUser() user: AccessTokenPayload,
     @Res() res: Response,
   ): Promise<void> {
-    await this.authService.logoutAll(user.id);
+    await this.authService.logoutAll(user.userId);
     this.clearTokenCookie(res);
   }
 
@@ -132,7 +132,7 @@ export class AuthController {
   @UseGuards(AuthGuard, ThrottlerGuard)
   @HttpCode(HttpStatus.OK)
   async sendOtpMail(@CurrentUser() user: AccessTokenPayload) {
-    await this.authService.sendOtp(user.id);
+    await this.authService.sendOtp(user.userId);
     return { message: 'If email exists, OTP sent' };
   }
 
@@ -144,7 +144,7 @@ export class AuthController {
     @CurrentUser() user: AccessTokenPayload,
     @Body() dto: ResetPasswordDto,
   ) {
-    await this.authService.resetPassword(user.id, dto);
+    await this.authService.resetPassword(user.userId, dto);
     return { message: 'Password reseted' };
   }
 

@@ -17,7 +17,7 @@ export class ChatMessageService {
 
   async getAllMessagesInChat(
     chatId: number,
-    { id }: AccessTokenPayload,
+    { userId: id }: AccessTokenPayload,
     paginationDto: PaginationDto,
   ) {
     await this.chatValidation.validateChatParticipation(id, chatId);
@@ -31,21 +31,21 @@ export class ChatMessageService {
     dto: CreateMessageDto,
     files: Express.Multer.File[],
   ) {
-    await this.chatValidation.validateChatParticipation(user.id, chatId);
+    await this.chatValidation.validateChatParticipation(user.userId, chatId);
 
     const { chatType } = await this.chatRepo.findChatType(chatId);
 
     if (chatType === ChatType.CHANNEL)
       await this.chatValidation.validateOwner(user, chatId);
 
-    return this.messageService.create(user.id, chatId, dto, files);
+    return this.messageService.create(user.userId, chatId, dto, files);
   }
 
   async deleteAllMessages(chatId: number, user: AccessTokenPayload) {
     const { chatType } = await this.chatRepo.findChatType(chatId);
 
     if (chatType === ChatType.PRIVATE) {
-      await this.chatValidation.validateChatParticipation(user.id, chatId);
+      await this.chatValidation.validateChatParticipation(user.userId, chatId);
     } else await this.chatValidation.validateOwner(user, chatId);
 
     return this.messageService.deleteAllMessagesInChat(chatId);

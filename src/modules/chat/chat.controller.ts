@@ -34,7 +34,7 @@ export class ChatController {
     @CurrentUser() user: AccessTokenPayload,
     @Query() paginationDto: PaginationDto,
   ) {
-    return this.chatService.getMyChats(user.id, paginationDto);
+    return this.chatService.getMyChats(user.userId, paginationDto);
   }
 
   @ChatRoutesDocs.CreatePrivateChat()
@@ -43,7 +43,7 @@ export class ChatController {
     @CurrentUser() user: AccessTokenPayload,
     @Body() dto: CreatePrivateChatDto,
   ) {
-    return this.chatService.createPrivateChat(user.id, dto);
+    return this.chatService.createPrivateChat(user.userId, dto);
   }
 
   @ChatRoutesDocs.CreateGroupChat()
@@ -52,7 +52,7 @@ export class ChatController {
     @CurrentUser() user: AccessTokenPayload,
     @Body() dto: CreateGroupChatDto,
   ) {
-    return this.chatService.createGroupChat(user.id, dto);
+    return this.chatService.createGroupChat(user.userId, dto);
   }
 
   @ChatRoutesDocs.CreateChannel()
@@ -61,7 +61,7 @@ export class ChatController {
     @CurrentUser() user: AccessTokenPayload,
     @Body() dto: CreateChannelDto,
   ) {
-    return this.chatService.createChannel(dto, user.id);
+    return this.chatService.createChannel(dto, user.userId);
   }
 
   @ChatRoutesDocs.AddChatByInviteToken()
@@ -137,7 +137,7 @@ export class ChatController {
   @Patch(':chatId/pin')
   async pinChat(
     @Param('chatId', ParseIntPipe) chatId: number,
-    @CurrentUser() { id }: AccessTokenPayload,
+    @CurrentUser() { userId: id }: AccessTokenPayload,
   ) {
     return this.chatService.pinChat(id, chatId);
   }
@@ -146,7 +146,7 @@ export class ChatController {
   @Patch(':chatId/unpin')
   async unpinChat(
     @Param('chatId', ParseIntPipe) chatId: number,
-    @CurrentUser() { id }: AccessTokenPayload,
+    @CurrentUser() { userId: id }: AccessTokenPayload,
   ) {
     return this.chatService.unpinChat(id, chatId);
   }
