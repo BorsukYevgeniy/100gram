@@ -34,7 +34,7 @@ services:
     image: quay.io/minio/aistor/minio:latest
     volumes:
       - minio-data:/data
-      - ./minio.license:/minio.license
+      - ${MINIO_LICENSE_PATH}:/minio.license
     ports:
       - '${MINIO_API_PORT}:${MINIO_API_PORT}'
       - '${MINIO_WEB_PORT}:${MINIO_WEB_PORT}'

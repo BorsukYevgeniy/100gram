@@ -37,4 +37,5 @@ export const validationSchema = J.object({
   MINIO_ACCESS_KEY: J.string().required(),
   MINIO_REGION: J.string().required(),
   MINIO_BUCKET: J.string().required(),
+  MINIO_LICENSE_PATH: J.string().required(),
 });
