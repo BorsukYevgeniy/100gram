@@ -243,6 +243,7 @@ describe('ChatController (e2e)', () => {
         inviteToken: null,
         membersCount: 2,
         title: null,
+        allowedReactions: [],
       });
       privateChatId = body.id;
     });
@@ -354,7 +355,7 @@ describe('ChatController (e2e)', () => {
         description: 'Group description',
         membersCount: 2,
         inviteToken: expect.any(String),
-
+        allowedReactions: [],
         lastMessageId: null,
         avatarName: null,
       });
@@ -384,6 +385,7 @@ describe('ChatController (e2e)', () => {
         inviteToken: null,
         lastMessageId: null,
         avatarName: null,
+        allowedReactions: [],
       });
 
       publicGroupId = body.id;
@@ -540,6 +542,7 @@ describe('ChatController (e2e)', () => {
         membersCount: 1,
         title: 'Updated channel',
         visibility: Visibility.PRIVATE,
+        allowedReactions: [],
       });
     });
   });
