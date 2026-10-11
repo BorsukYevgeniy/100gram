@@ -72,11 +72,11 @@ export class ChatMemberService {
   }
 
   async getUsersInChat(
-    user: AccessTokenPayload,
+    userId: number,
     chatId: number,
     paginationDto: PaginationDto,
   ): Promise<PaginatedUserNoCredOtpVCode> {
-    await this.chatValidator.validateChatParticipation(user, chatId);
+    await this.chatValidator.validateChatParticipation(userId, chatId);
 
     const { limit, cursor } = paginationDto;
 
@@ -88,7 +88,7 @@ export class ChatMemberService {
     const hasMore = nextCursor !== null;
 
     this.logger.info(
-      { chatId, userId: user.id, limit, nextCursor, hasMore },
+      { chatId, userId, limit, nextCursor, hasMore },
       'Fetched users in chat',
     );
 

@@ -209,7 +209,7 @@ export class ChatService {
     }
 
     if (user.role !== Role.ADMIN) {
-      await this.chatValidator.validateChatParticipation(user, chatId);
+      await this.chatValidator.validateChatParticipation(user.id, chatId);
     }
 
     switch (chat.chatType) {
@@ -348,14 +348,14 @@ export class ChatService {
     return this.chatUserService.addUserToChat(chatId, user.id);
   }
 
-  async pinChat(user: AccessTokenPayload, chatId: number) {
-    await this.chatValidator.validateChatParticipation(user, chatId);
-    return this.chatRepo.pinChat(user.id, chatId);
+  async pinChat(userId: number, chatId: number) {
+    await this.chatValidator.validateChatParticipation(userId, chatId);
+    return this.chatRepo.pinChat(userId, chatId);
   }
 
-  async unpinChat(user: AccessTokenPayload, chatId: number) {
-    await this.chatValidator.validateChatParticipation(user, chatId);
-    return this.chatRepo.unpinChat(user.id, chatId);
+  async unpinChat(userId: number, chatId: number) {
+    await this.chatValidator.validateChatParticipation(userId, chatId);
+    return this.chatRepo.unpinChat(userId, chatId);
   }
 
   async updateAllowedReactions(

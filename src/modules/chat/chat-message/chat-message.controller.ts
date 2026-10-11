@@ -1,7 +1,10 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
+  HttpCode,
+  HttpStatus,
   Param,
   ParseIntPipe,
   Post,
@@ -56,5 +59,15 @@ export class ChatMessageController {
       createMessageDto,
       files,
     );
+  }
+
+  @ChatMessageRoutes.DeleteAllMessage()
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @Delete()
+  async deleteAllMessages(
+    @CurrentUser() user: AccessTokenPayload,
+    @Param('chatId', ParseIntPipe) chatId: number,
+  ): Promise<void> {
+    await this.chatMessageService.deleteAllMessages(chatId, user);
   }
 }

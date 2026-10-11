@@ -99,4 +99,12 @@ export class MessageRepository {
       data: { isPinned: false },
     });
   }
+
+  async deleteAll(chatId: number) {
+    return this.prisma.message.deleteMany({
+      where: {
+        chatId,
+      },
+    });
+  }
 }

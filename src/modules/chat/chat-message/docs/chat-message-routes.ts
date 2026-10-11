@@ -1,9 +1,9 @@
 import { applyDecorators } from '@nestjs/common';
 import {
   ApiBody,
-  ApiConsumes,
   ApiCreatedResponse,
   ApiForbiddenResponse,
+  ApiNoContentResponse,
   ApiOkResponse,
   ApiOperation,
 } from '@nestjs/swagger';
@@ -38,11 +38,25 @@ export class ChatMessageRoutes {
         description:
           'User is not a participant of the chat or is not allowed to create messages in the channel',
       }),
-      ApiConsumes('multipart/form-data'),
       ApiFileUploadDocs('Optional attachments: up to 5 files, 200 MB per file'),
       ApiBody({
         type: CreateMessageDto,
         description: 'The message content and optional attachments',
+      }),
+    );
+  }
+
+  static DeleteAllMessage() {
+    return applyDecorators(
+      ApiOperation({
+        summary: 'Deletee all messages in chat',
+        description:
+          'Deletes all messages in a chat. The user must be a participant in private chat or owner if it is group or channe;',
+      }),
+      ApiNoContentResponse({ description: 'Messages deleted successfully' }),
+      ApiForbiddenResponse({
+        description:
+          'User is not a participant of the chat or is not allowed to delete all messages in the channel',
       }),
     );
   }

@@ -137,18 +137,18 @@ export class ChatController {
   @Patch(':chatId/pin')
   async pinChat(
     @Param('chatId', ParseIntPipe) chatId: number,
-    @CurrentUser() user: AccessTokenPayload,
+    @CurrentUser() { id }: AccessTokenPayload,
   ) {
-    return this.chatService.pinChat(user, chatId);
+    return this.chatService.pinChat(id, chatId);
   }
 
   @ChatRoutesDocs.UnpinChat()
   @Patch(':chatId/unpin')
   async unpinChat(
     @Param('chatId', ParseIntPipe) chatId: number,
-    @CurrentUser() user: AccessTokenPayload,
+    @CurrentUser() { id }: AccessTokenPayload,
   ) {
-    return this.chatService.unpinChat(user, chatId);
+    return this.chatService.unpinChat(id, chatId);
   }
 
   @ChatRoutesDocs.UpdateAllowedReactions()

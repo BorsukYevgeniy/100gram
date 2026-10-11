@@ -28,11 +28,11 @@ export class ChatMemberController {
   @ChatMemberRoutesDocs.GetUsersInChat()
   @Get()
   async getUsersInChat(
-    @CurrentUser() user: AccessTokenPayload,
+    @CurrentUser() { id }: AccessTokenPayload,
     @Param('chatId', ParseIntPipe) chatId: number,
     @Query() paginationDto: PaginationDto,
   ): Promise<PaginatedUserNoCredOtpVCode> {
-    return this.chatMemberService.getUsersInChat(user, chatId, paginationDto);
+    return this.chatMemberService.getUsersInChat(id, chatId, paginationDto);
   }
 
   @ChatMemberRoutesDocs.AddUserToChat()

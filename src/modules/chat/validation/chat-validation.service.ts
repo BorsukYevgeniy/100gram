@@ -97,17 +97,14 @@ export class ChatValidationService {
     return chat;
   }
 
-  async validateChatParticipation(user: AccessTokenPayload, chatId: number) {
-    this.logger.debug(
-      { userId: user.id, chatId },
-      'Validating chat participation',
-    );
+  async validateChatParticipation(userId: number, chatId: number) {
+    this.logger.debug({ userId, chatId }, 'Validating chat participation');
 
-    const chatToUser = await this.chatUserRepo.getChatUser(chatId, user.id);
+    const chatToUser = await this.chatUserRepo.getChatUser(chatId, userId);
 
     if (!chatToUser) {
       this.logger.warn(
-        { userId: user.id, chatId },
+        { userId: userId, chatId },
         'User is not a participant of the chat',
       );
       throw new ForbiddenException('User is not a participant of the chat');

@@ -28,29 +28,29 @@ export class MessageReactionController {
   @MessageReactionRoutesDocs.AddReaction()
   @Post()
   async addReaction(
-    @CurrentUser() user: AccessTokenPayload,
+    @CurrentUser() { id }: AccessTokenPayload,
     @Param('messageId', ParseIntPipe) messageId: number,
     @Body() dto: AddReactionDto,
   ) {
-    return this.reactionService.addReaction(user, messageId, dto);
+    return this.reactionService.addReaction(id, messageId, dto);
   }
 
   @MessageReactionRoutesDocs.UpdateReaction()
   @Patch()
   async updateReaction(
-    @CurrentUser() user: AccessTokenPayload,
+    @CurrentUser() { id }: AccessTokenPayload,
     @Param('messageId', ParseIntPipe) messageId: number,
     @Body() dto: UpdateReactionDto,
   ) {
-    return this.reactionService.updateReaction(user, messageId, dto);
+    return this.reactionService.updateReaction(id, messageId, dto);
   }
 
   @MessageReactionRoutesDocs.DeleteReaction()
   @Delete()
   async removeReaction(
-    @CurrentUser() user: AccessTokenPayload,
+    @CurrentUser() { id }: AccessTokenPayload,
     @Param('messageId', ParseIntPipe) messageId: number,
   ) {
-    return this.reactionService.removeReaction(user, messageId);
+    return this.reactionService.removeReaction(id, messageId);
   }
 }

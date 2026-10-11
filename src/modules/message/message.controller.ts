@@ -29,10 +29,10 @@ export class MessageController {
   @MessageRoutesDocs.GetById()
   @Get(':messageId')
   async findOne(
-    @CurrentUser() user: AccessTokenPayload,
+    @CurrentUser() { id }: AccessTokenPayload,
     @Param('messageId', ParseIntPipe) messageId: number,
   ): Promise<Message> {
-    return this.messageService.findById(user, messageId);
+    return this.messageService.findById(id, messageId);
   }
 
   @MessageRoutesDocs.Update()
@@ -59,18 +59,18 @@ export class MessageController {
   @MessageRoutesDocs.Pin()
   @Patch(':messageId/pin')
   async pinMessage(
-    @CurrentUser() user: AccessTokenPayload,
+    @CurrentUser() { id }: AccessTokenPayload,
     @Param('messageId', ParseIntPipe) messageId: number,
   ) {
-    return this.messageService.pinMessage(user, messageId);
+    return this.messageService.pinMessage(id, messageId);
   }
 
   @MessageRoutesDocs.Unpin()
   @Patch(':messageId/unpin')
   async unpinMessage(
-    @CurrentUser() user: AccessTokenPayload,
+    @CurrentUser() { id }: AccessTokenPayload,
     @Param('messageId', ParseIntPipe) messageId: number,
   ) {
-    return this.messageService.unpinMessage(user, messageId);
+    return this.messageService.unpinMessage(id, messageId);
   }
 }

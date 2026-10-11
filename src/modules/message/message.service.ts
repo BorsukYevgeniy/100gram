@@ -168,15 +168,12 @@ export class MessageService {
     }
   }
 
-  async findById(
-    user: AccessTokenPayload,
-    messageId: number,
-  ): Promise<MessageFiles> {
+  async findById(userId: number, messageId: number): Promise<MessageFiles> {
     const msg = await this.messageRepository.findById(messageId);
 
     if (!msg) throw new NotFoundException('Message not found');
 
-    await this.chatValidator.validateChatParticipation(user, msg.chatId);
+    await this.chatValidator.validateChatParticipation(userId, msg.chatId);
     return this.messageRepository.findById(messageId);
   }
 
@@ -258,21 +255,29 @@ export class MessageService {
     return message;
   }
 
-  async pinMessage(user: AccessTokenPayload, messageId: number) {
+  async pinMessage(userId: number, messageId: number) {
     const msg = await this.messageRepository.findById(messageId);
 
     if (!msg) throw new NotFoundException('Message not found');
 
-    await this.chatValidator.validateChatParticipation(user, msg.chatId);
+    await this.chatValidator.validateChatParticipation(userId, msg.chatId);
     return this.messageRepository.pinMessage(messageId);
   }
 
-  async unpinMessage(user: AccessTokenPayload, messageId: number) {
+  async unpinMessage(userId: number, messageId: number) {
     const msg = await this.messageRepository.findById(messageId);
 
     if (!msg) throw new NotFoundException('Message not found');
 
-    await this.chatValidator.validateChatParticipation(user, msg.chatId);
+    await this.chatValidator.validateChatParticipation(userId, msg.chatId);
     return this.messageRepository.unpinMessage(messageId);
+  }
+
+  async deleteAllMessagesInChat(chatId: number) {
+    const messages = await this.messageRepository.deleteAll(chatId);
+
+    this.logger.info({ chatId }, 'Deleted all messages');
+
+    return messages;
   }
 }

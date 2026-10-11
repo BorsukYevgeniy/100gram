@@ -30,6 +30,7 @@ describe('ChatMessageController (e2e)', () => {
 
   let groupChatId: number;
   let channelId: number;
+  let privateChatId: number;
   let firstMessageId: number;
   let replyMessageId: number;
 
@@ -156,6 +157,19 @@ describe('ChatMessageController (e2e)', () => {
       data: [
         { chatId: channelId, userId: owner.id, role: ChatRole.OWNER },
         { chatId: channelId, userId: member.id },
+      ],
+    });
+
+    const privateChat = await prisma.chat.create({
+      data: { chatType: ChatType.PRIVATE },
+    });
+
+    privateChatId = privateChat.id;
+
+    await prisma.chatToUser.createMany({
+      data: [
+        { chatId: privateChatId, userId: owner.id },
+        { chatId: privateChatId, userId: member.id },
       ],
     });
   }, 10_000);
@@ -348,6 +362,60 @@ describe('ChatMessageController (e2e)', () => {
           text: 'First message',
         }),
       );
+    });
+  });
+
+  describe('DELETE /chats/:chatId/messages - Should delete all messages in chat', () => {
+    it('DELETE /chats/:chatId/messages - 401 UNAUTHORIZED - Should return 401 because user is unauthorized', async () => {
+      const { body } = await request(app.getHttpServer())
+        .delete(`/chats/${groupChatId}/messages`)
+        .expect(401);
+
+      expect(body).toEqual(unauthorizedResponse);
+    });
+
+    it('DELETE /chats/:chatId/messages - 403 FORBIDDEN - Should return 403 because user is not verified', async () => {
+      const { body } = await request(app.getHttpServer())
+        .delete(`/chats/${groupChatId}/messages`)
+        .set('Cookie', [`access_token=${unverifiedAccessToken}`])
+        .expect(403);
+
+      expect(body).toEqual(verifiedForbiddenResponse);
+    });
+
+    it('DELETE /chats/:chatId/messages - 400 BAD REQUEST - Should return 400 because chatId is invalid', async () => {
+      await request(app.getHttpServer())
+        .delete('/chats/invalid/messages')
+        .set('Cookie', [`access_token=${ownerAccessToken}`])
+        .expect(400);
+    });
+
+    it('DELETE /chats/:chatId/messages - 403 FORBIDDEN - Should return 403 because user is not a participant', async () => {
+      await request(app.getHttpServer())
+        .delete(`/chats/${groupChatId}/messages`)
+        .set('Cookie', [`access_token=${guestAccessToken}`])
+        .expect(403);
+    });
+
+    it('DELETE /chats/:chatId/messages - 403 FORBIDDEN - Should return 403 because user is not the channel owner', async () => {
+      await request(app.getHttpServer())
+        .delete(`/chats/${channelId}/messages`)
+        .set('Cookie', [`access_token=${memberAccessToken}`])
+        .expect(403);
+    });
+
+    it('DELETE /chats/:chatId/messages - 204 NO CONTENT - Should delete all messages from a private chat as a participant', async () => {
+      await request(app.getHttpServer())
+        .delete(`/chats/${privateChatId}/messages`)
+        .set('Cookie', [`access_token=${memberAccessToken}`])
+        .expect(204);
+    });
+
+    it('DELETE /chats/:chatId/messages - 204 NO CONTENT - Should delete all messages from a group chat as owner', async () => {
+      await request(app.getHttpServer())
+        .delete(`/chats/${groupChatId}/messages`)
+        .set('Cookie', [`access_token=${ownerAccessToken}`])
+        .expect(204);
     });
   });
 

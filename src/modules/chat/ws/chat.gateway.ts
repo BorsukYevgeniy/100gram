@@ -78,9 +78,9 @@ export class ChatGateway
   async handleJoinRoom(
     @MessageBody() payload: WsRoomDto,
     @ConnectedSocket() client: Socket,
-    @WsCurrentUser() user: AccessTokenPayload,
+    @WsCurrentUser() { id }: AccessTokenPayload,
   ) {
-    await this.chatValidator.validateChatParticipation(user, payload.chatId);
+    await this.chatValidator.validateChatParticipation(id, payload.chatId);
     client.join(`chat-${payload.chatId}`);
   }
 
@@ -138,9 +138,9 @@ export class ChatGateway
   async handleLeaveRoom(
     @MessageBody() { chatId }: WsRoomDto,
     @ConnectedSocket() client: Socket,
-    @WsCurrentUser() user: AccessTokenPayload,
+    @WsCurrentUser() { id }: AccessTokenPayload,
   ) {
-    await this.chatValidator.validateChatParticipation(user, chatId);
+    await this.chatValidator.validateChatParticipation(id, chatId);
 
     client.leave(`chat-${chatId}`);
   }
@@ -148,14 +148,10 @@ export class ChatGateway
   @ChatGatewayDocs.AddReaction()
   @SubscribeMessage('addReaction')
   async handleAddingReaction(
-    @WsCurrentUser() user: AccessTokenPayload,
+    @WsCurrentUser() { id }: AccessTokenPayload,
     @MessageBody() { chatId, messageId, ...dto }: WsAddReactionDto,
   ) {
-    const reaction = await this.reactionService.addReaction(
-      user,
-      messageId,
-      dto,
-    );
+    const reaction = await this.reactionService.addReaction(id, messageId, dto);
 
     this.server.to(`chat-${chatId}`).emit('chatAddedReaction', reaction);
   }
@@ -163,11 +159,11 @@ export class ChatGateway
   @ChatGatewayDocs.UpdateReaction()
   @SubscribeMessage('updateReaction')
   async handleUpdatingReaction(
-    @WsCurrentUser() user: AccessTokenPayload,
+    @WsCurrentUser() { id }: AccessTokenPayload,
     @MessageBody() { chatId, messageId, ...dto }: WsUpdateReactionDto,
   ) {
     const reaction = await this.reactionService.updateReaction(
-      user,
+      id,
       messageId,
       dto,
     );
@@ -178,10 +174,10 @@ export class ChatGateway
   @ChatGatewayDocs.DeleteReaction()
   @SubscribeMessage('deleteReaction')
   async handleDeletingReaction(
-    @WsCurrentUser() user: AccessTokenPayload,
+    @WsCurrentUser() { id }: AccessTokenPayload,
     @MessageBody() { chatId, messageId }: WsRemoveReactionDto,
   ) {
-    const reaction = await this.reactionService.removeReaction(user, messageId);
+    const reaction = await this.reactionService.removeReaction(id, messageId);
 
     this.server.to(`chat-${chatId}`).emit('chatDeletedReaction', reaction);
   }
