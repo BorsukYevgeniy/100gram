@@ -1,7 +1,0 @@
-enum Reaction {
-  LIKE
-  DISLIKE
-  FIRE
-  HEART
-  HEART_WITH_FIRE
-}
