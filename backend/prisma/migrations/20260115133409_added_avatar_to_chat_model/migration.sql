@@ -1,0 +1,2 @@
+-- AlterTable
+ALTER TABLE "Chat" ADD COLUMN     "avatar" TEXT DEFAULT 'DEFAULT_CHAT_AVATAR.png';

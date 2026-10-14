@@ -1,0 +1,13 @@
+.git
+.dist
+.generated
+.node_modules
+.env.dev
+.env.test
+.env.example
+.gitignore
+.vscode
+.prettierrc
+.eslintrc.js
+minio.license
+README.md

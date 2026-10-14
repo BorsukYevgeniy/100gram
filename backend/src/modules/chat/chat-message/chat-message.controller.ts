@@ -1,0 +1,73 @@
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  HttpCode,
+  HttpStatus,
+  Param,
+  ParseIntPipe,
+  Post,
+  Query,
+  UploadedFiles,
+  UseGuards,
+  UseInterceptors,
+} from '@nestjs/common';
+import { Message } from '../../../../generated/prisma/client';
+import { PaginationDto } from '../../../common/dto/pagination.dto';
+import { MessageFilesInterceptor } from '../../../common/interceptor/message-files.interceptor';
+import { AccessTokenPayload } from '../../../common/types';
+import { CurrentUser } from '../../auth/decorator/current-user.decorator';
+import { VerifiedUserGuard } from '../../auth/guards/verified-user.guard';
+import { CreateMessageDto } from '../../message/dto/create-message.dto';
+import { PaginatedMessageFiles } from '../../message/types/message.types';
+import { ChatMessageService } from './chat-message.service';
+import { ChatMessageControllerDocs, ChatMessageRoutes } from './docs';
+
+@ChatMessageControllerDocs()
+@Controller('chats/:chatId/messages')
+@UseGuards(VerifiedUserGuard)
+export class ChatMessageController {
+  constructor(private readonly chatMessageService: ChatMessageService) {}
+
+  @ChatMessageRoutes.GetMessageInChat()
+  @Get()
+  async getAllMessagesInChat(
+    @CurrentUser() user: AccessTokenPayload,
+    @Param('chatId', ParseIntPipe) chatId: number,
+    @Query() paginationDto: PaginationDto,
+  ): Promise<PaginatedMessageFiles> {
+    return this.chatMessageService.getAllMessagesInChat(
+      chatId,
+      user,
+      paginationDto,
+    );
+  }
+
+  @ChatMessageRoutes.CreateMessage()
+  @Post()
+  @UseInterceptors(MessageFilesInterceptor)
+  async create(
+    @CurrentUser() user: AccessTokenPayload,
+    @Param('chatId', ParseIntPipe) chatId: number,
+    @Body() createMessageDto: CreateMessageDto,
+    @UploadedFiles() files: Express.Multer.File[],
+  ): Promise<Message> {
+    return this.chatMessageService.createMessageInChat(
+      chatId,
+      user,
+      createMessageDto,
+      files,
+    );
+  }
+
+  @ChatMessageRoutes.DeleteAllMessage()
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @Delete()
+  async deleteAllMessages(
+    @CurrentUser() user: AccessTokenPayload,
+    @Param('chatId', ParseIntPipe) chatId: number,
+  ): Promise<void> {
+    await this.chatMessageService.deleteAllMessages(chatId, user);
+  }
+}

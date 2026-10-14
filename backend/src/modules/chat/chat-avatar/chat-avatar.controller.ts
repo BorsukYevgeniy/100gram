@@ -1,0 +1,47 @@
+import {
+  Controller,
+  Delete,
+  HttpCode,
+  HttpStatus,
+  Param,
+  ParseIntPipe,
+  Patch,
+  UploadedFile,
+  UseGuards,
+  UseInterceptors,
+} from '@nestjs/common';
+import { AvatarInterceptor } from '../../../common/interceptor/avatar.interceptor';
+import { AccessTokenPayload } from '../../../common/types';
+import { CurrentUser } from '../../auth/decorator/current-user.decorator';
+import { VerifiedUserGuard } from '../../auth/guards/verified-user.guard';
+import { ChatAvatarService } from './chat-avatar.service';
+import { ChatAvatarControllerDocs } from './docs/chat-avatar-controller-docs';
+import { ChatAvatarRoutes } from './docs/chat-avatar-routes-docs';
+
+@ChatAvatarControllerDocs()
+@Controller('chats/:chatId')
+@UseGuards(VerifiedUserGuard)
+export class ChatAvatarController {
+  constructor(private readonly chatAvatarService: ChatAvatarService) {}
+
+  @ChatAvatarRoutes.UpdateAvatar()
+  @Patch('avatar')
+  @UseInterceptors(AvatarInterceptor)
+  async updateAvatar(
+    @Param('chatId', ParseIntPipe) chatId: number,
+    @CurrentUser() user: AccessTokenPayload,
+    @UploadedFile() file: Express.Multer.File,
+  ) {
+    return this.chatAvatarService.updateAvatar(chatId, user, file);
+  }
+
+  @ChatAvatarRoutes.DeleteChatAvatar()
+  @Delete('avatar')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async deleteAvatar(
+    @Param('chatId', ParseIntPipe) chatId: number,
+    @CurrentUser() user: AccessTokenPayload,
+  ) {
+    return this.chatAvatarService.deleteAvatar(chatId, user);
+  }
+}
