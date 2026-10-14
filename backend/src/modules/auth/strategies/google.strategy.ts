@@ -38,7 +38,7 @@ export class GoogleStrategy extends PassportStrategy(Strategy) {
     );
 
     done(null, {
-      id: user.id,
+      userId: user.id,
       role: user.role,
       isVerified: true,
     });
