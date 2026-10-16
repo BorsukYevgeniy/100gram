@@ -54,7 +54,7 @@ function VerifyEmailForm({
             : `Помилка сервера (${response.status}).`;
         throw new Error(serverMessage);
       }
-      router.replace("/user");
+      router.replace("/");
     } catch (verificationError) {
       setError(true);
       setMessage(

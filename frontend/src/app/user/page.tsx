@@ -179,9 +179,14 @@ export default function UserPage() {
           <span className="brand-mark">1</span>
           <span>100gram</span>
         </Link>
-        <Link className="docs-link" href="/">
-          До входу <span aria-hidden="true">↗</span>
-        </Link>
+        <div className="user-page-nav">
+          <Link className="docs-link" href="/">
+            До чатів <span aria-hidden="true">↗</span>
+          </Link>
+          <Link className="docs-link" href="/login">
+            До входу <span aria-hidden="true">↗</span>
+          </Link>
+        </div>
       </header>
 
       <section className="user-page-intro">
@@ -246,7 +251,7 @@ export default function UserPage() {
                     "logout",
                     undefined,
                     "Ви вийшли з акаунта.",
-                    "/",
+                    "/login",
                   )
                 }
               >
@@ -262,7 +267,7 @@ export default function UserPage() {
                     "logout-all",
                     undefined,
                     "Ви вийшли з усіх пристроїв.",
-                    "/",
+                    "/login",
                   )
                 }
               >
