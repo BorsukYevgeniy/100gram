@@ -2,6 +2,7 @@
 
 import { FormEvent, Suspense, use, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 export default function VerifyEmail({
   params,
@@ -26,6 +27,7 @@ function VerifyEmailForm({
 }: {
   params: Promise<{ verificationCode: string }>;
 }) {
+  const router = useRouter();
   const { verificationCode: code } = use(params);
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
@@ -52,7 +54,7 @@ function VerifyEmailForm({
             : `Помилка сервера (${response.status}).`;
         throw new Error(serverMessage);
       }
-      setMessage("Електронну пошту підтверджено. Можете увійти в акаунт.");
+      router.replace("/user");
     } catch (verificationError) {
       setError(true);
       setMessage(

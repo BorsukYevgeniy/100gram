@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { fetchWithTokenRefresh } from '../../auth-proxy';
 
 type RouteContext = {
 	params: Promise<{ path: string[] }>;
@@ -32,16 +33,19 @@ async function proxyAuthRequest(request: NextRequest, context: RouteContext) {
 	if (cookie) headers.set('cookie', cookie);
 
 	let upstream: Response;
+	let refreshedCookies: string[] = [];
 	try {
-		upstream = await fetch(upstreamUrl, {
+		const result = await fetchWithTokenRefresh(backendUrl, {
+			url: upstreamUrl,
 			method: request.method,
 			headers,
 			...(request.method === 'GET' || request.method === 'HEAD'
 				? {}
 				: { body: await request.arrayBuffer() }),
-			cache: 'no-store',
-			redirect: 'manual',
+			cookie: cookie ?? undefined,
 		});
+		upstream = result.response;
+		refreshedCookies = result.refreshedCookies;
 	} catch {
 		return NextResponse.json(
 			{ message: 'Unable to reach the authentication API.' },
@@ -71,7 +75,7 @@ async function proxyAuthRequest(request: NextRequest, context: RouteContext) {
 			responseHeaders.append(name, value);
 		}
 	}
-	for (const cookieHeader of upstream.headers.getSetCookie()) {
+	for (const cookieHeader of [...refreshedCookies, ...upstream.headers.getSetCookie()]) {
 		responseHeaders.append('set-cookie', cookieHeader);
 	}
 

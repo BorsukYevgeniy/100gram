@@ -1,7 +1,8 @@
 "use client";
 
-import { FormEvent, useState } from "react";
+import { FormEvent, useEffect, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 type Notice = {
   kind: "success" | "error";
@@ -27,21 +28,58 @@ function errorMessage(payload: unknown, fallback: string) {
 }
 
 export default function Home() {
+  const router = useRouter();
   const [busy, setBusy] = useState<string | null>(null);
   const [notice, setNotice] = useState<Notice | null>(null);
   const [authMode, setAuthMode] = useState<"login" | "register">("login");
+  const [hasSession, setHasSession] = useState(false);
   const [email, setEmail] = useState("");
   const [nickname, setNickname] = useState("");
   const [password, setPassword] = useState("");
-  const [verificationCode, setVerificationCode] = useState("");
-  const [otpCode, setOtpCode] = useState("");
-  const [newPassword, setNewPassword] = useState("");
+
+  useEffect(() => {
+    let active = true;
+
+    async function checkSession() {
+      try {
+        const response = await fetch("/api/users/me", { cache: "no-store" });
+        if (!active) return;
+        setHasSession(response.ok);
+        if (response.ok) {
+          router.replace("/user");
+          return;
+        }
+        if (!response.ok && response.status !== 401 && response.status !== 403) {
+          setNotice({
+            kind: "error",
+            text: `Не вдалося перевірити сесію (${response.status}).`,
+          });
+        }
+      } catch (error) {
+        if (!active) return;
+        setHasSession(false);
+        setNotice({
+          kind: "error",
+          text:
+            error instanceof Error
+              ? error.message
+              : "Не вдалося перевірити сесію.",
+        });
+      }
+    }
+
+    void checkSession();
+    return () => {
+      active = false;
+    };
+  }, [router]);
 
   async function request(
     key: string,
     path: string,
     body?: Record<string, string | number>,
     successMessage?: string,
+    redirectTo?: string,
   ) {
     setBusy(key);
     setNotice(null);
@@ -80,6 +118,7 @@ export default function Home() {
           ? payload.message
           : successMessage ?? "Запит успішно виконано.";
       setNotice({ kind: "success", text: successMessage ?? message });
+      if (redirectTo) router.replace(redirectTo);
     } catch (error) {
       setNotice({
         kind: "error",
@@ -96,28 +135,16 @@ export default function Home() {
   function handleAuthSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (authMode === "register") {
-      void request("auth", "register", { email, nickname, password }, "Акаунт створено. Перевірте пошту, щоб підтвердити адресу.");
+      void request(
+        "auth",
+        "register",
+        { email, nickname, password },
+        "Акаунт створено. Перевірте пошту, щоб підтвердити адресу.",
+        "/user",
+      );
     } else {
-      void request("auth", "login", { email, password }, "Вхід виконано.");
+      void request("auth", "login", { email, password }, "Вхід виконано.", "/user");
     }
-  }
-
-  function handleVerify(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    void request(
-      "verify",
-      `verify/${encodeURIComponent(verificationCode.trim())}`,
-      undefined,
-      "Електронну пошту підтверджено.",
-    );
-  }
-
-  function handleResetPassword(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    void request("reset", "reset-password", {
-      code: Number(otpCode),
-      newPassword,
-    }, "Пароль успішно змінено.");
   }
 
   return (
@@ -127,9 +154,11 @@ export default function Home() {
           <span className="brand-mark">1</span>
           <span>100gram</span>
         </Link>
-        <a className="docs-link" href="#auth-tools">
-          Інструменти акаунта <span aria-hidden="true">↘</span>
-        </a>
+        {hasSession && (
+          <Link className="docs-link" href="/user">
+            Профіль користувача <span aria-hidden="true">↘</span>
+          </Link>
+        )}
       </header>
 
       <section className="hero">
@@ -144,8 +173,7 @@ export default function Home() {
             <span>Ваші правила.</span>
           </h1>
           <p>
-            Увійдіть або створіть акаунт, а потім керуйте безпекою та
-            підтвердженням пошти в одному місці.
+            Увійдіть або створіть акаунт, щоб отримати доступ до 100gram.
           </p>
           <div className="hero-meta">
             <span className="meta-icon">↗</span>
@@ -281,164 +309,6 @@ export default function Home() {
           </button>
         </div>
       )}
-
-      <section className="tools-section" id="auth-tools">
-        <div className="section-heading">
-          <div>
-            <div className="eyebrow">КЕРУВАННЯ ПРОФІЛЕМ</div>
-            <h2>Усе під контролем</h2>
-          </div>
-          <p>
-            Увійдіть, щоб виконати захищені дії. Сесія зберігається у cookie —
-            токени не потрапляють у JavaScript.
-          </p>
-        </div>
-
-        <div className="tools-grid">
-          <article className="tool-card">
-            <div className="tool-icon icon-violet">01</div>
-            <h3>Сесія та пристрої</h3>
-            <p>Оновіть сесію або завершіть один чи всі активні входи.</p>
-            <div className="button-row">
-              <button
-                className="button button-soft"
-                type="button"
-                disabled={busy !== null}
-                onClick={() =>
-                  void request("refresh", "refresh", undefined, "Сесію оновлено.")
-                }
-              >
-                {busy === "refresh" ? "Оновлення…" : "Оновити сесію"}
-              </button>
-              <button
-                className="button button-quiet"
-                type="button"
-                disabled={busy !== null}
-                onClick={() =>
-                  void request("logout", "logout", undefined, "Ви вийшли з акаунта.")
-                }
-              >
-                Вийти
-              </button>
-              <button
-                className="text-button"
-                type="button"
-                disabled={busy !== null}
-                onClick={() =>
-                  void request(
-                    "logout-all",
-                    "logout-all",
-                    undefined,
-                    "Ви вийшли з усіх пристроїв.",
-                  )
-                }
-              >
-                Вийти з усіх пристроїв ↗
-              </button>
-            </div>
-          </article>
-
-          <article className="tool-card">
-            <div className="tool-icon icon-green">02</div>
-            <h3>Підтвердження пошти</h3>
-            <p>Підтвердьте акаунт за кодом або надішліть лист повторно.</p>
-            <form className="inline-form" onSubmit={handleVerify}>
-              <label className="sr-only" htmlFor="verification-code">
-                Код підтвердження UUID
-              </label>
-              <input
-                id="verification-code"
-                type="text"
-                placeholder="UUID із листа"
-                value={verificationCode}
-                onChange={(event) => setVerificationCode(event.target.value)}
-                required
-              />
-              <button
-                className="button button-soft"
-                type="submit"
-                disabled={busy !== null}
-              >
-                {busy === "verify" ? "Перевірка…" : "Підтвердити"}
-              </button>
-            </form>
-            <button
-              className="text-button"
-              type="button"
-              disabled={busy !== null}
-              onClick={() =>
-                void request(
-                  "resend",
-                  "resend-verification-email",
-                  undefined,
-                  "Лист для підтвердження надіслано.",
-                )
-              }
-            >
-              {busy === "resend" ? "Надсилання…" : "Надіслати лист повторно ↗"}
-            </button>
-          </article>
-
-          <article className="tool-card">
-            <div className="tool-icon icon-orange">03</div>
-            <h3>Новий пароль</h3>
-            <p>Отримайте одноразовий код на пошту та задайте новий пароль.</p>
-            <button
-              className="button button-soft"
-              type="button"
-              disabled={busy !== null}
-              onClick={() =>
-                void request(
-                  "send-otp",
-                  "send-otp-email",
-                  undefined,
-                  "Якщо пошта прив’язана до локального акаунта, на неї надіслано код.",
-                )
-              }
-            >
-              {busy === "send-otp" ? "Надсилання…" : "Надіслати код на пошту"}
-            </button>
-            <form
-              className="stack-form compact-form"
-              onSubmit={handleResetPassword}
-            >
-              <label>
-                Код із листа
-                <input
-                  type="number"
-                  inputMode="numeric"
-                  min={100000}
-                  max={1000000}
-                  placeholder="000000"
-                  value={otpCode}
-                  onChange={(event) => setOtpCode(event.target.value)}
-                  required
-                />
-              </label>
-              <label>
-                Новий пароль
-                <input
-                  type="password"
-                  minLength={6}
-                  maxLength={16}
-                  autoComplete="new-password"
-                  placeholder="6–16 символів"
-                  value={newPassword}
-                  onChange={(event) => setNewPassword(event.target.value)}
-                  required
-                />
-              </label>
-              <button
-                className="button button-primary"
-                type="submit"
-                disabled={busy !== null}
-              >
-                {busy === "reset" ? "Оновлення…" : "Змінити пароль"}
-              </button>
-            </form>
-          </article>
-        </div>
-      </section>
 
       <footer className="footer">
         <Link className="brand footer-brand" href="/">
