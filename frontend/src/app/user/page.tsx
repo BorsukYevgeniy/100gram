@@ -186,6 +186,9 @@ export default function UserPage() {
           <Link className="docs-link" href="/login">
             До входу <span aria-hidden="true">↗</span>
           </Link>
+          <Link className="docs-link" href="/controllers">
+            Інструменти <span aria-hidden="true">↗</span>
+          </Link>
         </div>
       </header>
 

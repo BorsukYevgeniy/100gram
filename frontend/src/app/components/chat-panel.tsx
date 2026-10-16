@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useEffect, useRef, useState } from "react";
+import { FormEvent, useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { io, Socket } from "socket.io-client";
 
@@ -201,6 +201,12 @@ export default function ChatPanel() {
   const [currentUserId, setCurrentUserId] = useState<number | null>(null);
   const [selectedChatId, setSelectedChatId] = useState<number | null>(null);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [pendingReactionMessageIds, setPendingReactionMessageIds] = useState<
+    Set<number>
+  >(() => new Set());
+  const pendingReactionSnapshots = useRef(
+    new Map<number, MessageReaction | null>(),
+  );
   const [connection, setConnection] = useState<ConnectionState>("loading");
   const [error, setError] = useState<string | null>(null);
   const [messageText, setMessageText] = useState("");
@@ -214,17 +220,43 @@ export default function ChatPanel() {
   const [creatingChat, setCreatingChat] = useState(false);
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [chatSearch, setChatSearch] = useState("");
+  const [showChatSettings, setShowChatSettings] = useState(false);
+  const [loadingChatSettings, setLoadingChatSettings] = useState(false);
+  const [savingChatSettings, setSavingChatSettings] = useState(false);
+  const [chatTitleDraft, setChatTitleDraft] = useState("");
+  const [chatDescriptionDraft, setChatDescriptionDraft] = useState("");
+  const [chatVisibilityDraft, setChatVisibilityDraft] =
+    useState<"PUBLIC" | "PRIVATE">("PRIVATE");
   const [socket, setSocket] = useState<Socket | null>(null);
   const activeChatId = useRef<number | null>(null);
-  const backendUrl =
-    process.env.NEXT_PUBLIC_BACKEND_URL?.trim() ||
-    (process.env.NODE_ENV === "development"
-      ? "http://localhost:3000"
-      : "");
+  const configuredBackendUrl = process.env.NEXT_PUBLIC_BACKEND_URL?.trim();
   const socketConfigError =
-    currentUserId !== null && !backendUrl
+    currentUserId !== null &&
+    !configuredBackendUrl &&
+    process.env.NODE_ENV !== "development"
       ? "Для чату задайте NEXT_PUBLIC_BACKEND_URL — адресу NestJS API."
       : null;
+
+  const rollbackPendingReactions = useCallback(() => {
+    if (currentUserId === null) return;
+    const snapshots = pendingReactionSnapshots.current;
+    if (snapshots.size === 0) return;
+    setMessages((current) =>
+      current.map((message) => {
+        if (!snapshots.has(message.id)) return message;
+        const previous = snapshots.get(message.id);
+        const reactions = message.reactions.filter(
+          (item) => item.userId !== currentUserId,
+        );
+        return {
+          ...message,
+          reactions: previous ? [...reactions, previous] : reactions,
+        };
+      }),
+    );
+    snapshots.clear();
+    setPendingReactionMessageIds(new Set());
+  }, [currentUserId]);
 
   useEffect(() => {
     let active = true;
@@ -281,6 +313,11 @@ export default function ChatPanel() {
 
   useEffect(() => {
     if (currentUserId === null) return;
+    const backendUrl = configuredBackendUrl
+      ? configuredBackendUrl
+      : process.env.NODE_ENV === "development"
+        ? `${window.location.protocol}//${window.location.hostname}:3000`
+        : "";
     if (!backendUrl) {
       return;
     }
@@ -296,13 +333,20 @@ export default function ChatPanel() {
       const chatId = activeChatId.current;
       if (chatId !== null) client.emit("joinRoom", { chatId });
     };
-    const handleDisconnect = () => setConnection("disconnected");
+    const handleDisconnect = () => {
+      rollbackPendingReactions();
+      setConnection("disconnected");
+    };
     const handleConnectError = (connectError: Error) => {
+      rollbackPendingReactions();
       setConnection("error");
-      setError(`Не вдалося під’єднатися до чату: ${connectError.message}`);
+      setError(
+        `Не вдалося під’єднатися до чату (${backendUrl}): ${connectError.message}. Перевірте, що сервер доступний з цього пристрою та використовується правильна адреса.`,
+      );
     };
     const handleException = (payload: unknown) => {
       setError(getErrorMessage(payload, "Помилка WebSocket-операції."));
+      rollbackPendingReactions();
     };
     const handleCreatedMessage = (payload: unknown) => {
       if (!isChatMessage(payload) || payload.chatId !== activeChatId.current) return;
@@ -335,16 +379,40 @@ export default function ChatPanel() {
     const handleAddedReaction = (payload: unknown) => {
       if (isMessageReaction(payload)) {
         setMessages((current) => updateReaction(current, payload));
+        if (payload.userId === currentUserId) {
+          pendingReactionSnapshots.current.delete(payload.messageId);
+          setPendingReactionMessageIds((current) => {
+            const next = new Set(current);
+            next.delete(payload.messageId);
+            return next;
+          });
+        }
       }
     };
     const handleUpdatedReaction = (payload: unknown) => {
       if (isMessageReaction(payload)) {
         setMessages((current) => updateReaction(current, payload));
+        if (payload.userId === currentUserId) {
+          pendingReactionSnapshots.current.delete(payload.messageId);
+          setPendingReactionMessageIds((current) => {
+            const next = new Set(current);
+            next.delete(payload.messageId);
+            return next;
+          });
+        }
       }
     };
     const handleDeletedReaction = (payload: unknown) => {
       if (isMessageReaction(payload)) {
         setMessages((current) => updateReaction(current, payload, true));
+        if (payload.userId === currentUserId) {
+          pendingReactionSnapshots.current.delete(payload.messageId);
+          setPendingReactionMessageIds((current) => {
+            const next = new Set(current);
+            next.delete(payload.messageId);
+            return next;
+          });
+        }
       }
     };
 
@@ -366,7 +434,7 @@ export default function ChatPanel() {
       client.removeAllListeners();
       setSocket(null);
     };
-  }, [backendUrl, currentUserId]);
+  }, [configuredBackendUrl, currentUserId, rollbackPendingReactions]);
 
   useEffect(() => {
     activeChatId.current = selectedChatId;
@@ -418,8 +486,97 @@ export default function ChatPanel() {
   function selectChat(chatId: number) {
     setMessages([]);
     setEditingMessageId(null);
+    setShowChatSettings(false);
     setError(null);
     setSelectedChatId(chatId);
+  }
+
+  async function openChatSettings() {
+    if (!selectedChat || selectedChat.title === null) return;
+
+    setLoadingChatSettings(true);
+    setError(null);
+    try {
+      const payload = await fetchPayload(`/api/chats/${selectedChat.id}`);
+      if (
+        !payload ||
+        typeof payload !== "object" ||
+        !("title" in payload) ||
+        typeof payload.title !== "string" ||
+        !("description" in payload) ||
+        (typeof payload.description !== "string" &&
+          payload.description !== null) ||
+        !("visibility" in payload) ||
+        typeof payload.visibility !== "string" ||
+        !isVisibility(payload.visibility)
+      ) {
+        throw new Error("Сервер повернув некоректну інформацію про чат.");
+      }
+
+      setChatTitleDraft(payload.title);
+      setChatDescriptionDraft(payload.description ?? "");
+      setChatVisibilityDraft(payload.visibility);
+      setShowChatSettings(true);
+    } catch (settingsError) {
+      setError(
+        settingsError instanceof Error
+          ? settingsError.message
+          : "Не вдалося завантажити інформацію про чат.",
+      );
+    } finally {
+      setLoadingChatSettings(false);
+    }
+  }
+
+  async function handleUpdateChat(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!selectedChat || savingChatSettings) return;
+
+    const title = chatTitleDraft.trim();
+    const description = chatDescriptionDraft.trim();
+    if (title.length < 3 || title.length > 20) {
+      setError("Назва чату має містити від 3 до 20 символів.");
+      return;
+    }
+    if (description.length === 1 || description.length > 500) {
+      setError("Опис має бути порожнім або містити від 2 до 500 символів.");
+      return;
+    }
+
+    setSavingChatSettings(true);
+    setError(null);
+    try {
+      const response = await fetch(`/api/chats/${selectedChat.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          title,
+          description: description || null,
+          visibility: chatVisibilityDraft,
+        }),
+      });
+      const payload: unknown = await response.json().catch(() => null);
+      if (!response.ok) {
+        throw new Error(
+          getErrorMessage(payload, `Не вдалося оновити чат (${response.status}).`),
+        );
+      }
+
+      setChats((current) =>
+        current.map((chat) =>
+          chat.id === selectedChat.id ? { ...chat, title } : chat,
+        ),
+      );
+      setShowChatSettings(false);
+    } catch (updateError) {
+      setError(
+        updateError instanceof Error
+          ? updateError.message
+          : "Не вдалося оновити інформацію про чат.",
+      );
+    } finally {
+      setSavingChatSettings(false);
+    }
   }
 
   function handleSendMessage(event: FormEvent<HTMLFormElement>) {
@@ -455,27 +612,48 @@ export default function ChatPanel() {
   }
 
   function toggleReaction(message: ChatMessage, reaction: Reaction) {
-    if (!socket?.connected || selectedChatId === null || currentUserId === null) return;
+    if (
+      !socket?.connected ||
+      selectedChatId === null ||
+      currentUserId === null ||
+      pendingReactionMessageIds.has(message.id)
+    ) {
+      return;
+    }
     const ownReaction = message.reactions.find(
       (item) => item.userId === currentUserId,
     );
+    const method =
+      !ownReaction ? "POST" : ownReaction.reaction === reaction ? "DELETE" : "PATCH";
+    pendingReactionSnapshots.current.set(message.id, ownReaction ?? null);
+    setPendingReactionMessageIds((current) => new Set(current).add(message.id));
     setError(null);
-    if (!ownReaction) {
+    const optimisticReaction: MessageReaction = {
+      messageId: message.id,
+      userId: currentUserId,
+      reaction,
+      createdAt: new Date().toISOString(),
+    };
+    setMessages((current) =>
+      updateReaction(current, optimisticReaction, method === "DELETE"),
+    );
+
+    if (method === "POST") {
       socket.emit("addReaction", {
         chatId: selectedChatId,
         messageId: message.id,
         reaction,
       });
-    } else if (ownReaction.reaction === reaction) {
-      socket.emit("deleteReaction", {
-        chatId: selectedChatId,
-        messageId: message.id,
-      });
-    } else {
+    } else if (method === "PATCH") {
       socket.emit("updateReaction", {
         chatId: selectedChatId,
         messageId: message.id,
         reaction,
+      });
+    } else {
+      socket.emit("deleteReaction", {
+        chatId: selectedChatId,
+        messageId: message.id,
       });
     }
   }
@@ -628,6 +806,9 @@ export default function ChatPanel() {
           </span>
           <Link className="docs-link" href="/user">
             Профіль <span aria-hidden="true">↗</span>
+          </Link>
+          <Link className="docs-link" href="/controllers">
+            Інструменти <span aria-hidden="true">↗</span>
           </Link>
         </div>
       </header>
@@ -834,7 +1015,109 @@ export default function ChatPanel() {
                       : "статус з’єднання"}
                   </span>
                 </div>
+                {selectedChat.title !== null && (
+                  <button
+                    className="messenger-chat-settings-button"
+                    type="button"
+                    onClick={() => void openChatSettings()}
+                    disabled={loadingChatSettings}
+                  >
+                    {loadingChatSettings ? "Завантаження…" : "Інформація"}
+                  </button>
+                )}
               </header>
+              {showChatSettings && (
+                <div
+                  className="chat-settings-overlay"
+                  onClick={(event) => {
+                    if (event.target === event.currentTarget) {
+                      setShowChatSettings(false);
+                    }
+                  }}
+                >
+                  <section
+                    className="chat-settings-dialog"
+                    role="dialog"
+                    aria-modal="true"
+                    aria-labelledby="chat-settings-title"
+                  >
+                    <div className="chat-settings-heading">
+                      <h2 id="chat-settings-title">Інформація про чат</h2>
+                      <button
+                        className="notice-close"
+                        type="button"
+                        aria-label="Закрити"
+                        onClick={() => setShowChatSettings(false)}
+                      >
+                        ×
+                      </button>
+                    </div>
+                    <form
+                      className="chat-settings-form"
+                      onSubmit={handleUpdateChat}
+                    >
+                      <label>
+                        Назва
+                        <input
+                          value={chatTitleDraft}
+                          minLength={3}
+                          maxLength={20}
+                          onChange={(event) =>
+                            setChatTitleDraft(event.target.value)
+                          }
+                          required
+                        />
+                      </label>
+                      <label>
+                        Опис
+                        <textarea
+                          value={chatDescriptionDraft}
+                          minLength={2}
+                          maxLength={500}
+                          onChange={(event) =>
+                            setChatDescriptionDraft(event.target.value)
+                          }
+                          placeholder="Необов’язковий опис"
+                          rows={4}
+                        />
+                      </label>
+                      <label>
+                        Видимість
+                        <select
+                          value={chatVisibilityDraft}
+                          onChange={(event) => {
+                            if (isVisibility(event.target.value)) {
+                              setChatVisibilityDraft(event.target.value);
+                            }
+                          }}
+                        >
+                          <option value="PRIVATE">Приватний</option>
+                          <option value="PUBLIC">Публічний</option>
+                        </select>
+                      </label>
+                      <div className="chat-settings-actions">
+                        <button
+                          className="button button-quiet"
+                          type="button"
+                          onClick={() => setShowChatSettings(false)}
+                          disabled={savingChatSettings}
+                        >
+                          Скасувати
+                        </button>
+                        <button
+                          className="button button-primary"
+                          type="submit"
+                          disabled={savingChatSettings}
+                        >
+                          {savingChatSettings
+                            ? "Збереження…"
+                            : "Зберегти зміни"}
+                        </button>
+                      </div>
+                    </form>
+                  </section>
+                </div>
+              )}
               <div className="messenger-messages" aria-live="polite">
                 {messages.length === 0 ? (
                   <div className="messenger-no-messages">
@@ -913,10 +1196,13 @@ export default function ChatPanel() {
                                     className={`chat-reaction${selected ? " selected" : ""}`}
                                     title={option.value}
                                     aria-label={`${option.value}: ${count}`}
-                                    disabled={connection !== "connected"}
-                                    onClick={() =>
-                                      toggleReaction(message, option.value)
+                                    disabled={
+                                      connection !== "connected" ||
+                                      pendingReactionMessageIds.has(message.id)
                                     }
+                                    onClick={() => {
+                                      void toggleReaction(message, option.value);
+                                    }}
                                   >
                                     {option.label}
                                     {count > 0 ? ` ${count}` : ""}

@@ -32,13 +32,89 @@ async function proxyChatRequest(request: NextRequest, context: RouteContext) {
     Number.isSafeInteger(Number(path[0])) &&
     Number(path[0]) > 0 &&
     path[1] === "users";
+  const isChatDetails =
+    path.length === 1 &&
+    /^\d+$/.test(path[0]) &&
+    Number.isSafeInteger(Number(path[0])) &&
+    Number(path[0]) > 0;
   const isChatCreation =
     path.length === 1 &&
     (path[0] === "private" || path[0] === "group" || path[0] === "channel");
-  if (!isChatList && !isMessageList && !isChatUsersList && !isChatCreation) {
+  const isInviteJoin = path.length === 2 && path[0] === "invite";
+  const isChatJoin =
+    path.length === 2 &&
+    path[0] === "join" &&
+    /^\d+$/.test(path[1]) &&
+    Number.isSafeInteger(Number(path[1])) &&
+    Number(path[1]) > 0;
+  const isChatAction =
+    path.length === 2 &&
+    /^\d+$/.test(path[0]) &&
+    Number.isSafeInteger(Number(path[0])) &&
+    Number(path[0]) > 0 &&
+    ["invite-token", "pin", "unpin", "allowed-reactions", "avatar", "messages"].includes(path[1]);
+  const isChatOwnerChange =
+    path.length === 3 &&
+    /^\d+$/.test(path[0]) &&
+    Number.isSafeInteger(Number(path[0])) &&
+    Number(path[0]) > 0 &&
+    path[1] === "owner" &&
+    /^\d+$/.test(path[2]) &&
+    Number.isSafeInteger(Number(path[2])) &&
+    Number(path[2]) > 0;
+  const isChatMemberAction =
+    path.length >= 3 &&
+    /^\d+$/.test(path[0]) &&
+    Number.isSafeInteger(Number(path[0])) &&
+    Number(path[0]) > 0 &&
+    path[1] === "users" &&
+    (path.length === 3 && /^\d+$/.test(path[2]) ||
+      path.length === 4 && /^\d+$/.test(path[2]) && path[3] === "role");
+  const isChatAvatarAction =
+    path.length === 2 &&
+    /^\d+$/.test(path[0]) &&
+    Number.isSafeInteger(Number(path[0])) &&
+    Number(path[0]) > 0 &&
+    path[1] === "avatar";
+  if (
+    !isChatList &&
+    !isMessageList &&
+    !isChatUsersList &&
+    !isChatDetails &&
+    !isChatCreation &&
+    !isInviteJoin &&
+    !isChatJoin &&
+    !isChatAction &&
+    !isChatOwnerChange &&
+    !isChatMemberAction &&
+    !isChatAvatarAction
+  ) {
     return NextResponse.json({ message: "Not found." }, { status: 404 });
   }
-  const allowedMethods = isChatCreation ? ["POST"] : ["GET"];
+  let allowedMethods: string[] = ["GET"];
+  if (isChatCreation || isInviteJoin || isChatJoin) allowedMethods = ["POST"];
+  else if (isChatDetails) allowedMethods = ["GET", "PATCH", "DELETE"];
+  else if (isChatOwnerChange || isChatAvatarAction) {
+    allowedMethods = isChatAvatarAction ? ["PATCH", "DELETE"] : ["PATCH"];
+  } else if (isChatMemberAction) {
+    allowedMethods =
+      path.length === 3 ? ["DELETE"] : ["PATCH"];
+  } else if (isChatAction) {
+    switch (path[1]) {
+      case "invite-token":
+      case "pin":
+      case "unpin":
+      case "allowed-reactions":
+        allowedMethods = ["PATCH"];
+        break;
+      case "avatar":
+        allowedMethods = ["PATCH", "DELETE"];
+        break;
+      case "messages":
+        allowedMethods = ["GET", "POST", "DELETE"];
+        break;
+    }
+  }
   if (!allowedMethods.includes(request.method)) {
     return NextResponse.json(
       { message: "Method not allowed." },
@@ -58,7 +134,10 @@ async function proxyChatRequest(request: NextRequest, context: RouteContext) {
   if (contentType) headers.set("content-type", contentType);
 
   try {
-    const body = request.method === "GET" ? undefined : await request.arrayBuffer();
+    const body =
+      request.method === "GET" || request.method === "DELETE"
+        ? undefined
+        : await request.arrayBuffer();
     const { response, refreshedCookies } = await fetchWithTokenRefresh(
       backendUrl,
       {
@@ -98,3 +177,5 @@ async function proxyChatRequest(request: NextRequest, context: RouteContext) {
 
 export const GET = proxyChatRequest;
 export const POST = proxyChatRequest;
+export const PATCH = proxyChatRequest;
+export const DELETE = proxyChatRequest;

@@ -33,12 +33,46 @@ async function proxyUserRequest(request: NextRequest, context: RouteContext) {
 		Number(path[1]) > 0;
 
 	const isSelfRoute = path.length === 1 && path[0] === 'me';
+	const isBlockedListRoute =
+		path.length === 2 && path[0] === 'me' && path[1] === 'blocked';
+	const isBlockActionRoute =
+		path.length === 2 &&
+		path[0] === 'block' &&
+		/^\d+$/.test(path[1]) &&
+		Number.isSafeInteger(Number(path[1])) &&
+		Number(path[1]) > 0;
+	const isOwnAvatarRoute =
+		path.length === 2 && path[0] === 'me' && path[1] === 'avatar';
+	const isUserAvatarRoute =
+		path.length === 2 &&
+		/^\d+$/.test(path[0]) &&
+		Number.isSafeInteger(Number(path[0])) &&
+		Number(path[0]) > 0 &&
+		path[1] === 'avatar';
 
-	if (!isSelfRoute && !isUserId && !isAdminRoute) {
+	if (
+		!isSelfRoute &&
+		!isUserId &&
+		!isAdminRoute &&
+		!isBlockedListRoute &&
+		!isBlockActionRoute &&
+		!isOwnAvatarRoute &&
+		!isUserAvatarRoute
+	) {
 		return NextResponse.json({ message: 'Not found.' }, { status: 404 });
 	}
 
-	const allowedMethods = isAdminRoute ? ['PATCH'] : ['GET', 'DELETE'];
+	const allowedMethods = isAdminRoute
+		? ['PATCH']
+		: isBlockedListRoute
+			? ['GET']
+			: isBlockActionRoute
+				? ['POST', 'DELETE']
+				: isOwnAvatarRoute
+					? ['PATCH', 'DELETE']
+					: isUserAvatarRoute
+						? ['DELETE']
+						: ['GET', 'DELETE'];
 
 	if (!allowedMethods.includes(request.method)) {
 		return NextResponse.json(
@@ -58,15 +92,22 @@ async function proxyUserRequest(request: NextRequest, context: RouteContext) {
 	const headers = new Headers();
 	const cookie = request.headers.get('cookie');
 	if (cookie) headers.set('cookie', cookie);
+	const contentType = request.headers.get('content-type');
+	if (contentType) headers.set('content-type', contentType);
 
 	let upstream: Response;
 	let refreshedCookies: string[] = [];
 
 	try {
+		const body =
+			request.method === 'GET' || request.method === 'DELETE'
+				? undefined
+				: await request.arrayBuffer();
 		const result = await fetchWithTokenRefresh(backendUrl, {
 			url: upstreamUrl,
 			method: request.method,
 			headers,
+			...(body ? { body } : {}),
 			cookie: cookie ?? undefined,
 		});
 		upstream = result.response;

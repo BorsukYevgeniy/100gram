@@ -4,7 +4,7 @@ const nextConfig: NextConfig = {
 	/* config options here */
 	cacheComponents: true,
 	partialPrefetching: true,
-	allowedDevOrigins: ['d061-46-149-186-24.ngrok-free.app'],
+	allowedDevOrigins: ['192.168.0.106'],
 };
 
 export default nextConfig;
