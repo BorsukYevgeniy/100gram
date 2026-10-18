@@ -272,6 +272,14 @@ describe('ChatMemberController (e2e)', () => {
         .expect(400);
     });
 
+    it('POST /chats/:chatId/users/:userId - 403 FORBIDDEN - Should return 403 because user is not the owner', async () => {
+      await request(app.getHttpServer())
+        .post(`/chats/${groupChatId}/users/${invitedUserId}`)
+        .send({ role: ChatRole.MODERATOR })
+        .set('Cookie', [`access_token=${memberAccessToken}`])
+        .expect(403);
+    });
+
     it('POST /chats/:chatId/users/:userId - 400 BAD REQUEST - Should only allow adding users to group chats', async () => {
       await request(app.getHttpServer())
         .post(`/chats/${privateChatId}/users/${invitedUserId}`)

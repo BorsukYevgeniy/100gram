@@ -21,8 +21,13 @@ export class ChatMemberService {
     private readonly logger: PinoLogger,
   ) {}
 
-  async addUserToChat(chatId: number, userId: number) {
+  async addUserToChat(
+    user: AccessTokenPayload,
+    chatId: number,
+    userId: number,
+  ) {
     await this.chatValidator.validateChatType(chatId, ChatType.GROUP);
+    await this.chatValidator.validateOwner(user, chatId);
 
     const isParticipant = await this.chatValidator.checkChatParticipation(
       userId,

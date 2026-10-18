@@ -354,7 +354,7 @@ export class ChatService {
 
     await this.chatValidator.validateChatVisibility(chatId, Visibility.PUBLIC);
 
-    return this.chatUserService.addUserToChat(chatId, user.userId);
+    return this.chatUserRepo.addUserToChat(chatId, user.userId);
   }
 
   async pinChat(userId: number, chatId: number) {

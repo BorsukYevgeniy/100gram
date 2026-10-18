@@ -40,8 +40,9 @@ export class ChatMemberController {
   async addUserToChat(
     @Param('chatId', ParseIntPipe) chatId: number,
     @Param('userId', ParseIntPipe) userId: number,
+    @CurrentUser() currentUser: AccessTokenPayload,
   ) {
-    return this.chatMemberService.addUserToChat(chatId, userId);
+    return this.chatMemberService.addUserToChat(currentUser, chatId, userId);
   }
 
   @ChatMemberRoutesDocs.DeleteUserFromChat()
