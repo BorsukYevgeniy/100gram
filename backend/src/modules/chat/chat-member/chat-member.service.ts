@@ -26,7 +26,11 @@ export class ChatMemberService {
     chatId: number,
     userId: number,
   ) {
-    await this.chatValidator.validateChatType(chatId, ChatType.GROUP);
+    await this.chatValidator.validateChatType(
+      chatId,
+      ChatType.GROUP,
+      ChatType.CHANNEL,
+    );
     await this.chatValidator.validateOwner(user, chatId);
 
     const isParticipant = await this.chatValidator.checkChatParticipation(
@@ -59,7 +63,11 @@ export class ChatMemberService {
     userId: number,
     currentUser: AccessTokenPayload,
   ) {
-    await this.chatValidator.validateChatType(chatId, ChatType.GROUP);
+    await this.chatValidator.validateChatType(
+      chatId,
+      ChatType.GROUP,
+      ChatType.CHANNEL,
+    );
     await this.chatValidator.validateOwner(currentUser, chatId);
 
     try {

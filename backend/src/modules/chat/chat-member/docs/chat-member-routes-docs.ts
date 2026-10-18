@@ -1,5 +1,6 @@
 import { applyDecorators } from '@nestjs/common';
 import {
+  ApiBadRequestResponse,
   ApiBody,
   ApiConflictResponse,
   ApiCreatedResponse,
@@ -47,7 +48,7 @@ export class ChatMemberRoutesDocs {
     return applyDecorators(
       ApiOperation({
         summary: 'Add a user to a group chat',
-        description: 'Adds the specified user to the group chat',
+        description: 'Adds the specified user to the group chat or channel',
       }),
       ApiCreatedResponse({ description: 'User added to chat successfully' }),
       ApiUserIdDocs(),
@@ -63,9 +64,10 @@ export class ChatMemberRoutesDocs {
       ApiOperation({
         summary: 'Remove a user from a group chat',
         description:
-          'Removes the specified participant from the group chat. Only the chat owner or an admin can do this.',
+          'Removes the specified participant from the group chat or channel. Only the chat owner or an admin can do this.',
       }),
       ApiOkResponse({ description: 'User removed from chat successfully' }),
+      ApiBadRequestResponse({ description: 'Chat must be a private' }),
       UserIsNotParticipantOfChatDocs(),
       ApiChatMustBeGroupOrChannelResponse(),
       ApiYouMustBeChatOwnerResponse(),
