@@ -1,8 +1,12 @@
+import { OmitType } from '@nestjs/mapped-types';
 import { ApiProperty } from '@nestjs/swagger';
 import { Chat } from '../../../../generated/prisma/browser';
 import { PrivateChatResponseDto } from './private-chat-response.dto';
 
-export class ChannelGroupChatResponseDto extends PrivateChatResponseDto {
+export class ChannelGroupChatResponseDto extends OmitType(
+  PrivateChatResponseDto,
+  ['withWhom'],
+) {
   @ApiProperty({
     type: String,
     description: 'Title of the group chat',

@@ -35,10 +35,17 @@ export class PrivateChatResponseDto {
   })
   readonly visibility: Visibility;
 
-  constructor(chat: Chat) {
+  @ApiProperty({
+    type: String,
+    description: 'User with whom you have a private chat',
+  })
+  readonly withWhom: string;
+
+  constructor(chat: Chat, withWhom: string) {
     this.id = chat.id;
     this.chatType = chat.chatType;
     this.lastMessageId = chat.lastMessageId;
     this.visibility = chat.visibility;
+    this.withWhom = withWhom;
   }
 }

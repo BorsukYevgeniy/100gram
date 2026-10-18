@@ -83,7 +83,10 @@ export class ChatService {
         'Private chat created',
       );
 
-      return chat;
+      const users = await this.chatUserRepo.getUsersInChat(chat.id, 2);
+
+      const withWhom = users.find((users) => userId !== users.user.id);
+      return new PrivateChatResponseDto(chat, withWhom.user.nickname);
     } catch (e) {
       if (e instanceof PrismaClientKnownRequestError && e.code === 'P2003') {
         this.logger.warn({ peerId: dto.userId }, 'Peer user not found');
@@ -217,7 +220,10 @@ export class ChatService {
 
     switch (chat.chatType) {
       case ChatType.PRIVATE:
-        return new PrivateChatResponseDto(chat);
+        const users = await this.chatUserRepo.getUsersInChat(chatId, 2);
+
+        const withWhom = users.find((users) => user.userId !== users.user.id);
+        return new PrivateChatResponseDto(chat, withWhom.user.nickname);
       case ChatType.GROUP:
         return new ChannelGroupChatResponseDto(chat);
       case ChatType.CHANNEL:

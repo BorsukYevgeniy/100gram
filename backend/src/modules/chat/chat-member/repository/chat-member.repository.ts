@@ -35,7 +35,7 @@ export class ChatMemberRepository {
     ]);
   }
 
-  async getUsersInChat(chatId: number, take: number, userCursor: number) {
+  async getUsersInChat(chatId: number, take: number, userCursor?: number) {
     return this.prisma.chatToUser.findMany({
       where: { chatId },
       select: {
@@ -153,4 +153,3 @@ export class ChatMemberRepository {
     });
   }
 }
-

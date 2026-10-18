@@ -238,12 +238,7 @@ describe('ChatController (e2e)', () => {
         lastMessageId: null,
         chatType: ChatType.PRIVATE,
         visibility: Visibility.PRIVATE,
-        avatarName: null,
-        description: null,
-        inviteToken: null,
-        membersCount: 2,
-        title: null,
-        allowedReactions: [],
+        withWhom: 'chatmember',
       });
       privateChatId = body.id;
     });
@@ -292,6 +287,7 @@ describe('ChatController (e2e)', () => {
         lastMessageId: null,
         chatType: ChatType.PRIVATE,
         visibility: Visibility.PRIVATE,
+        withWhom: 'chatmember',
       });
     });
   });
