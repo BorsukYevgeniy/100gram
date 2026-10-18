@@ -18,7 +18,6 @@ import { randomBytes } from 'crypto';
 import { ChatToUser, Role } from '../../../generated/prisma/browser';
 import { PaginationDto } from '../../common/dto/pagination.dto';
 import { CacheService } from '../cache/cache.service';
-import { ChatMemberService } from './chat-member/chat-member.service';
 import { ChatMemberRepository } from './chat-member/repository/chat-member.repository';
 import { AllowReactionDto } from './dto/allow-reaction.dto';
 import { ChannelGroupChatResponseDto } from './dto/channel-group-chat-response.dto';
@@ -32,7 +31,6 @@ export class ChatService {
     private readonly chatRepo: ChatRepository,
     private readonly chatUserRepo: ChatMemberRepository,
     private readonly chatValidator: ChatValidationService,
-    private readonly chatUserService: ChatMemberService,
     private readonly cache: CacheService,
     private readonly logger: PinoLogger,
   ) {
@@ -198,7 +196,12 @@ export class ChatService {
   }
 
   async updateInviteToken(user: AccessTokenPayload, chatId: number) {
-    await this.chatValidator.validateChatType(chatId, ChatType.GROUP);
+    await this.chatValidator.validateChatVisibility(chatId, Visibility.PRIVATE);
+    await this.chatValidator.validateChatType(
+      chatId,
+      ChatType.GROUP,
+      ChatType.CHANNEL,
+    );
     await this.chatValidator.validateOwner(user, chatId);
 
     return this.chatRepo.updateInviteToken(chatId, this.generateInviteToken());
@@ -287,7 +290,11 @@ export class ChatService {
     user: AccessTokenPayload,
     newOwnerId: number,
   ): Promise<ChatToUser> {
-    await this.chatValidator.validateChatType(chatId, ChatType.GROUP);
+    await this.chatValidator.validateChatType(
+      chatId,
+      ChatType.GROUP,
+      ChatType.CHANNEL,
+    );
     await this.chatValidator.validateOwner(user, chatId);
 
     try {

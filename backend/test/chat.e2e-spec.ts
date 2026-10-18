@@ -566,6 +566,13 @@ describe('ChatController (e2e)', () => {
         .expect(403);
     });
 
+    it('PATCH /chats/:chatId/invite-token - 400 BAD REQUEST - Should return 400 because chat is not private', async () => {
+      await request(app.getHttpServer())
+        .patch(`/chats/${publicGroupId}/invite-token`)
+        .set('Cookie', [`access_token=${guestAccessToken}`])
+        .expect(400);
+    });
+
     it('PATCH /chats/:chatId/invite-token - 200 OK - Should rotate the invite token', async () => {
       const { body } = await request(app.getHttpServer())
         .patch(`/chats/${groupChatId}/invite-token`)

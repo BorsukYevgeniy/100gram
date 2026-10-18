@@ -1,5 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { Chat } from '../../../../generated/prisma/browser';
+import { IsEnum, IsString } from 'class-validator';
+import { Chat, Reaction } from '../../../../generated/prisma/browser';
 import { BaseChatResponseDto } from './base-chat-response.dto';
 
 export class ChannelGroupChatResponseDto extends BaseChatResponseDto {
@@ -37,6 +38,16 @@ export class ChannelGroupChatResponseDto extends BaseChatResponseDto {
   })
   readonly inviteToken: string;
 
+  @ApiProperty({
+    description: 'List of allowed reactions for the chat',
+    type: [String],
+    enumName: 'Reaction',
+    enum: Reaction,
+  })
+  @IsString({ each: true })
+  @IsEnum(Reaction, { each: true })
+  allowedReactions: Reaction[];
+
   constructor(chat: Chat) {
     super(chat);
     this.title = chat.title;
@@ -44,5 +55,6 @@ export class ChannelGroupChatResponseDto extends BaseChatResponseDto {
     this.avatarName = chat.avatarName;
     this.membersCount = chat.membersCount;
     this.inviteToken = chat.inviteToken;
+    this.allowedReactions = chat.allowedReactions;
   }
 }
