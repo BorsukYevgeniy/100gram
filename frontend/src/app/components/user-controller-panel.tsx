@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import Link from "next/link";
 import { FormEvent, useEffect, useRef, useState } from "react";
 
 type UserProfile = {
@@ -28,6 +29,13 @@ type ApiError = {
   message?: string | string[];
   error?: string;
 };
+
+function fileProxyUrl(fileName: string, kind: "users" | "chats") {
+	const fileKey = fileName.startsWith("avatars/")
+		? fileName
+		: `avatars/${kind}/${fileName}`;
+	return `/api/files?key=${encodeURIComponent(fileKey)}`;
+}
 
 function errorMessage(payload: unknown, fallback: string) {
   if (payload && typeof payload === "object" && "message" in payload) {
@@ -93,6 +101,9 @@ export default function UserControllerPanel() {
   const [busy, setBusy] = useState<string | null>(null);
   const [notice, setNotice] = useState<Notice | null>(null);
   const [profile, setProfile] = useState<UserProfile | null>(null);
+  const [profileStatus, setProfileStatus] = useState<
+    "loading" | "authenticated" | "unauthenticated" | "error"
+  >("loading");
   const [targetProfile, setTargetProfile] = useState<UserProfile | null>(null);
   const [targetUserId, setTargetUserId] = useState("");
   const [profileNickname, setProfileNickname] = useState("");
@@ -108,6 +119,57 @@ export default function UserControllerPanel() {
     const previewUrls = avatarPreviewUrls.current;
     return () => {
       for (const previewUrl of previewUrls) URL.revokeObjectURL(previewUrl);
+    };
+  }, []);
+
+  useEffect(() => {
+    let active = true;
+    async function loadProfile() {
+      try {
+        const response = await fetch("/api/users/me", { cache: "no-store" });
+        const payload: unknown = await response.json().catch(() => null);
+        if (!response.ok) {
+          if (active) {
+            setProfileStatus(
+              response.status === 401 || response.status === 403
+                ? "unauthenticated"
+                : "error",
+            );
+            if (response.status !== 401 && response.status !== 403) {
+              setNotice({
+                kind: "error",
+                text: errorMessage(
+                  payload,
+                  `Не вдалося завантажити профіль (${response.status}).`,
+                ),
+              });
+            }
+          }
+          return;
+        }
+        if (!isUserProfile(payload)) {
+          throw new Error("Сервер повернув некоректні дані профілю.");
+        }
+        if (active) {
+          setProfile(payload);
+          setProfileNickname(payload.nickname);
+          setProfileStatus("authenticated");
+        }
+      } catch (error) {
+        if (!active) return;
+        setProfileStatus("error");
+        setNotice({
+          kind: "error",
+          text:
+            error instanceof Error
+              ? error.message
+              : "Не вдалося завантажити профіль.",
+        });
+      }
+    }
+    void loadProfile();
+    return () => {
+      active = false;
     };
   }, []);
 
@@ -153,7 +215,10 @@ export default function UserControllerPanel() {
         if (!isUserProfile(payload)) {
           throw new Error("Сервер повернув некоректні дані профілю.");
         }
-        if (profileResult === "current") setProfile(payload);
+        if (profileResult === "current") {
+          setProfile(payload);
+          setProfileStatus("authenticated");
+        }
         else setTargetProfile(payload);
         if (profileResult === "current") {
           setProfileNickname(payload.nickname);
@@ -322,10 +387,9 @@ export default function UserControllerPanel() {
         throw new Error("Сервер повернув некоректні дані аватару.");
       }
       const avatarName = payload.avatarUrl;
-      setProfile((current) =>
-        current ? { ...current, avatarName } : current,
-      );
+      setProfile((current) => (current ? { ...current, avatarName } : current));
       setAvatarFile(null);
+      setAvatarPreview(null);
       setNotice({ kind: "success", text: "Аватар оновлено." });
     } catch (error) {
       setNotice({
@@ -469,23 +533,46 @@ export default function UserControllerPanel() {
             >
               {busy === "get-me" ? "Завантаження…" : "Мій профіль"}
             </button>
-            <button
-              className="button button-danger"
-              type="button"
-              disabled={busy !== null}
-              onClick={deleteCurrentUser}
-            >
-              {busy === "delete-me" ? "Видалення…" : "Видалити акаунт"}
-            </button>
+            {profile && (
+              <button
+                className="button button-danger"
+                type="button"
+                disabled={busy !== null}
+                onClick={deleteCurrentUser}
+              >
+                {busy === "delete-me" ? "Видалення…" : "Видалити акаунт"}
+              </button>
+            )}
           </div>
-          {profile && (
+          {profileStatus === "loading" && (
+            <p className="profile-auth-message">Завантажуємо налаштування…</p>
+          )}
+          {profileStatus === "unauthenticated" && (
+            <p className="profile-auth-message">
+              Увійдіть, щоб змінити нікнейм або аватар.{" "}
+              <Link href="/login">Увійти</Link>
+            </p>
+          )}
+          {profileStatus === "error" && !profile && (
+            <p className="profile-auth-message">
+              Не вдалося завантажити налаштування профілю.
+            </p>
+          )}
+          {profileStatus === "authenticated" && profile && (
             <>
               <div className="profile-avatar-settings">
                 <span className="profile-avatar-preview">
-                  {avatarPreview ? (
+                  {avatarPreview || profile.avatarName ? (
                     <Image
-                      src={avatarPreview}
-                      alt="Попередній перегляд нового аватара"
+                      src={
+                        avatarPreview ??
+                        fileProxyUrl(profile.avatarName ?? "", "users")
+                      }
+                      alt={
+                        avatarPreview
+                          ? "Попередній перегляд нового аватара"
+                          : "Аватар користувача"
+                      }
                       width={72}
                       height={72}
                       unoptimized

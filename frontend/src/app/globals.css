@@ -1954,6 +1954,19 @@ p {
   gap: 8px;
 }
 
+.profile-auth-message {
+  margin: 18px 0 0;
+  color: #aab2bd;
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+.profile-auth-message a {
+  color: var(--accent);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
 .user-search-form {
   margin: 12px 0;
 }

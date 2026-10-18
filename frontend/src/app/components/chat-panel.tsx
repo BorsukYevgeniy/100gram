@@ -66,6 +66,13 @@ const reactionOptions: { value: Reaction; label: string }[] = [
 	{ value: 'HEART_WITH_FIRE', label: '❤️‍🔥' },
 ];
 
+function fileProxyUrl(fileName: string) {
+	const fileKey = fileName.startsWith('avatars/')
+		? fileName
+		: `avatars/chats/${fileName}`;
+	return `/api/files?key=${encodeURIComponent(fileKey)}`;
+}
+
 function isChatCreationMode(value: string): value is ChatCreationMode {
 	return value === 'private' || value === 'group' || value === 'channel';
 }
@@ -894,12 +901,13 @@ export default function ChatPanel() {
 									typeof payload.avatarUrl === 'string'
 										? payload.avatarUrl
 										: chat.avatarName,
-								avatarPreview: chatAvatarPreview ?? undefined,
+								avatarPreview: undefined,
 							}
 						: chat,
 				),
 			);
 			setChatAvatarFile(null);
+			setChatAvatarPreview(null);
 		} catch (avatarError) {
 			setError(
 				avatarError instanceof Error
@@ -1540,9 +1548,12 @@ export default function ChatPanel() {
 										onClick={() => selectChat(chat.id)}
 									>
 										<span className='messenger-avatar' aria-hidden='true'>
-											{chat.avatarPreview ? (
+											{chat.avatarPreview || chat.avatarName ? (
 												<Image
-													src={chat.avatarPreview}
+														src={
+															chat.avatarPreview ??
+															fileProxyUrl(chat.avatarName ?? '')
+														}
 													alt=''
 													width={48}
 													height={48}
@@ -1604,9 +1615,12 @@ export default function ChatPanel() {
 										onClick={() => void openChatSettings()}
 										disabled={loadingChatSettings}
 									>
-										{selectedChat.avatarPreview ? (
+										{selectedChat.avatarPreview || selectedChat.avatarName ? (
 											<Image
-												src={selectedChat.avatarPreview}
+												src={
+													selectedChat.avatarPreview ??
+													fileProxyUrl(selectedChat.avatarName ?? '')
+												}
 												alt=''
 												width={48}
 												height={48}
@@ -1729,12 +1743,16 @@ export default function ChatPanel() {
 											<h3 id='chat-avatar-title'>Аватар чату</h3>
 											<div className='chat-avatar-settings-preview'>
 												<span className='messenger-avatar'>
-													{chatAvatarPreview || selectedChat.avatarPreview ? (
+													{chatAvatarPreview ||
+													selectedChat.avatarPreview ||
+													selectedChat.avatarName ? (
 														<Image
 															src={
 																chatAvatarPreview ??
 																selectedChat.avatarPreview ??
-																''
+																fileProxyUrl(
+																	selectedChat.avatarName ?? '',
+																)
 															}
 															alt=''
 															width={64}
