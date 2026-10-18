@@ -3,6 +3,7 @@ import { Role, User } from '../../../generated/prisma/client';
 import { Provider } from '../../../generated/prisma/enums';
 import { PrismaService } from '../../infra/prisma/prisma.service';
 import { CreateUserDto } from './dto/create-user.dto';
+import { SearchUserDto } from './dto/search-user.dto';
 import { UpdateUserProfileDto } from './dto/update-user-profile.dto';
 import { UserNoCredOtpVCode } from './types/user.types';
 
@@ -180,6 +181,32 @@ export class UserRepository {
     return this.prisma.user.update({
       where: { id: userId },
       data: dto,
+      omit: {
+        email: true,
+        password: true,
+        verificationCode: true,
+        otpHash: true,
+        otpExpiresAt: true,
+        otpAttempts: true,
+      },
+    });
+  }
+
+  async searchUser(dto: SearchUserDto, take: number, cursor?: number) {
+    return this.prisma.user.findMany({
+      where: {
+        nickname: { contains: dto.nickname },
+      },
+      take,
+
+      ...(cursor && {
+        cursor: { id: cursor },
+        skip: 1,
+      }),
+
+      orderBy: {
+        id: 'desc',
+      },
       omit: {
         email: true,
         password: true,

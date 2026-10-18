@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { ScheduleModule } from '@nestjs/schedule';
 import { PrismaModule } from '../../infra/prisma/prisma.module';
+import { CacheModule } from '../cache/cache.module';
 import { ChatMemberRepositoryModule } from '../chat/chat-member/repository/chat-member-repository.module';
 import { ChatModule } from '../chat/chat.module';
 import { FileModule } from '../file/file.module';
@@ -22,6 +23,7 @@ import { UserService } from './user.service';
     ChatModule,
     BlockedUserModule,
     FileModule,
+    CacheModule,
   ],
   controllers: [UserAvatarController, UserController],
   providers: [

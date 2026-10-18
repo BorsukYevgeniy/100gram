@@ -3,6 +3,7 @@ import { Injectable } from '@nestjs/common';
 import { InjectRedis } from '@nestjs-modules/ioredis';
 import Redis from 'ioredis';
 import { PaginationDto } from '../../common/dto/pagination.dto';
+import { SearchUserDto } from '../user/dto/search-user.dto';
 
 @Injectable()
 export class CacheService {
@@ -41,5 +42,9 @@ export class CacheService {
 
   buildMyChatsKey(userId: number, paginationDto: PaginationDto) {
     return `chats:user:${userId}:cursor:${paginationDto.cursor ?? 'start'}:limit:${paginationDto.limit}`;
+  }
+
+  buildSearchUsersKey(dto: SearchUserDto, { cursor, limit }: PaginationDto) {
+    return `users:search:nickname${dto.nickname}:cursor:${cursor}:limit:${limit}`;
   }
 }

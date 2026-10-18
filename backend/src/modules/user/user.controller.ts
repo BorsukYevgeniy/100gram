@@ -6,6 +6,7 @@ import {
   Param,
   ParseIntPipe,
   Patch,
+  Query,
   UseGuards,
 } from '@nestjs/common';
 import { AccessTokenPayload } from '../../common/types';
@@ -16,13 +17,25 @@ import { UserService } from './user.service';
 import { CurrentUser } from '../auth/decorator/current-user.decorator';
 import { UserNoCredOtpVCode } from './types/user.types';
 
+import { PaginationDto } from '../../common/dto/pagination.dto';
 import { ApiUserControllerDocs, ApiUserRoutesDocs } from './docs';
+import { SearchUserDto } from './dto/search-user.dto';
 import { UpdateUserProfileDto } from './dto/update-user-profile.dto';
 
 @ApiUserControllerDocs()
 @Controller('users')
 export class UserController {
   constructor(private readonly userService: UserService) {}
+
+  @ApiUserRoutesDocs.Search()
+  @UseGuards(AuthGuard)
+  @Get('search')
+  async searchUser(
+    @Query() dto: SearchUserDto,
+    @Query() pagination: PaginationDto,
+  ) {
+    return this.userService.searchUser(dto, pagination);
+  }
 
   @ApiUserRoutesDocs.GetMe()
   @UseGuards(AuthGuard)

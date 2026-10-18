@@ -6,12 +6,18 @@ import {
 import { PrismaClientKnownRequestError } from '@prisma/client/runtime/client';
 import { PinoLogger } from 'nestjs-pino';
 import { Role, User } from '../../../generated/prisma/client';
+import { PaginationDto } from '../../common/dto/pagination.dto';
 import { AccessTokenPayload } from '../../common/types';
+import { CacheService } from '../cache/cache.service';
 import { ChatMemberRepository } from '../chat/chat-member/repository/chat-member.repository';
 import { ChatService } from '../chat/chat.service';
 import { CreateUserDto } from './dto/create-user.dto';
+import { SearchUserDto } from './dto/search-user.dto';
 import { UpdateUserProfileDto } from './dto/update-user-profile.dto';
-import { UserNoCredOtpVCode } from './types/user.types';
+import {
+  PaginatedUserNoCredOtpVCode,
+  UserNoCredOtpVCode,
+} from './types/user.types';
 import { UserRepository } from './user.repository';
 
 @Injectable()
@@ -21,6 +27,7 @@ export class UserService {
     private readonly chatUserRepo: ChatMemberRepository,
     private readonly chatService: ChatService,
     private readonly logger: PinoLogger,
+    private readonly cache: CacheService,
   ) {
     this.logger.setContext(UserService.name);
   }
@@ -179,5 +186,34 @@ export class UserService {
     this.logger.info({ userId, dto }, 'Updated user profile');
 
     return user;
+  }
+
+  async searchUser(
+    dto: SearchUserDto,
+    { cursor, limit }: PaginationDto,
+  ): Promise<PaginatedUserNoCredOtpVCode> {
+    const cacheData = await this.cache.get<PaginatedUserNoCredOtpVCode>(
+      this.cache.buildSearchUsersKey(dto, { cursor, limit }),
+    );
+
+    if (cacheData) {
+      this.logger.debug({ nickname: dto.nickname }, 'Users fetched from cache');
+      return cacheData;
+    }
+
+    const users = await this.userRepository.searchUser(dto, limit, cursor);
+
+    const nextCursor = users.length === limit ? users.at(-1).id : null;
+    const hasMore = users.length === limit;
+
+    const result = { limit, hasMore, nextCursor, users };
+
+    await this.cache.set(
+      this.cache.buildSearchUsersKey(dto, { cursor, limit }),
+      result,
+      60,
+    );
+
+    return result;
   }
 }

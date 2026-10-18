@@ -124,6 +124,40 @@ describe('UserController (e2e)', () => {
     userId = user.id;
   });
 
+  describe('GET /users/search - Should search users by nickname', () => {
+    it('GET /users/search - 401 UNAUTHORIZED - Should return 401 because user is unauthorized', async () => {
+      const { body } = await request(app.getHttpServer())
+        .get('/users/search')
+        .query({ nickname: 'use' })
+        .expect(401);
+
+      expect(body).toEqual(unauthorizedResponse);
+    });
+
+    it('GET /users/search - 400 BAD REQUEST - Should return 400 because the query is invalid', async () => {
+      await request(app.getHttpServer())
+        .get('/users/search')
+        .query({ nickname: 'us' })
+        .set('Cookie', [`access_token=${userAccessToken}`])
+        .expect(400);
+    });
+
+    it('GET /users/search - 200 OK - Should return matching users without credentials', async () => {
+      const { body } = await request(app.getHttpServer())
+        .get('/users/search')
+        .query({ nickname: 'use' })
+        .set('Cookie', [`access_token=${userAccessToken}`])
+        .expect(200);
+
+      expect(body).toEqual({
+        limit: 10,
+        hasMore: false,
+        nextCursor: null,
+        users: [userResponse],
+      });
+    });
+  });
+
   describe('GET /users/:userId - Should return user by id', () => {
     it('GET /users/:userId - 200 OK - Should return user searched by id', async () => {
       const { body } = await request(app.getHttpServer())

@@ -4,12 +4,27 @@ import {
   ApiConflictResponse,
   ApiOkResponse,
   ApiOperation,
+  ApiQuery,
 } from '@nestjs/swagger';
 import { ApiAdminAuthDocs } from '../../../common/decorators/docs/auth';
+import { ApiPaginationDocs } from '../../../common/decorators/docs/pagination';
+import { SearchUserDto } from '../dto/search-user.dto';
 import { UpdateUserProfileDto } from '../dto/update-user-profile.dto';
 import { ApiUserIdDocs } from './shared';
 
 export class ApiUserRoutesDocs {
+  static Search() {
+    return applyDecorators(
+      ApiOperation({
+        summary: 'Search users by nickname',
+        description: 'Returns users by provided nickname',
+      }),
+      ApiOkResponse({ description: 'Users fetched successfully' }),
+      ApiQuery({ type: SearchUserDto }),
+      ApiPaginationDocs(),
+    );
+  }
+
   static GetById() {
     return applyDecorators(
       ApiOperation({
