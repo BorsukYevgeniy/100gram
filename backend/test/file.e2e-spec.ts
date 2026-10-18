@@ -19,7 +19,7 @@ import {
   verifiedForbiddenResponse,
 } from './const/response.const';
 
-describe('AuthController (e2e)', () => {
+describe('FileController (e2e)', () => {
   let app: NestExpressApplication;
   let minio: MinioService;
   let prisma: PrismaService;
@@ -145,12 +145,62 @@ describe('AuthController (e2e)', () => {
     });
   });
 
+  describe('GET /files/:key - Should get file content', () => {
+    const fileKey = () => `attachments/${fileName}`;
+    const fileUrl = () => `/files/${encodeURIComponent(fileKey())}`;
+
+    it('GET /files/:key - 401 UNAUTHORIZED - Should returns 401 when user is unauthorized', async () => {
+      const { body } = await request(app.getHttpServer())
+        .get(fileUrl())
+        .expect(401);
+
+      expect(body).toEqual(unauthorizedResponse);
+    });
+
+    it('GET /files/:key - 403 FORBIDDEN - Should returns 403 when user is unverified', async () => {
+      const { body } = await request(app.getHttpServer())
+        .get(fileUrl())
+        .set('Cookie', [`access_token=${unverUserAccessToken}`])
+        .expect(403);
+
+      expect(body).toEqual(verifiedForbiddenResponse);
+    });
+
+    it('GET /files/:key - 200 OK - Should returns the uploaded file content and headers', async () => {
+      const response = await request(app.getHttpServer())
+        .get(fileUrl())
+        .set('Cookie', [`access_token=${verUserAccessToken}`])
+        .expect(200);
+
+      expect(response.headers['content-type']).toMatch(
+        /^application\/octet-stream/,
+      );
+      expect(Number(response.headers['content-length'])).toBe(3);
+      expect(response.body).toEqual(Buffer.from('123'));
+    });
+
+    it('GET /files/:key - 404 NOT FOUND - Should returns 404 when the requested file does not exist', async () => {
+      const { body } = await request(app.getHttpServer())
+        .get(`/files/${encodeURIComponent('attachments/missing-file.jpg')}`)
+        .set('Cookie', [`access_token=${verUserAccessToken}`])
+        .expect(404);
+
+      expect(body).toEqual({
+        error: 'Not Found',
+        message: 'File not found',
+        statusCode: 404,
+      });
+    });
+  });
+
   afterAll(async () => {
     await prisma.user.deleteMany({});
     await prisma.token.deleteMany({});
     await prisma.file.deleteMany({});
 
-    await minio.delete(`/attachments/${fileName}`);
+    if (fileName) {
+      await minio.delete(`attachments/${fileName}`);
+    }
 
     await app.close();
   });
