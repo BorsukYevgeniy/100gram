@@ -32,8 +32,9 @@ verification page.
 The interface covers Google login/callback, registration, login, logout,
 logout-all, email verification, token refresh, verification email resend,
 one-time password reset email, and password reset. It also includes the user
-controller features: view the current profile, fetch a user by ID, assign an
-admin role, and delete the current account or another user as an administrator.
+controller features: view and update the current nickname, search users by
+nickname, fetch a user by ID, assign an admin role, and delete the current
+account or another user as an administrator.
 The `/controllers` page exposes the existing chat membership and moderation,
 chat invite/pinning/reaction settings, message CRUD and pinning, REST reactions,
 blocked-user management, user/chat avatar operations, and attachment upload
@@ -56,10 +57,6 @@ The current frontend uses existing routes and does not require backend changes
 for the controller tools. To support a more complete self-service product,
 consider adding:
 
-- `PATCH /users/me` with validated nickname and description fields so users can
-  edit their profile without an administrator.
-- A paginated, searchable `GET /users` endpoint with privacy-safe results for
-  selecting users by nickname instead of manually entering IDs.
 - A paginated `GET /chats/public` endpoint so users can discover public groups
   and channels before joining them.
 - A file download or signed-URL endpoint for attachment records returned with

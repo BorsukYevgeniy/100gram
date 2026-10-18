@@ -1165,26 +1165,36 @@ p {
   background: #11161e;
 }
 
-.messenger-chat-settings-button {
-  min-height: 34px;
-  margin-left: auto;
-  padding: 0 12px;
+.messenger-chat-avatar-button {
+  padding: 0;
   border: 1px solid #343e49;
-  border-radius: 8px;
-  background: #1a222b;
-  color: #dce4e9;
   cursor: pointer;
-  font-size: 11px;
+  transition:
+    border-color 150ms ease,
+    filter 150ms ease;
 }
 
-.messenger-chat-settings-button:hover:not(:disabled) {
-  border-color: #526477;
-  background: #222e39;
+.messenger-chat-avatar-button:hover:not(:disabled) {
+  border-color: #b8dc8c;
+  filter: brightness(1.15);
 }
 
-.messenger-chat-settings-button:disabled {
+.messenger-chat-avatar-button:disabled {
   cursor: wait;
   opacity: 0.65;
+}
+
+.messenger-chat-avatar-button:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+}
+
+.messenger-chat-avatar-button:not(:disabled) {
+  background: linear-gradient(145deg, #486b73, #35485e);
+  color: #edf7e7;
+  font-size: 15px;
+  font-weight: 700;
+  text-transform: uppercase;
 }
 
 .chat-settings-overlay {
@@ -1600,6 +1610,67 @@ p {
   margin: 0;
   color: #e3e5eb;
   text-align: right;
+}
+
+.profile-edit-form {
+  display: grid;
+  gap: 8px;
+  margin-top: 18px;
+}
+
+.profile-edit-form > label {
+  color: #c5c8d0;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.profile-edit-form .inline-form input {
+  height: 40px;
+  font-size: 12px;
+}
+
+.user-search-form {
+  margin: 12px 0;
+}
+
+.user-search-form input {
+  flex: 1;
+}
+
+.user-search-results {
+  display: grid;
+  gap: 6px;
+  max-height: 240px;
+  overflow-y: auto;
+  margin: 12px 0;
+  padding: 0;
+  list-style: none;
+}
+
+.user-search-results button {
+  width: 100%;
+  min-height: 42px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 8px 10px;
+  border: 1px solid #292e39;
+  border-radius: 8px;
+  background: #12161e;
+  color: #e3e5eb;
+  cursor: pointer;
+  text-align: left;
+}
+
+.user-search-results button:hover {
+  border-color: #414958;
+  background: #191e27;
+}
+
+.user-search-results span {
+  color: #858b9a;
+  font-size: 10px;
 }
 
 .target-profile {

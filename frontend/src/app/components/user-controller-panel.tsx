@@ -11,6 +11,12 @@ type UserProfile = {
   description: string | null;
 };
 
+type UserSearchResult = {
+  users: UserProfile[];
+  nextCursor: number | null;
+  hasMore: boolean;
+};
+
 type Notice = {
   kind: "success" | "error";
   text: string;
@@ -86,6 +92,11 @@ export default function UserControllerPanel() {
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [targetProfile, setTargetProfile] = useState<UserProfile | null>(null);
   const [targetUserId, setTargetUserId] = useState("");
+  const [profileNickname, setProfileNickname] = useState("");
+  const [searchNickname, setSearchNickname] = useState("");
+  const [searchResults, setSearchResults] = useState<UserProfile[]>([]);
+  const [searchCursor, setSearchCursor] = useState<number | null>(null);
+  const [searchHasMore, setSearchHasMore] = useState(false);
 
   async function request(
     key: string,
@@ -93,6 +104,7 @@ export default function UserControllerPanel() {
     method: "GET" | "PATCH" | "DELETE",
     successMessage: string,
     profileResult: "current" | "target" | null = null,
+    body?: Record<string, string>,
   ) {
     setBusy(key);
     setNotice(null);
@@ -100,6 +112,12 @@ export default function UserControllerPanel() {
     try {
       const response = await fetch(`/api/users/${path}`, {
         method,
+        ...(body
+          ? {
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify(body),
+            }
+          : {}),
         cache: "no-store",
       });
       const rawResponse = await response.text();
@@ -124,6 +142,9 @@ export default function UserControllerPanel() {
         }
         if (profileResult === "current") setProfile(payload);
         else setTargetProfile(payload);
+        if (profileResult === "current") {
+          setProfileNickname(payload.nickname);
+        }
       } else if (method === "DELETE" && path === "me") {
         setProfile(null);
       } else if (
@@ -134,6 +155,7 @@ export default function UserControllerPanel() {
       }
 
       setNotice({ kind: "success", text: successMessage });
+      return payload;
     } catch (error) {
       setNotice({
         kind: "error",
@@ -142,9 +164,101 @@ export default function UserControllerPanel() {
             ? error.message
             : "Не вдалося зв’язатися із сервером.",
       });
+      return null;
     } finally {
       setBusy(null);
     }
+  }
+
+  async function searchUsers(
+    event?: FormEvent<HTMLFormElement>,
+    cursor?: number,
+  ) {
+    event?.preventDefault();
+    const nickname = searchNickname.trim();
+    if (nickname.length < 3 || nickname.length > 25) {
+      setNotice({
+        kind: "error",
+        text: "Пошуковий нікнейм має містити від 3 до 25 символів.",
+      });
+      return;
+    }
+
+    setBusy("search-users");
+    setNotice(null);
+    try {
+      const query = new URLSearchParams({
+        nickname,
+        limit: "20",
+        ...(cursor ? { cursor: String(cursor) } : {}),
+      });
+      const response = await fetch(`/api/users/search?${query}`, {
+        cache: "no-store",
+      });
+      const payload: unknown = await response.json().catch(() => null);
+      if (!response.ok) {
+        throw new Error(
+          errorMessage(payload, `Пошук завершився помилкою ${response.status}.`),
+        );
+      }
+      if (
+        !payload ||
+        typeof payload !== "object" ||
+        !("users" in payload) ||
+        !Array.isArray(payload.users) ||
+        !payload.users.every(isUserProfile) ||
+        !("nextCursor" in payload) ||
+        (typeof payload.nextCursor !== "number" &&
+          payload.nextCursor !== null) ||
+        !("hasMore" in payload) ||
+        typeof payload.hasMore !== "boolean"
+      ) {
+        throw new Error("Сервер повернув некоректні результати пошуку.");
+      }
+
+      const result = payload as UserSearchResult;
+      setSearchResults((current) =>
+        cursor ? [...current, ...result.users] : result.users,
+      );
+      setSearchCursor(result.nextCursor);
+      setSearchHasMore(result.hasMore);
+      setNotice({
+        kind: "success",
+        text: cursor
+          ? "Наступні результати завантажено."
+          : `Знайдено користувачів: ${result.users.length}.`,
+      });
+    } catch (error) {
+      setNotice({
+        kind: "error",
+        text:
+          error instanceof Error
+            ? error.message
+            : "Не вдалося виконати пошук користувачів.",
+      });
+    } finally {
+      setBusy(null);
+    }
+  }
+
+  function updateProfile(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const nickname = profileNickname.trim();
+    if (nickname.length < 3 || nickname.length > 25) {
+      setNotice({
+        kind: "error",
+        text: "Нікнейм має містити від 3 до 25 символів.",
+      });
+      return;
+    }
+    void request(
+      "update-profile",
+      "me",
+      "PATCH",
+      "Профіль оновлено.",
+      "current",
+      { nickname },
+    );
   }
 
   function handleFindUser(event: FormEvent<HTMLFormElement>) {
@@ -201,8 +315,8 @@ export default function UserControllerPanel() {
           <h2>Профіль і користувачі</h2>
         </div>
         <p>
-          Переглядайте профіль, знаходьте користувачів за ID та керуйте
-          акаунтом. Адмінські операції доступні лише адміністраторам.
+          Оновлюйте власний нікнейм, шукайте користувачів за нікнеймом або ID.
+          Адмінські операції доступні лише адміністраторам.
         </p>
       </div>
 
@@ -222,7 +336,7 @@ export default function UserControllerPanel() {
         <article className="tool-card user-tool-card">
           <div className="tool-icon icon-green">01</div>
           <h3>Мій профіль</h3>
-          <p>Завантажте дані поточного акаунта або видаліть його.</p>
+          <p>Переглядайте та оновлюйте нікнейм або видаліть акаунт.</p>
           <div className="button-row">
             <button
               className="button button-soft"
@@ -249,13 +363,93 @@ export default function UserControllerPanel() {
               {busy === "delete-me" ? "Видалення…" : "Видалити акаунт"}
             </button>
           </div>
-          {profile && <ProfileDetails profile={profile} />}
+          {profile && (
+            <>
+              <ProfileDetails profile={profile} />
+              <form className="profile-edit-form" onSubmit={updateProfile}>
+                <label htmlFor="profile-nickname">Нікнейм</label>
+                <div className="inline-form">
+                  <input
+                    id="profile-nickname"
+                    value={profileNickname}
+                    minLength={3}
+                    maxLength={25}
+                    onChange={(event) =>
+                      setProfileNickname(event.target.value)
+                    }
+                    required
+                  />
+                  <button
+                    className="button button-primary"
+                    type="submit"
+                    disabled={busy !== null}
+                  >
+                    {busy === "update-profile" ? "Збереження…" : "Зберегти"}
+                  </button>
+                </div>
+              </form>
+            </>
+          )}
         </article>
 
         <article className="tool-card user-tool-card">
           <div className="tool-icon icon-violet">02</div>
           <h3>Пошук користувача</h3>
-          <p>Отримайте профіль користувача за його числовим ID.</p>
+          <p>Знайдіть користувача за нікнеймом або завантажте його за ID.</p>
+          <form
+            className="inline-form user-search-form"
+            onSubmit={(event) => void searchUsers(event)}
+          >
+            <input
+              aria-label="Нікнейм для пошуку"
+              value={searchNickname}
+              minLength={3}
+              maxLength={25}
+              placeholder="Частина нікнейму"
+              onChange={(event) => {
+                setSearchNickname(event.target.value);
+                setSearchResults([]);
+                setSearchCursor(null);
+                setSearchHasMore(false);
+              }}
+              required
+            />
+            <button
+              className="button button-soft"
+              type="submit"
+              disabled={busy !== null}
+            >
+              {busy === "search-users" ? "Пошук…" : "Знайти"}
+            </button>
+          </form>
+          {searchResults.length > 0 && (
+            <ul className="user-search-results">
+              {searchResults.map((user) => (
+                <li key={user.id}>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setTargetUserId(String(user.id));
+                      setTargetProfile(user);
+                    }}
+                  >
+                    <strong>{user.nickname}</strong>
+                    <span>ID {user.id}</span>
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
+          {searchHasMore && searchCursor !== null && (
+            <button
+              className="button button-quiet"
+              type="button"
+              disabled={busy !== null}
+              onClick={() => void searchUsers(undefined, searchCursor)}
+            >
+              {busy === "search-users" ? "Завантаження…" : "Ще користувачі"}
+            </button>
+          )}
           <form className="inline-form" onSubmit={handleFindUser}>
             <label className="sr-only" htmlFor="user-id">
               ID користувача
