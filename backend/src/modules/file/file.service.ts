@@ -1,9 +1,10 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { randomUUID } from 'crypto';
 
 import { File, FileType } from '../../../generated/prisma/client';
 import { FileRepository } from './file.repository';
 
+import { NoSuchKey } from '@aws-sdk/client-s3';
 import { PinoLogger } from 'nestjs-pino';
 import { extname } from 'path';
 import { MinioService } from '../../infra/minio/minio.service';
@@ -33,6 +34,17 @@ export class FileService {
     return this.getKey(filetype) + filename;
   }
 
+  async getFileContent(key: string) {
+    try {
+      return await this.minio.get(key);
+    } catch (e) {
+      if (e instanceof NoSuchKey) {
+        this.logger.warn({ key }, 'File not found');
+        throw new NotFoundException('File not found');
+      }
+    }
+  }
+
   async createFiles(
     files: Express.Multer.File[],
     filesType: FileType,
@@ -45,7 +57,12 @@ export class FileService {
       const fileName = randomUUID().concat(extname(f.originalname));
 
       fileNames.push(fileName);
-      return this.minio.upload(this.getFileUrl(fileName, filesType), f.buffer);
+
+      return this.minio.upload(
+        this.getFileUrl(fileName, filesType),
+        f.buffer,
+        f.mimetype,
+      );
     });
 
     try {

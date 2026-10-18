@@ -1,7 +1,9 @@
 import {
   CreateBucketCommand,
   DeleteObjectCommand,
+  GetObjectCommand,
   HeadBucketCommand,
+  NoSuchKey,
   PutObjectCommand,
   S3Client,
 } from '@aws-sdk/client-s3';
@@ -46,13 +48,41 @@ export class MinioService implements OnModuleInit {
     }
   }
 
-  async upload(key: string, content: Buffer) {
+  async get(key: string) {
+    try {
+      const file = await this.s3.send(
+        new GetObjectCommand({
+          Bucket: this.bucket,
+          Key: key,
+        }),
+      );
+
+      return {
+        body: file.Body,
+        contentType: file.ContentType ?? 'application/octet-stream',
+        contentLength: file.ContentLength,
+      };
+    } catch (e: unknown) {
+      if (e instanceof NoSuchKey) {
+        throw e;
+      }
+
+      this.logger.error(
+        `Failed to get file from MinIO: ${key}`,
+        e instanceof Error ? e.stack : String(e),
+      );
+
+      throw e;
+    }
+  }
+  async upload(key: string, content: Buffer, contentType: string) {
     try {
       await this.s3.send(
         new PutObjectCommand({
           Key: key,
           Bucket: this.bucket,
           Body: content,
+          ContentType: contentType,
         }),
       );
 
