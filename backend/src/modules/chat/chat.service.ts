@@ -354,6 +354,16 @@ export class ChatService {
 
     await this.chatValidator.validateChatVisibility(chatId, Visibility.PUBLIC);
 
+    const isParticipant = await this.chatValidator.checkChatParticipation(
+      userId,
+      chatId,
+    );
+
+    if (isParticipant) {
+      this.logger.warn({ chatId, userId }, 'User already in chat');
+      throw new ConflictException('User already is a participant of the chat');
+    }
+
     const chatToUser = await this.chatUserRepo.addUserToChat(chatId, userId);
 
     this.logger.info({ chatId, userId }, 'User joined to public chat');
