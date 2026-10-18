@@ -10,6 +10,7 @@ import { AccessTokenPayload } from '../../common/types';
 import { ChatMemberRepository } from '../chat/chat-member/repository/chat-member.repository';
 import { ChatService } from '../chat/chat.service';
 import { CreateUserDto } from './dto/create-user.dto';
+import { UpdateUserProfileDto } from './dto/update-user-profile.dto';
 import { UserNoCredOtpVCode } from './types/user.types';
 import { UserRepository } from './user.repository';
 
@@ -170,5 +171,13 @@ export class UserService {
   async resetPasswordWithOtp(userId: number, newPassword: string) {
     await this.userRepository.updatePassword(userId, newPassword);
     this.logger.info({ userId }, 'Password reseted');
+  }
+
+  async updateProfile(userId: number, dto: UpdateUserProfileDto) {
+    const user = await this.userRepository.updateUserProfile(userId, dto);
+
+    this.logger.info({ userId, dto }, 'Updated user profile');
+
+    return user;
   }
 }

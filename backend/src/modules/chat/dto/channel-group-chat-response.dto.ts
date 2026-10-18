@@ -1,5 +1,4 @@
-import { OmitType } from '@nestjs/mapped-types';
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty, OmitType } from '@nestjs/swagger';
 import { Chat } from '../../../../generated/prisma/browser';
 import { PrivateChatResponseDto } from './private-chat-response.dto';
 

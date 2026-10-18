@@ -345,7 +345,7 @@ export class ChatService {
     return result;
   }
 
-  async joinToChat(chatId: number, user: AccessTokenPayload) {
+  async joinToChat(chatId: number, userId: number) {
     await this.chatValidator.validateChatType(
       chatId,
       ChatType.GROUP,
@@ -354,7 +354,11 @@ export class ChatService {
 
     await this.chatValidator.validateChatVisibility(chatId, Visibility.PUBLIC);
 
-    return this.chatUserRepo.addUserToChat(chatId, user.userId);
+    const chatToUser = await this.chatUserRepo.addUserToChat(chatId, userId);
+
+    this.logger.info({ chatId, userId }, 'User joined to public chat');
+
+    return chatToUser;
   }
 
   async pinChat(userId: number, chatId: number) {

@@ -128,9 +128,9 @@ export class ChatController {
   @Post('join/:chatId')
   async join(
     @Param('chatId', ParseIntPipe) chatId: number,
-    @CurrentUser() user: AccessTokenPayload,
+    @CurrentUser() { userId }: AccessTokenPayload,
   ) {
-    return this.chatService.joinToChat(chatId, user);
+    return this.chatService.joinToChat(chatId, userId);
   }
 
   @ChatRoutesDocs.PinChat()

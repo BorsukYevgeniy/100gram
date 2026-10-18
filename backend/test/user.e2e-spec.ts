@@ -31,6 +31,7 @@ const userResponse = {
   provider: Provider.LOCAL,
 };
 const adminResponse = { ...userResponse, role: Role.ADMIN, isVerified: true };
+const updatedAdminResponse = { ...adminResponse, nickname: 'updated-user' };
 
 describe('UserController (e2e)', () => {
   let app: NestExpressApplication;
@@ -239,6 +240,35 @@ describe('UserController (e2e)', () => {
     });
   });
 
+  describe('PATCH /users/me - Should update my profile', () => {
+    it('PATCH /users/me - 401 UNAUTHORIZED - Should return 401 because user is unauthorized', async () => {
+      const { body } = await request(app.getHttpServer())
+        .patch('/users/me')
+        .send({ nickname: 'updated-user' })
+        .expect(401);
+
+      expect(body).toEqual(unauthorizedResponse);
+    });
+
+    it('PATCH /users/me - 400 BAD REQUEST - Should return 400 because the profile is invalid', async () => {
+      await request(app.getHttpServer())
+        .patch('/users/me')
+        .send({ nickname: 'ab' })
+        .set('Cookie', [`access_token=${userAccessToken}`])
+        .expect(400);
+    });
+
+    it('PATCH /users/me - 200 OK - Should update my profile', async () => {
+      const { body } = await request(app.getHttpServer())
+        .patch('/users/me')
+        .send({ nickname: 'updated-user' })
+        .set('Cookie', [`access_token=${userAccessToken}`])
+        .expect(200);
+
+      expect(body).toEqual(updatedAdminResponse);
+    });
+  });
+
   describe('DELETE /users/:userId - Should delete user by id', () => {
     it('DELETE /users/:userId - 401 UNAUTHORIZED - Should return 401 code because user is unauthorized', async () => {
       const { body } = await request(app.getHttpServer())
@@ -270,7 +300,7 @@ describe('UserController (e2e)', () => {
         .set('Cookie', [`access_token=${adminAccessToken}`])
         .expect(200);
 
-      expect(body).toEqual(adminResponse); // There is adminResponse because now response have save the same fileds with admin response
+      expect(body).toEqual(updatedAdminResponse);
     });
 
     it('DELETE /users/:userId - 404 NOT FOUND - Should return 404 HTTP code', async () => {

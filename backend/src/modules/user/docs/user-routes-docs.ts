@@ -1,10 +1,12 @@
 import { applyDecorators } from '@nestjs/common';
 import {
+  ApiBody,
   ApiConflictResponse,
   ApiOkResponse,
   ApiOperation,
 } from '@nestjs/swagger';
 import { ApiAdminAuthDocs } from '../../../common/decorators/docs/auth';
+import { UpdateUserProfileDto } from '../dto/update-user-profile.dto';
 import { ApiUserIdDocs } from './shared';
 
 export class ApiUserRoutesDocs {
@@ -39,6 +41,17 @@ export class ApiUserRoutesDocs {
       ApiUserIdDocs(),
       ApiAdminAuthDocs(),
       ApiConflictResponse({ description: 'Admin must be a verified user' }),
+    );
+  }
+
+  static UpdateUserProfile() {
+    return applyDecorators(
+      ApiOperation({
+        summary: 'Update user profile',
+        description: 'Updates the user nickname',
+      }),
+      ApiOkResponse({ description: 'User profile updated successfully' }),
+      ApiBody({ type: UpdateUserProfileDto }),
     );
   }
 

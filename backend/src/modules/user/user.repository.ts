@@ -3,6 +3,7 @@ import { Role, User } from '../../../generated/prisma/client';
 import { Provider } from '../../../generated/prisma/enums';
 import { PrismaService } from '../../infra/prisma/prisma.service';
 import { CreateUserDto } from './dto/create-user.dto';
+import { UpdateUserProfileDto } from './dto/update-user-profile.dto';
 import { UserNoCredOtpVCode } from './types/user.types';
 
 @Injectable()
@@ -171,6 +172,21 @@ export class UserRepository {
         otpHash: null,
         otpExpiresAt: null,
         otpAttempts: null,
+      },
+    });
+  }
+
+  async updateUserProfile(userId: number, dto: UpdateUserProfileDto) {
+    return this.prisma.user.update({
+      where: { id: userId },
+      data: dto,
+      omit: {
+        email: true,
+        password: true,
+        verificationCode: true,
+        otpHash: true,
+        otpExpiresAt: true,
+        otpAttempts: true,
       },
     });
   }

@@ -1,4 +1,5 @@
 import {
+  Body,
   Controller,
   Delete,
   Get,
@@ -16,6 +17,7 @@ import { CurrentUser } from '../auth/decorator/current-user.decorator';
 import { UserNoCredOtpVCode } from './types/user.types';
 
 import { ApiUserControllerDocs, ApiUserRoutesDocs } from './docs';
+import { UpdateUserProfileDto } from './dto/update-user-profile.dto';
 
 @ApiUserControllerDocs()
 @Controller('users')
@@ -47,6 +49,16 @@ export class UserController {
     @Param('userId', ParseIntPipe) userId: number,
   ): Promise<UserNoCredOtpVCode> {
     return this.userService.assignAdmin(userId);
+  }
+
+  @ApiUserRoutesDocs.UpdateUserProfile()
+  @UseGuards(AuthGuard)
+  @Patch('me')
+  async updateMyProfile(
+    @CurrentUser() { userId }: AccessTokenPayload,
+    @Body() dto: UpdateUserProfileDto,
+  ): Promise<UserNoCredOtpVCode> {
+    return this.userService.updateProfile(userId, dto);
   }
 
   @ApiUserRoutesDocs.DeleteMe()
