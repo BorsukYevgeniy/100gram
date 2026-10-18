@@ -2,6 +2,7 @@
 
 import { FormEvent, useCallback, useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { io, Socket } from 'socket.io-client';
 
 type ChatSummary = {
@@ -9,8 +10,19 @@ type ChatSummary = {
 	title: string | null;
 	participantName?: string;
 	avatarName: string | null;
+	avatarPreview?: string;
 	lastMessage: { text: string; createdAt: string } | null;
 	isPinned: boolean;
+};
+
+type GroupUserOption = {
+	id: number;
+	nickname: string;
+};
+
+type ChatMember = {
+	id: number;
+	nickname: string;
 };
 
 type ChatMessage = {
@@ -158,6 +170,55 @@ async function addPrivateChatParticipantNames(
 	);
 }
 
+async function fetchChatMembers(chatId: number): Promise<ChatMember[]> {
+	const members: ChatMember[] = [];
+	const cursors = new Set<number>();
+	let cursor: number | null = null;
+
+	while (true) {
+		const query = new URLSearchParams({ limit: '50' });
+		if (cursor !== null) query.set('cursor', String(cursor));
+		const payload = await fetchPayload(
+			`/api/chats/${chatId}/users?${query}`,
+		);
+		if (
+			!payload ||
+			typeof payload !== 'object' ||
+			!('users' in payload) ||
+			!Array.isArray(payload.users) ||
+			!('hasMore' in payload) ||
+			typeof payload.hasMore !== 'boolean' ||
+			!('nextCursor' in payload) ||
+			(payload.nextCursor !== null && typeof payload.nextCursor !== 'number')
+		) {
+			throw new Error('Сервер повернув некоректний список учасників чату.');
+		}
+		for (const member of payload.users) {
+			if (
+				!member ||
+				typeof member !== 'object' ||
+				!('id' in member) ||
+				typeof member.id !== 'number' ||
+				!('nickname' in member) ||
+				typeof member.nickname !== 'string'
+			) {
+				throw new Error('Сервер повернув некоректні дані учасника чату.');
+			}
+			members.push({ id: member.id, nickname: member.nickname });
+		}
+
+		if (!payload.hasMore) return members;
+		if (
+			typeof payload.nextCursor !== 'number' ||
+			cursors.has(payload.nextCursor)
+		) {
+			throw new Error('Сервер повернув некоректний курсор учасників чату.');
+		}
+		cursor = payload.nextCursor;
+		cursors.add(cursor);
+	}
+}
+
 function isChatMessage(payload: unknown): payload is ChatMessage {
 	if (!payload || typeof payload !== 'object') return false;
 	const message = payload as Partial<ChatMessage>;
@@ -224,6 +285,14 @@ export default function ChatPanel() {
 	const [creationTitle, setCreationTitle] = useState('');
 	const [creationDescription, setCreationDescription] = useState('');
 	const [creationUserIds, setCreationUserIds] = useState('');
+	const [groupUserSearch, setGroupUserSearch] = useState('');
+	const [groupUserResults, setGroupUserResults] = useState<GroupUserOption[]>(
+		[],
+	);
+	const [selectedGroupUsers, setSelectedGroupUsers] = useState<
+		GroupUserOption[]
+	>([]);
+	const [searchingGroupUsers, setSearchingGroupUsers] = useState(false);
 	const [creationVisibility, setCreationVisibility] = useState<
 		'PUBLIC' | 'PRIVATE'
 	>('PRIVATE');
@@ -238,6 +307,25 @@ export default function ChatPanel() {
 	const [chatVisibilityDraft, setChatVisibilityDraft] = useState<
 		'PUBLIC' | 'PRIVATE'
 	>('PRIVATE');
+	const [chatAllowedReactions, setChatAllowedReactions] = useState<Reaction[]>(
+		[],
+	);
+	const [reactionSettings, setReactionSettings] = useState<{
+		chatId: number;
+		allowedReactions: Reaction[];
+	} | null>(null);
+	const [chatMembers, setChatMembers] = useState<ChatMember[]>([]);
+	const [chatUserSearch, setChatUserSearch] = useState('');
+	const [chatUserResults, setChatUserResults] = useState<GroupUserOption[]>([]);
+	const [searchingChatUsers, setSearchingChatUsers] = useState(false);
+	const [addingChatUserId, setAddingChatUserId] = useState<number | null>(null);
+	const [savingAllowedReactions, setSavingAllowedReactions] = useState(false);
+	const [chatAvatarFile, setChatAvatarFile] = useState<File | null>(null);
+	const [chatAvatarPreview, setChatAvatarPreview] = useState<string | null>(
+		null,
+	);
+	const [savingChatAvatar, setSavingChatAvatar] = useState(false);
+	const chatAvatarPreviewUrls = useRef(new Set<string>());
 	const [socket, setSocket] = useState<Socket | null>(null);
 	const activeChatId = useRef<number | null>(null);
 	const configuredBackendUrl = process.env.NEXT_PUBLIC_BACKEND_URL?.trim();
@@ -247,6 +335,15 @@ export default function ChatPanel() {
 		process.env.NODE_ENV !== 'development'
 			? 'Для чату задайте NEXT_PUBLIC_BACKEND_URL — адресу NestJS API.'
 			: null;
+
+	useEffect(() => {
+		const previewUrls = chatAvatarPreviewUrls.current;
+		return () => {
+			for (const previewUrl of previewUrls) {
+				URL.revokeObjectURL(previewUrl);
+			}
+		};
+	}, []);
 
 	const rollbackPendingReactions = useCallback(() => {
 		if (currentUserId === null) return;
@@ -463,6 +560,45 @@ export default function ChatPanel() {
 
 		let active = true;
 		const chatId = selectedChatId;
+		async function loadAllowedReactions() {
+			try {
+				const payload = await fetchPayload(`/api/chats/${chatId}`);
+				if (!payload || typeof payload !== 'object') {
+					throw new Error('Сервер повернув некоректні налаштування реакцій.');
+				}
+
+				let allowedReactions: Reaction[];
+				if ('allowedReactions' in payload) {
+					if (
+						!Array.isArray(payload.allowedReactions) ||
+						!payload.allowedReactions.every((reaction) =>
+							reactionOptions.some((option) => option.value === reaction),
+						)
+					) {
+						throw new Error(
+							'Сервер повернув некоректний список дозволених реакцій.',
+						);
+					}
+					allowedReactions = payload.allowedReactions;
+				} else if ('chatType' in payload && payload.chatType === 'PRIVATE') {
+					allowedReactions = [];
+				} else {
+					throw new Error(
+						'Сервер не повернув налаштування дозволених реакцій.',
+					);
+				}
+				if (active) setReactionSettings({ chatId, allowedReactions });
+			} catch (settingsError) {
+				if (!active) return;
+				setReactionSettings(null);
+				setError(
+					settingsError instanceof Error
+						? settingsError.message
+						: 'Не вдалося завантажити дозволені реакції.',
+				);
+			}
+		}
+
 		async function loadMessages() {
 			try {
 				const payload = await fetchPayload(
@@ -495,6 +631,7 @@ export default function ChatPanel() {
 			}
 		}
 
+		void loadAllowedReactions();
 		void loadMessages();
 		if (socket?.connected) socket.emit('joinRoom', { chatId });
 
@@ -518,8 +655,10 @@ export default function ChatPanel() {
 		setLoadingChatSettings(true);
 		setError(null);
 		try {
-			const payload = await fetchPayload(`/api/chats/${selectedChat.id}`);
-			console.log(payload);
+			const [payload, members] = await Promise.all([
+				fetchPayload(`/api/chats/${selectedChat.id}`),
+				fetchChatMembers(selectedChat.id),
+			]);
 
 			if (
 				!payload ||
@@ -531,7 +670,12 @@ export default function ChatPanel() {
 					payload.description !== null) ||
 				!('visibility' in payload) ||
 				typeof payload.visibility !== 'string' ||
-				!isVisibility(payload.visibility)
+				!isVisibility(payload.visibility) ||
+				!('allowedReactions' in payload) ||
+				!Array.isArray(payload.allowedReactions) ||
+				!payload.allowedReactions.every((reaction) =>
+					reactionOptions.some((option) => option.value === reaction),
+				)
 			) {
 				throw new Error('Сервер повернув некоректну інформацію про чат.');
 			}
@@ -539,6 +683,16 @@ export default function ChatPanel() {
 			setChatTitleDraft(payload.title);
 			setChatDescriptionDraft(payload.description ?? '');
 			setChatVisibilityDraft(payload.visibility);
+			setChatAllowedReactions(payload.allowedReactions);
+			setReactionSettings({
+				chatId: selectedChat.id,
+				allowedReactions: payload.allowedReactions,
+			});
+			setChatMembers(members);
+			setChatUserSearch('');
+			setChatUserResults([]);
+			setChatAvatarFile(null);
+			setChatAvatarPreview(null);
 			setShowChatSettings(true);
 		} catch (settingsError) {
 			setError(
@@ -548,6 +702,249 @@ export default function ChatPanel() {
 			);
 		} finally {
 			setLoadingChatSettings(false);
+		}
+	}
+
+	function toggleChatAllowedReaction(reaction: Reaction) {
+		setChatAllowedReactions((current) =>
+			current.includes(reaction)
+				? current.filter((item) => item !== reaction)
+				: [...current, reaction],
+		);
+	}
+
+	async function saveAllowedReactions() {
+		if (!selectedChat || savingAllowedReactions) return;
+
+		setSavingAllowedReactions(true);
+		setError(null);
+		try {
+			const response = await fetch(
+				`/api/chats/${selectedChat.id}/allowed-reactions`,
+				{
+					method: 'PATCH',
+					headers: { 'Content-Type': 'application/json' },
+					body: JSON.stringify({ allowedReactions: chatAllowedReactions }),
+				},
+			);
+			const payload: unknown = await response.json().catch(() => null);
+			if (!response.ok) {
+				throw new Error(
+					getErrorMessage(
+						payload,
+						`Не вдалося оновити дозволені реакції (${response.status}).`,
+					),
+				);
+			}
+			setReactionSettings({
+				chatId: selectedChat.id,
+				allowedReactions: chatAllowedReactions,
+			});
+		} catch (reactionError) {
+			setError(
+				reactionError instanceof Error
+					? reactionError.message
+					: 'Не вдалося оновити дозволені реакції.',
+			);
+		} finally {
+			setSavingAllowedReactions(false);
+		}
+	}
+
+	async function searchChatUsers() {
+		const nickname = chatUserSearch.trim();
+		if (nickname.length < 3 || nickname.length > 25) {
+			setError('Введіть від 3 до 25 символів нікнейму для пошуку.');
+			return;
+		}
+
+		setSearchingChatUsers(true);
+		setError(null);
+		try {
+			const query = new URLSearchParams({ nickname, limit: '20' });
+			const payload = await fetchPayload(`/api/users/search?${query}`);
+			if (
+				!payload ||
+				typeof payload !== 'object' ||
+				!('users' in payload) ||
+				!Array.isArray(payload.users)
+			) {
+				throw new Error('Сервер повернув некоректні результати пошуку.');
+			}
+
+			const users: GroupUserOption[] = [];
+			for (const user of payload.users) {
+				if (
+					!user ||
+					typeof user !== 'object' ||
+					!('id' in user) ||
+					typeof user.id !== 'number' ||
+					!('nickname' in user) ||
+					typeof user.nickname !== 'string'
+				) {
+					throw new Error('Сервер повернув некоректні дані користувача.');
+				}
+				if (!chatMembers.some((member) => member.id === user.id)) {
+					users.push({ id: user.id, nickname: user.nickname });
+				}
+			}
+			setChatUserResults(users);
+			if (users.length === 0) {
+				setError('Користувачів не знайдено або їх уже додано до чату.');
+			}
+		} catch (searchError) {
+			setError(
+				searchError instanceof Error
+					? searchError.message
+					: 'Не вдалося знайти користувачів.',
+			);
+		} finally {
+			setSearchingChatUsers(false);
+		}
+	}
+
+	async function addChatUser(user: GroupUserOption) {
+		if (!selectedChat || addingChatUserId !== null) return;
+
+		setAddingChatUserId(user.id);
+		setError(null);
+		try {
+			const response = await fetch(
+				`/api/chats/${selectedChat.id}/users/${user.id}`,
+				{ method: 'POST' },
+			);
+			const payload: unknown = await response.json().catch(() => null);
+			if (!response.ok) {
+				throw new Error(
+					getErrorMessage(
+						payload,
+						`Не вдалося додати користувача (${response.status}).`,
+					),
+				);
+			}
+			setChatMembers((current) =>
+				current.some((member) => member.id === user.id)
+					? current
+					: [...current, user].sort((left, right) =>
+							left.nickname.localeCompare(right.nickname, 'uk-UA'),
+						),
+			);
+			setChatUserResults((current) =>
+				current.filter((result) => result.id !== user.id),
+			);
+		} catch (addError) {
+			setError(
+				addError instanceof Error
+					? addError.message
+					: 'Не вдалося додати користувача до чату.',
+			);
+		} finally {
+			setAddingChatUserId(null);
+		}
+	}
+
+	function selectChatAvatar(file: File | null) {
+		if (file && !file.type.startsWith('image/')) {
+			setError('Оберіть файл зображення для аватару.');
+			setChatAvatarFile(null);
+			setChatAvatarPreview(null);
+			return;
+		}
+		setError(null);
+		setChatAvatarFile(file);
+		if (!file) {
+			setChatAvatarPreview(null);
+			return;
+		}
+		const previewUrl = URL.createObjectURL(file);
+		chatAvatarPreviewUrls.current.add(previewUrl);
+		setChatAvatarPreview(previewUrl);
+	}
+
+	async function uploadChatAvatar() {
+		if (!selectedChat || !chatAvatarFile || savingChatAvatar) return;
+
+		setSavingChatAvatar(true);
+		setError(null);
+		try {
+			const form = new FormData();
+			form.append('avatar', chatAvatarFile);
+			const response = await fetch(`/api/chats/${selectedChat.id}/avatar`, {
+				method: 'PATCH',
+				body: form,
+			});
+			const payload: unknown = await response.json().catch(() => null);
+			if (!response.ok) {
+				throw new Error(
+					getErrorMessage(
+						payload,
+						`Не вдалося змінити аватар чату (${response.status}).`,
+					),
+				);
+			}
+			setChats((current) =>
+				current.map((chat) =>
+					chat.id === selectedChat.id
+						? {
+								...chat,
+								avatarName:
+									payload &&
+									typeof payload === 'object' &&
+									'avatarUrl' in payload &&
+									typeof payload.avatarUrl === 'string'
+										? payload.avatarUrl
+										: chat.avatarName,
+								avatarPreview: chatAvatarPreview ?? undefined,
+							}
+						: chat,
+				),
+			);
+			setChatAvatarFile(null);
+		} catch (avatarError) {
+			setError(
+				avatarError instanceof Error
+					? avatarError.message
+					: 'Не вдалося змінити аватар чату.',
+			);
+		} finally {
+			setSavingChatAvatar(false);
+		}
+	}
+
+	async function deleteChatAvatar() {
+		if (!selectedChat || savingChatAvatar) return;
+
+		setSavingChatAvatar(true);
+		setError(null);
+		try {
+			const response = await fetch(`/api/chats/${selectedChat.id}/avatar`, {
+				method: 'DELETE',
+			});
+			if (!response.ok) {
+				const payload: unknown = await response.json().catch(() => null);
+				throw new Error(
+					getErrorMessage(
+						payload,
+						`Не вдалося видалити аватар чату (${response.status}).`,
+					),
+				);
+			}
+			setChats((current) =>
+				current.map((chat) =>
+					chat.id === selectedChat.id
+						? { ...chat, avatarName: null, avatarPreview: undefined }
+						: chat,
+				),
+			);
+			selectChatAvatar(null);
+		} catch (avatarError) {
+			setError(
+				avatarError instanceof Error
+					? avatarError.message
+					: 'Не вдалося видалити аватар чату.',
+			);
+		} finally {
+			setSavingChatAvatar(false);
 		}
 	}
 
@@ -647,7 +1044,10 @@ export default function ChatPanel() {
 			!socket?.connected ||
 			selectedChatId === null ||
 			currentUserId === null ||
-			pendingReactionMessageIds.has(message.id)
+			pendingReactionMessageIds.has(message.id) ||
+			reactionSettings?.chatId !== selectedChatId ||
+			(reactionSettings.allowedReactions.length > 0 &&
+				!reactionSettings.allowedReactions.includes(reaction))
 		) {
 			return;
 		}
@@ -713,32 +1113,11 @@ export default function ChatPanel() {
 			}
 			body = { userId };
 		} else {
-			const rawUserIds = creationUserIds
-				.split(',')
-				.map((value) => value.trim());
-			const userIds = rawUserIds.map(Number);
-			if (
-				creationMode === 'group' &&
-				(!creationUserIds.trim() ||
-					rawUserIds.some((value) => value.length === 0) ||
-					userIds.some((userId) => !Number.isSafeInteger(userId) || userId < 1))
-			) {
-				setError('Введіть додатні числові ID учасників через кому.');
-				return;
-			}
-			if (
-				creationMode === 'group' &&
-				new Set(userIds).size !== userIds.length
-			) {
-				setError('ID кожного учасника можна вказати лише один раз.');
-				return;
-			}
-			const otherUserIds =
-				creationMode === 'group'
-					? userIds.filter((userId) => userId !== currentUserId)
-					: userIds;
+			const otherUserIds = selectedGroupUsers
+				.map((user) => user.id)
+				.filter((userId) => userId !== currentUserId);
 			if (creationMode === 'group' && otherUserIds.length === 0) {
-				setError('Вкажіть ID хоча б одного іншого учасника групи.');
+				setError('Знайдіть і додайте хоча б одного учасника групи.');
 				return;
 			}
 			body = {
@@ -789,6 +1168,9 @@ export default function ChatPanel() {
 			setCreationTitle('');
 			setCreationDescription('');
 			setCreationUserIds('');
+			setGroupUserSearch('');
+			setGroupUserResults([]);
+			setSelectedGroupUsers([]);
 			setShowCreateForm(false);
 		} catch (createError) {
 			setError(
@@ -801,7 +1183,70 @@ export default function ChatPanel() {
 		}
 	}
 
+	async function searchGroupUsers() {
+		const nickname = groupUserSearch.trim();
+		if (nickname.length < 3 || nickname.length > 25) {
+			setError('Введіть від 3 до 25 символів нікнейму для пошуку.');
+			return;
+		}
+
+		setSearchingGroupUsers(true);
+		setError(null);
+		try {
+			const query = new URLSearchParams({ nickname, limit: '20' });
+			const payload = await fetchPayload(`/api/users/search?${query}`);
+			if (
+				!payload ||
+				typeof payload !== 'object' ||
+				!('users' in payload) ||
+				!Array.isArray(payload.users)
+			) {
+				throw new Error('Сервер повернув некоректні результати пошуку.');
+			}
+
+			const users: GroupUserOption[] = [];
+			for (const user of payload.users) {
+				if (
+					!user ||
+					typeof user !== 'object' ||
+					!('id' in user) ||
+					typeof user.id !== 'number' ||
+					!('nickname' in user) ||
+					typeof user.nickname !== 'string'
+				) {
+					throw new Error('Сервер повернув некоректні дані користувача.');
+				}
+				if (
+					user.id !== currentUserId &&
+					!selectedGroupUsers.some((selected) => selected.id === user.id)
+				) {
+					users.push({ id: user.id, nickname: user.nickname });
+				}
+			}
+			setGroupUserResults(users);
+			if (users.length === 0) {
+				setError('Користувачів не знайдено або їх уже додано до групи.');
+			}
+		} catch (searchError) {
+			setError(
+				searchError instanceof Error
+					? searchError.message
+					: 'Не вдалося знайти користувачів.',
+			);
+		} finally {
+			setSearchingGroupUsers(false);
+		}
+	}
+
 	const selectedChat = chats.find((chat) => chat.id === selectedChatId);
+	const availableReactionOptions =
+		reactionSettings?.chatId !== selectedChatId
+			? []
+			: reactionSettings.allowedReactions.length === 0
+				? reactionOptions
+				: reactionOptions.filter((option) =>
+						reactionSettings.allowedReactions.includes(option.value),
+					);
 	const displayError = error ?? socketConfigError;
 	const displayedConnection = socketConfigError ? 'error' : connection;
 	const visibleChats = chats.filter((chat) =>
@@ -947,22 +1392,118 @@ export default function ChatPanel() {
 									</label>
 								</>
 							)}
-							{creationMode !== 'channel' && (
+							{creationMode === 'private' && (
 								<label>
-									{creationMode === 'private'
-										? 'ID користувача'
-										: 'ID учасників через кому'}
+									ID користувача
 									<input
 										type='text'
 										inputMode='numeric'
 										value={creationUserIds}
 										onChange={(event) => setCreationUserIds(event.target.value)}
-										placeholder={
-											creationMode === 'private' ? 'Наприклад, 12' : '12, 34'
-										}
+										placeholder='Наприклад, 12'
 										required
 									/>
 								</label>
+							)}
+							{creationMode === 'group' && (
+								<div className='group-user-picker'>
+									<div className='group-user-search'>
+										<label htmlFor='group-user-nickname'>
+											Знайти учасників за нікнеймом
+										</label>
+										<div className='group-user-search-controls'>
+											<input
+												id='group-user-nickname'
+												type='search'
+												minLength={3}
+												maxLength={25}
+												value={groupUserSearch}
+												onChange={(event) => {
+													setGroupUserSearch(event.target.value);
+													setGroupUserResults([]);
+												}}
+												onKeyDown={(event) => {
+													if (event.key === 'Enter') {
+														event.preventDefault();
+														void searchGroupUsers();
+													}
+												}}
+												placeholder='Введіть мінімум 3 символи'
+											/>
+											<button
+												className='button button-soft'
+												type='button'
+												disabled={searchingGroupUsers}
+												onClick={() => void searchGroupUsers()}
+											>
+												{searchingGroupUsers ? 'Пошук…' : 'Знайти'}
+											</button>
+										</div>
+									</div>
+									{groupUserResults.length > 0 && (
+										<ul className='group-user-results'>
+											{groupUserResults.map((user) => (
+												<li key={user.id}>
+													<span>
+														<strong>{user.nickname}</strong>
+														<small>ID {user.id}</small>
+													</span>
+													<button
+														className='button button-soft'
+														type='button'
+														onClick={() => {
+															setSelectedGroupUsers((current) =>
+																current.some(
+																	(selected) =>
+																		selected.id === user.id,
+																)
+																	? current
+																	: [...current, user],
+															);
+															setGroupUserResults((current) =>
+																current.filter(
+																	(result) => result.id !== user.id,
+																),
+															);
+														}}
+													>
+														Додати
+													</button>
+												</li>
+											))}
+										</ul>
+									)}
+									<div className='group-user-selected'>
+										<span className='group-user-selected-heading'>
+											Учасники: {selectedGroupUsers.length}
+										</span>
+										{selectedGroupUsers.length === 0 ? (
+											<p>Знайдіть і додайте хоча б одного учасника.</p>
+										) : (
+											<ul className='group-user-chips'>
+												{selectedGroupUsers.map((user) => (
+													<li key={user.id}>
+														<span>{user.nickname}</span>
+														<button
+															type='button'
+															aria-label={`Видалити ${user.nickname} зі списку учасників`}
+															onClick={() =>
+																setSelectedGroupUsers((current) =>
+																	current.filter(
+																		(selected) =>
+																			selected.id !== user.id,
+																	),
+																)
+															}
+														>
+															×
+														</button>
+													</li>
+												))}
+											</ul>
+										)}
+									</div>
+								</div>
 							)}
 							<button
 								className='button button-primary'
@@ -999,7 +1540,17 @@ export default function ChatPanel() {
 										onClick={() => selectChat(chat.id)}
 									>
 										<span className='messenger-avatar' aria-hidden='true'>
-											{title.slice(0, 1).toLocaleUpperCase('uk-UA')}
+											{chat.avatarPreview ? (
+												<Image
+													src={chat.avatarPreview}
+													alt=''
+													width={48}
+													height={48}
+													unoptimized
+												/>
+											) : (
+												title.slice(0, 1).toLocaleUpperCase('uk-UA')
+											)}
 										</span>
 										<span className='messenger-chat-copy'>
 											<span className='messenger-chat-title'>
@@ -1053,7 +1604,17 @@ export default function ChatPanel() {
 										onClick={() => void openChatSettings()}
 										disabled={loadingChatSettings}
 									>
-										{selectedChatTitle.slice(0, 1).toLocaleUpperCase('uk-UA')}
+										{selectedChat.avatarPreview ? (
+											<Image
+												src={selectedChat.avatarPreview}
+												alt=''
+												width={48}
+												height={48}
+												unoptimized
+											/>
+										) : (
+											selectedChatTitle.slice(0, 1).toLocaleUpperCase('uk-UA')
+										)}
 									</button>
 								) : (
 									<span
@@ -1161,6 +1722,170 @@ export default function ChatPanel() {
 												</button>
 											</div>
 										</form>
+										<section
+											className='chat-settings-section'
+											aria-labelledby='chat-avatar-title'
+										>
+											<h3 id='chat-avatar-title'>Аватар чату</h3>
+											<div className='chat-avatar-settings-preview'>
+												<span className='messenger-avatar'>
+													{chatAvatarPreview || selectedChat.avatarPreview ? (
+														<Image
+															src={
+																chatAvatarPreview ??
+																selectedChat.avatarPreview ??
+																''
+															}
+															alt=''
+															width={64}
+															height={64}
+															unoptimized
+														/>
+													) : (
+														selectedChatTitle
+															.slice(0, 1)
+															.toLocaleUpperCase('uk-UA')
+													)}
+												</span>
+												<label className='chat-avatar-file'>
+													Оберіть нове зображення
+													<input
+														type='file'
+														accept='image/*'
+														onChange={(event) =>
+															selectChatAvatar(
+																event.target.files?.[0] ?? null,
+															)
+														}
+													/>
+												</label>
+											</div>
+											<div className='chat-settings-actions'>
+												{selectedChat.avatarName && (
+													<button
+														className='button button-quiet'
+														type='button'
+														onClick={() => void deleteChatAvatar()}
+														disabled={savingChatAvatar}
+													>
+														Видалити аватар
+													</button>
+												)}
+												<button
+													className='button button-primary'
+													type='button'
+													onClick={() => void uploadChatAvatar()}
+													disabled={!chatAvatarFile || savingChatAvatar}
+												>
+													{savingChatAvatar ? 'Завантаження…' : 'Зберегти аватар'}
+												</button>
+											</div>
+										</section>
+										<section
+											className='chat-settings-section'
+											aria-labelledby='chat-reactions-title'
+										>
+											<h3 id='chat-reactions-title'>Дозволені реакції</h3>
+											<p className='chat-settings-hint'>
+												Якщо не вибрати жодної, будуть доступні всі реакції.
+											</p>
+											<div className='chat-allowed-reactions'>
+												{reactionOptions.map((option) => (
+													<label key={option.value}>
+														<input
+															type='checkbox'
+															checked={chatAllowedReactions.includes(
+																option.value,
+															)}
+															onChange={() =>
+																toggleChatAllowedReaction(option.value)
+															}
+														/>
+														<span>{option.label}</span>
+													</label>
+												))}
+											</div>
+											<div className='chat-settings-actions'>
+												<button
+													className='button button-primary'
+													type='button'
+													onClick={() => void saveAllowedReactions()}
+													disabled={savingAllowedReactions}
+												>
+													{savingAllowedReactions
+														? 'Збереження…'
+														: 'Зберегти реакції'}
+												</button>
+											</div>
+										</section>
+										<section
+											className='chat-settings-section'
+											aria-labelledby='chat-members-title'
+										>
+											<h3 id='chat-members-title'>
+												Учасники чату ({chatMembers.length})
+											</h3>
+											<ul className='chat-settings-members'>
+												{chatMembers.map((member) => (
+													<li key={member.id}>
+														<span>{member.nickname}</span>
+														<small>#{member.id}</small>
+													</li>
+												))}
+											</ul>
+											<div className='chat-settings-member-search'>
+												<label htmlFor='chat-member-search'>
+													Додати учасника за нікнеймом
+												</label>
+												<div className='chat-member-search-controls'>
+													<input
+														id='chat-member-search'
+														value={chatUserSearch}
+														minLength={3}
+														maxLength={25}
+														onChange={(event) =>
+															setChatUserSearch(event.target.value)
+														}
+														onKeyDown={(event) => {
+															if (event.key === 'Enter') {
+																event.preventDefault();
+																void searchChatUsers();
+															}
+														}}
+														placeholder='Введіть нікнейм'
+													/>
+													<button
+														className='button button-soft'
+														type='button'
+														onClick={() => void searchChatUsers()}
+														disabled={searchingChatUsers}
+													>
+														{searchingChatUsers ? 'Пошук…' : 'Знайти'}
+													</button>
+												</div>
+											</div>
+											{chatUserResults.length > 0 && (
+												<ul className='chat-settings-user-results'>
+													{chatUserResults.map((user) => (
+														<li key={user.id}>
+															<span>
+																{user.nickname} <small>#{user.id}</small>
+															</span>
+															<button
+																className='button button-quiet'
+																type='button'
+																onClick={() => void addChatUser(user)}
+																disabled={addingChatUserId !== null}
+															>
+																{addingChatUserId === user.id
+																	? 'Додавання…'
+																	: 'Додати'}
+															</button>
+														</li>
+													))}
+												</ul>
+											)}
+										</section>
 									</section>
 								</div>
 							)}
@@ -1228,7 +1953,7 @@ export default function ChatPanel() {
 													)}
 													<div className='messenger-message-footer'>
 														<div className='chat-message-actions'>
-															{reactionOptions.map((option) => {
+															{availableReactionOptions.map((option) => {
 																const count = message.reactions.filter(
 																	(item) => item.reaction === option.value,
 																).length;

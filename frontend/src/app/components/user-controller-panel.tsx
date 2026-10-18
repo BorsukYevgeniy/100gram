@@ -1,10 +1,12 @@
 "use client";
 
-import { FormEvent, useState } from "react";
+import Image from "next/image";
+import { FormEvent, useEffect, useRef, useState } from "react";
 
 type UserProfile = {
   id: number;
   nickname: string;
+  avatarName: string | null;
   role: "ADMIN" | "USER";
   isVerified: boolean;
   createdAt: string;
@@ -46,6 +48,7 @@ function isUserProfile(payload: unknown): payload is UserProfile {
   return (
     typeof user.id === "number" &&
     typeof user.nickname === "string" &&
+    (typeof user.avatarName === "string" || user.avatarName === null) &&
     (user.role === "ADMIN" || user.role === "USER") &&
     typeof user.isVerified === "boolean" &&
     typeof user.createdAt === "string" &&
@@ -93,10 +96,20 @@ export default function UserControllerPanel() {
   const [targetProfile, setTargetProfile] = useState<UserProfile | null>(null);
   const [targetUserId, setTargetUserId] = useState("");
   const [profileNickname, setProfileNickname] = useState("");
+  const [avatarFile, setAvatarFile] = useState<File | null>(null);
+  const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
+  const avatarPreviewUrls = useRef(new Set<string>());
   const [searchNickname, setSearchNickname] = useState("");
   const [searchResults, setSearchResults] = useState<UserProfile[]>([]);
   const [searchCursor, setSearchCursor] = useState<number | null>(null);
   const [searchHasMore, setSearchHasMore] = useState(false);
+
+  useEffect(() => {
+    const previewUrls = avatarPreviewUrls.current;
+    return () => {
+      for (const previewUrl of previewUrls) URL.revokeObjectURL(previewUrl);
+    };
+  }, []);
 
   async function request(
     key: string,
@@ -261,6 +274,108 @@ export default function UserControllerPanel() {
     );
   }
 
+  function selectAvatar(file: File | null) {
+    if (file && !file.type.startsWith("image/")) {
+      setNotice({ kind: "error", text: "Оберіть файл зображення для аватару." });
+      setAvatarFile(null);
+      setAvatarPreview(null);
+      return;
+    }
+    setNotice(null);
+    setAvatarFile(file);
+    if (!file) {
+      setAvatarPreview(null);
+      return;
+    }
+    const previewUrl = URL.createObjectURL(file);
+    avatarPreviewUrls.current.add(previewUrl);
+    setAvatarPreview(previewUrl);
+  }
+
+  async function updateAvatar() {
+    if (!avatarFile || busy !== null) return;
+    setBusy("update-avatar");
+    setNotice(null);
+    try {
+      const form = new FormData();
+      form.append("avatar", avatarFile);
+      const response = await fetch("/api/users/me/avatar", {
+        method: "PATCH",
+        body: form,
+        cache: "no-store",
+      });
+      const payload: unknown = await response.json().catch(() => null);
+      if (!response.ok) {
+        throw new Error(
+          errorMessage(
+            payload,
+            `Не вдалося оновити аватар (${response.status}).`,
+          ),
+        );
+      }
+      if (
+        !payload ||
+        typeof payload !== "object" ||
+        !("avatarUrl" in payload) ||
+        typeof payload.avatarUrl !== "string"
+      ) {
+        throw new Error("Сервер повернув некоректні дані аватару.");
+      }
+      const avatarName = payload.avatarUrl;
+      setProfile((current) =>
+        current ? { ...current, avatarName } : current,
+      );
+      setAvatarFile(null);
+      setNotice({ kind: "success", text: "Аватар оновлено." });
+    } catch (error) {
+      setNotice({
+        kind: "error",
+        text:
+          error instanceof Error
+            ? error.message
+            : "Не вдалося оновити аватар.",
+      });
+    } finally {
+      setBusy(null);
+    }
+  }
+
+  async function deleteAvatar() {
+    if (busy !== null) return;
+    setBusy("delete-avatar");
+    setNotice(null);
+    try {
+      const response = await fetch("/api/users/me/avatar", {
+        method: "DELETE",
+        cache: "no-store",
+      });
+      const payload: unknown = await response.json().catch(() => null);
+      if (!response.ok) {
+        throw new Error(
+          errorMessage(
+            payload,
+            `Не вдалося видалити аватар (${response.status}).`,
+          ),
+        );
+      }
+      setProfile((current) =>
+        current ? { ...current, avatarName: null } : current,
+      );
+      selectAvatar(null);
+      setNotice({ kind: "success", text: "Аватар видалено." });
+    } catch (error) {
+      setNotice({
+        kind: "error",
+        text:
+          error instanceof Error
+            ? error.message
+            : "Не вдалося видалити аватар.",
+      });
+    } finally {
+      setBusy(null);
+    }
+  }
+
   function handleFindUser(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const userId = Number(targetUserId);
@@ -312,7 +427,7 @@ export default function UserControllerPanel() {
       <div className="section-heading">
         <div>
           <div className="eyebrow">USER CONTROLLER</div>
-          <h2>Профіль і користувачі</h2>
+          <h2>Налаштування та користувачі</h2>
         </div>
         <p>
           Оновлюйте власний нікнейм, шукайте користувачів за нікнеймом або ID.
@@ -335,8 +450,8 @@ export default function UserControllerPanel() {
       <div className="user-tools-grid">
         <article className="tool-card user-tool-card">
           <div className="tool-icon icon-green">01</div>
-          <h3>Мій профіль</h3>
-          <p>Переглядайте та оновлюйте нікнейм або видаліть акаунт.</p>
+          <h3>Налаштування профілю</h3>
+          <p>Змініть аватар і нікнейм або видаліть акаунт.</p>
           <div className="button-row">
             <button
               className="button button-soft"
@@ -365,6 +480,53 @@ export default function UserControllerPanel() {
           </div>
           {profile && (
             <>
+              <div className="profile-avatar-settings">
+                <span className="profile-avatar-preview">
+                  {avatarPreview ? (
+                    <Image
+                      src={avatarPreview}
+                      alt="Попередній перегляд нового аватара"
+                      width={72}
+                      height={72}
+                      unoptimized
+                    />
+                  ) : (
+                    profile.nickname.slice(0, 1).toLocaleUpperCase("uk-UA")
+                  )}
+                </span>
+                <div className="profile-avatar-controls">
+                  <label htmlFor="profile-avatar">Аватар користувача</label>
+                  <input
+                    id="profile-avatar"
+                    type="file"
+                    accept="image/*"
+                    onChange={(event) =>
+                      selectAvatar(event.target.files?.[0] ?? null)
+                    }
+                    disabled={busy !== null}
+                  />
+                  <div className="button-row">
+                    <button
+                      className="button button-primary"
+                      type="button"
+                      onClick={() => void updateAvatar()}
+                      disabled={!avatarFile || busy !== null}
+                    >
+                      {busy === "update-avatar" ? "Завантаження…" : "Зберегти аватар"}
+                    </button>
+                    {profile.avatarName && (
+                      <button
+                        className="button button-quiet"
+                        type="button"
+                        onClick={() => void deleteAvatar()}
+                        disabled={busy !== null}
+                      >
+                        {busy === "delete-avatar" ? "Видалення…" : "Видалити"}
+                      </button>
+                    )}
+                  </div>
+                </div>
+              </div>
               <ProfileDetails profile={profile} />
               <form className="profile-edit-form" onSubmit={updateProfile}>
                 <label htmlFor="profile-nickname">Нікнейм</label>

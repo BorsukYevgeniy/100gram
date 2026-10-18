@@ -98,7 +98,7 @@ async function proxyChatRequest(request: NextRequest, context: RouteContext) {
     allowedMethods = isChatAvatarAction ? ["PATCH", "DELETE"] : ["PATCH"];
   } else if (isChatMemberAction) {
     allowedMethods =
-      path.length === 3 ? ["DELETE"] : ["PATCH"];
+      path.length === 3 ? ["POST", "DELETE"] : ["PATCH"];
   } else if (isChatAction) {
     switch (path[1]) {
       case "invite-token":

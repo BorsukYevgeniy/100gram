@@ -35,6 +35,8 @@ one-time password reset email, and password reset. It also includes the user
 controller features: view and update the current nickname, search users by
 nickname, fetch a user by ID, assign an admin role, and delete the current
 account or another user as an administrator.
+The profile settings on `/user` let users update their nickname and upload or
+remove their avatar.
 The `/controllers` page exposes the existing chat membership and moderation,
 chat invite/pinning/reaction settings, message CRUD and pinning, REST reactions,
 blocked-user management, user/chat avatar operations, and attachment upload
@@ -45,8 +47,14 @@ searchable conversation list and message view. It uses the existing Socket.IO
 gateway to join and leave rooms, send/edit/delete messages, and
 add/update/remove reactions. Users can create private chats, group chats with
 selected user IDs, and public or private channels from the chat list. The
+group creation form finds participants by nickname through `GET /users/search`
+and submits their selected IDs to the existing group creation endpoint. The
 owners of groups and channels can update the chat title, description, and
-visibility from the conversation header. The profile is available at `/user`,
+visibility, chat avatar, and allowed reactions from the conversation header.
+The same chat settings menu lists current members and lets owners add users by
+nickname. The backend chat detail response includes allowed reactions, and
+member and avatar operations support both groups and channels. The profile is
+available at `/user`,
 and `/chats` remains an alias for the chat interface. Private chat names are
 resolved from the other participant's nickname using the existing
 chat-members endpoint.
