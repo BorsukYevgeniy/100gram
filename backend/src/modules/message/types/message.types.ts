@@ -3,12 +3,12 @@ import { Paginated } from '../../../common/types/paginated.types';
 
 export type MessageFiles = Message & { fileNames: string[] };
 export type MessageFilesReactionCount = MessageFiles & {
-  reactionCount: {
-    likeCount: number;
-    dislikeCount: number;
-    heartCount: number;
-    heartWithFire: number;
-    fireCount: number;
+  reactions: {
+    like: { count: number; isReactedByMe: boolean };
+    dislike: { count: number; isReactedByMe: boolean };
+    heart: { count: number; isReactedByMe: boolean };
+    heartWithFire: { count: number; isReactedByMe: boolean };
+    fire: { count: number; isReactedByMe: boolean };
   };
 };
 

@@ -36,12 +36,18 @@ export class MessageService {
   async getMessagesInChat(
     chatId: number,
     paginationDto: PaginationDto,
+    currentUserId: number,
   ): Promise<PaginatedMessageFilesReactionCount> {
     const { cursor, limit } = paginationDto;
 
     const chatMessageVersion = await this.cache.getChatMessageVersion(chatId);
     const cacheData = await this.cache.get<PaginatedMessageFilesReactionCount>(
-      this.cache.buildChatMessageKey(chatId, chatMessageVersion, paginationDto),
+      this.cache.buildChatMessageKey(
+        chatId,
+        currentUserId,
+        chatMessageVersion,
+        paginationDto,
+      ),
     );
 
     if (cacheData) {
@@ -50,6 +56,7 @@ export class MessageService {
     }
 
     const messages = await this.messageRepository.findMessagesInChat(
+      currentUserId,
       chatId,
       limit,
       cursor,
@@ -76,7 +83,12 @@ export class MessageService {
     };
 
     await this.cache.set(
-      this.cache.buildChatMessageKey(chatId, chatMessageVersion, paginationDto),
+      this.cache.buildChatMessageKey(
+        chatId,
+        currentUserId,
+        chatMessageVersion,
+        paginationDto,
+      ),
       result,
       60,
     );

@@ -6,7 +6,7 @@ import { hashSync } from 'bcryptjs';
 import cookieParser from 'cookie-parser';
 import { LoggerModule } from 'nestjs-pino';
 import request from 'supertest';
-import { ChatRole, ChatType } from '../generated/prisma/enums';
+import { ChatRole, ChatType, Reaction } from '../generated/prisma/enums';
 import authConfig from '../src/config/auth.config';
 import databaseConfig from '../src/config/database.config';
 import pinoConfig from '../src/config/pino.config';
@@ -332,6 +332,12 @@ describe('ChatMessageController (e2e)', () => {
     });
 
     it('GET /chats/:chatId/messages - 200 OK - Should return messages using cursor pagination', async () => {
+      await request(app.getHttpServer())
+        .post(`/messages/${replyMessageId}/reactions`)
+        .send({ reaction: Reaction.LIKE })
+        .set('Cookie', [`access_token=${memberAccessToken}`])
+        .expect(201);
+
       const { body } = await request(app.getHttpServer())
         .get(`/chats/${groupChatId}/messages?limit=1`)
         .set('Cookie', [`access_token=${ownerAccessToken}`])
@@ -344,18 +350,28 @@ describe('ChatMessageController (e2e)', () => {
             text: 'A reply',
             replyId: firstMessageId,
             fileNames: [],
-            reactionCount: {
-              likeCount: 0,
-              dislikeCount: 0,
-              heartCount: 0,
-              heartWithFire: 0,
-              fireCount: 0,
+            reactions: {
+              like: { count: 1, isReactedByMe: false },
+              dislike: { count: 0, isReactedByMe: false },
+              heart: { count: 0, isReactedByMe: false },
+              heartWithFire: { count: 0, isReactedByMe: false },
+              fire: { count: 0, isReactedByMe: false },
             },
           }),
         ],
         limit: 1,
         nextCursor: replyMessageId,
         hasMore: true,
+      });
+
+      const memberPage = await request(app.getHttpServer())
+        .get(`/chats/${groupChatId}/messages?limit=1`)
+        .set('Cookie', [`access_token=${memberAccessToken}`])
+        .expect(200);
+
+      expect(memberPage.body.messages[0].reactions.like).toEqual({
+        count: 1,
+        isReactedByMe: true,
       });
 
       const nextPage = await request(app.getHttpServer())
@@ -368,12 +384,12 @@ describe('ChatMessageController (e2e)', () => {
           id: firstMessageId,
           text: 'First message',
           fileNames: [],
-          reactionCount: {
-            likeCount: 0,
-            dislikeCount: 0,
-            heartCount: 0,
-            heartWithFire: 0,
-            fireCount: 0,
+          reactions: {
+            like: { count: 0, isReactedByMe: false },
+            dislike: { count: 0, isReactedByMe: false },
+            heart: { count: 0, isReactedByMe: false },
+            heartWithFire: { count: 0, isReactedByMe: false },
+            fire: { count: 0, isReactedByMe: false },
           },
         }),
       );

@@ -10,6 +10,7 @@ export class MessageRepository {
   constructor(private readonly prisma: PrismaService) {}
 
   async findMessagesInChat(
+    currentUserId: number,
     chatId: number,
     take: number,
     cursor: number,
@@ -56,6 +57,23 @@ export class MessageRepository {
       reactionCounts.set(r.messageId, counts);
     }
 
+    const myReactions = await this.prisma.reactionToMessage.findMany({
+      where: {
+        messageId: {
+          in: msg.map((m) => m.id),
+        },
+        userId: currentUserId,
+      },
+      select: {
+        messageId: true,
+        reaction: true,
+      },
+    });
+
+    const myReactionSet = new Set(
+      myReactions.map((r) => `${r.messageId}:${r.reaction}`),
+    );
+
     return msg.map((m) => {
       const counts = reactionCounts.get(m.id) ?? {};
 
@@ -68,12 +86,29 @@ export class MessageRepository {
         replyId: m.replyId,
         text: m.text,
         userId: m.userId,
-        reactionCount: {
-          likeCount: counts[Reaction.LIKE] ?? 0,
-          dislikeCount: counts[Reaction.DISLIKE] ?? 0,
-          heartCount: counts[Reaction.HEART] ?? 0,
-          heartWithFire: counts[Reaction.HEART_WITH_FIRE] ?? 0,
-          fireCount: counts[Reaction.FIRE] ?? 0,
+        reactions: {
+          like: {
+            count: counts[Reaction.LIKE] ?? 0,
+            isReactedByMe: myReactionSet.has(`${m.id}:${Reaction.LIKE}`),
+          },
+          dislike: {
+            count: counts[Reaction.DISLIKE] ?? 0,
+            isReactedByMe: myReactionSet.has(`${m.id}:${Reaction.DISLIKE}`),
+          },
+          heart: {
+            count: counts[Reaction.HEART] ?? 0,
+            isReactedByMe: myReactionSet.has(`${m.id}:${Reaction.HEART}`),
+          },
+          heartWithFire: {
+            count: counts[Reaction.HEART_WITH_FIRE] ?? 0,
+            isReactedByMe: myReactionSet.has(
+              `${m.id}:${Reaction.HEART_WITH_FIRE}`,
+            ),
+          },
+          fire: {
+            count: counts[Reaction.FIRE] ?? 0,
+            isReactedByMe: myReactionSet.has(`${m.id}:${Reaction.FIRE}`),
+          },
         },
       };
     });
