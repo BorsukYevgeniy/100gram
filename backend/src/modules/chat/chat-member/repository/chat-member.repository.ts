@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { ChatToUser } from '../../../../../generated/prisma/browser';
 import { ChatRole } from '../../../../../generated/prisma/enums';
 import { PrismaService } from '../../../../infra/prisma/prisma.service';
+import { UpdateRoleDto } from '../../dto/role/update-role.dto';
 
 @Injectable()
 export class ChatMemberRepository {
@@ -84,10 +85,10 @@ export class ChatMemberRepository {
     });
   }
 
-  async updateChatRole(chatId: number, userId: number, role: ChatRole) {
+  async updateChatRole(chatId: number, userId: number, dto: UpdateRoleDto) {
     return this.prisma.chatToUser.update({
       where: { chatId_userId: { chatId, userId } },
-      data: { role },
+      data: dto,
     });
   }
 

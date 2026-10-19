@@ -127,7 +127,7 @@ export class ChatMemberService {
     currentUser: AccessTokenPayload,
     chatId: number,
     userId: number,
-    { role }: UpdateRoleDto,
+    dto: UpdateRoleDto,
   ) {
     await this.chatValidator.validateOwner(currentUser, chatId);
 
@@ -144,10 +144,10 @@ export class ChatMemberService {
       throw new NotFoundException('User is not a participant of the chat');
     }
 
-    const chatUser = await this.chatRepo.updateChatRole(chatId, userId, role);
+    const chatUser = await this.chatRepo.updateChatRole(chatId, userId, dto);
 
     this.logger.info(
-      { chatId, userId, newRole: role },
+      { chatId, userId, newRole: dto.role },
       'Updated user role in chat',
     );
 
