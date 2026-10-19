@@ -7,7 +7,7 @@ import {
 	Reaction,
 	ReactionOption,
 } from './chat-types';
-import { getReactionCount } from './chat-utils';
+import { getReactionSummary } from './chat-utils';
 
 type ChatMessageListProps = {
 	messages: ChatMessage[];
@@ -42,9 +42,9 @@ export default function ChatMessageList({
 }: ChatMessageListProps) {
 	if (messages.length === 0) {
 		return (
-			<div className='messenger-messages' aria-live='polite'>
-				<div className='messenger-no-messages'>
-					<span aria-hidden='true'>✉</span>
+			<div className="messenger-messages" aria-live="polite">
+				<div className="messenger-no-messages">
+					<span aria-hidden="true">✉</span>
 					<p>Повідомлень поки немає</p>
 					<span>Напишіть першим</span>
 				</div>
@@ -53,7 +53,7 @@ export default function ChatMessageList({
 	}
 
 	return (
-		<div className='messenger-messages' aria-live='polite'>
+		<div className="messenger-messages" aria-live="polite">
 			{messages.map((message) => {
 				const isOwnMessage = message.userId === currentUserId;
 				return (
@@ -61,66 +61,61 @@ export default function ChatMessageList({
 						className={`messenger-message${isOwnMessage ? ' own' : ''}`}
 						key={message.id}
 					>
-						<div className='messenger-message-bubble'>
+						<div className="messenger-message-bubble">
 							{!isOwnMessage && (
-								<strong className='messenger-sender'>
+								<strong className="messenger-sender">
 									Користувач #{message.userId}
 								</strong>
 							)}
 							{editingMessageId === message.id ? (
-								<form className='chat-edit-form' onSubmit={onUpdateMessage}>
+								<form className="chat-edit-form" onSubmit={onUpdateMessage}>
 									<input
-										aria-label='Текст повідомлення'
+										aria-label="Текст повідомлення"
 										value={editText}
 										maxLength={3000}
 										onChange={(event) => onEditTextChange(event.target.value)}
 										required
 									/>
-									<button className='button button-soft' type='submit'>
+									<button className="button button-soft" type="submit">
 										Зберегти
 									</button>
 									<button
-										className='button button-quiet'
-										type='button'
+										className="button button-quiet"
+										type="button"
 										onClick={onCancelEdit}
 									>
 										Скасувати
 									</button>
 								</form>
 							) : (
-								<p className='messenger-message-text'>{message.text}</p>
+								<p className="messenger-message-text">{message.text}</p>
 							)}
 							{message.fileNames.length > 0 && (
-								<p className='chat-muted'>
+								<p className="chat-muted">
 									Вкладення: {message.fileNames.join(', ')}
 								</p>
 							)}
-							<div className='messenger-message-footer'>
-								<div className='chat-message-actions'>
+							<div className="messenger-message-footer">
+								<div className="chat-message-actions">
 									{availableReactionOptions.map((option) => {
-										const count = getReactionCount(
-											message.reactionCount,
+										const summary = getReactionSummary(
+											message.reactions,
 											option.value,
 										);
-										const selected = message.reactions.some(
-											(item) =>
-												item.userId === currentUserId &&
-												item.reaction === option.value,
-										);
+										const { count, isReactedByMe: selected } = summary;
 										return (
 											<button
-												type='button'
+												type="button"
 												key={option.value}
 												className={`chat-reaction${selected ? ' selected' : ''}`}
 												title={option.value}
 												aria-label={`${option.value}: ${count}`}
+												aria-pressed={selected}
 												disabled={
 													connection !== 'connected' ||
 													pendingReactionMessageIds.has(message.id)
 												}
-												onClick={() =>
-													onToggleReaction(message, option.value)
-												}
+												onClick={() => onToggleReaction(message, option.value)}
 											>
 												{option.label}
 												{count > 0 ? ` ${count}` : ''}
@@ -135,18 +130,18 @@ export default function ChatMessageList({
 									})}
 								</time>
 								{isOwnMessage && editingMessageId !== message.id && (
-									<div className='messenger-edit-actions'>
+									<div className="messenger-edit-actions">
 										<button
-											className='text-button'
-											type='button'
+											className="text-button"
+											type="button"
 											disabled={connection !== 'connected'}
 											onClick={() => onStartEdit(message)}
 										>
 											Редагувати
 										</button>
 										<button
-											className='text-button'
-											type='button'
+											className="text-button"
+											type="button"
 											disabled={connection !== 'connected'}
 											onClick={() => onDelete(message.id)}
 										>
