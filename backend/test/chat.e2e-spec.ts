@@ -238,7 +238,10 @@ describe('ChatController (e2e)', () => {
         lastMessageId: null,
         chatType: ChatType.PRIVATE,
         visibility: Visibility.PRIVATE,
-        withWhom: 'chatmember',
+        participant: {
+          nickname: 'chatmember',
+          avatarName: null,
+        },
       });
       privateChatId = body.id;
     });
@@ -287,7 +290,10 @@ describe('ChatController (e2e)', () => {
         lastMessageId: null,
         chatType: ChatType.PRIVATE,
         visibility: Visibility.PRIVATE,
-        withWhom: 'chatmember',
+        participant: {
+          nickname: 'chatmember',
+          avatarName: null,
+        },
       });
     });
   });
@@ -429,6 +435,58 @@ describe('ChatController (e2e)', () => {
       );
 
       channelId = body.id;
+    });
+  });
+
+  describe('GET /chats/me - Should return chats with type-specific data', () => {
+    it('GET /chats/me - 200 OK - Should return private, group, and channel chats', async () => {
+      const { body } = await request(app.getHttpServer())
+        .get('/chats/me?limit=9')
+        .set('Cookie', [`access_token=${ownerAccessToken}`])
+        .expect(200);
+
+      expect(body).toEqual({
+        limit: 9,
+        hasMore: false,
+        nextCursor: null,
+        chats: expect.arrayContaining([
+          {
+            id: privateChatId,
+            lastMessage: null,
+            isPinned: false,
+            chatType: ChatType.PRIVATE,
+            participant: {
+              nickname: 'chatmember',
+              avatarName: null,
+            },
+          },
+          {
+            id: groupChatId,
+            lastMessage: null,
+            isPinned: false,
+            chatType: ChatType.GROUP,
+            title: 'Group chat',
+            avatarName: null,
+          },
+          {
+            id: publicGroupId,
+            lastMessage: null,
+            isPinned: false,
+            chatType: ChatType.GROUP,
+            title: 'Public group',
+            avatarName: null,
+          },
+          {
+            id: channelId,
+            lastMessage: null,
+            isPinned: false,
+            chatType: ChatType.CHANNEL,
+            title: 'Public channel',
+            avatarName: null,
+          },
+        ]),
+      });
+      expect(body.chats).toHaveLength(4);
     });
   });
 

@@ -36,8 +36,6 @@ export class FileController {
 
     res.setHeader('Content-Disposition', `inline; filename="${filename}"`);
 
-    console.log(file.contentType);
-
     return new StreamableFile(
       Readable.from(file.body as AsyncIterable<Uint8Array>),
       {
