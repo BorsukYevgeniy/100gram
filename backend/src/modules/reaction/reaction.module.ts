@@ -1,12 +1,18 @@
 import { Module } from '@nestjs/common';
 import { PrismaModule } from '../../infra/prisma/prisma.module';
+import { CacheModule } from '../cache/cache.module';
 import { ChatValidationModule } from '../chat/validation/chat-validation.module';
 import { MessageRepositoryModule } from '../message/repository/message-repository.module';
 import { ReactionRepository } from './reaction.repository';
 import { ReactionService } from './reaction.service';
 
 @Module({
-  imports: [MessageRepositoryModule, ChatValidationModule, PrismaModule],
+  imports: [
+    MessageRepositoryModule,
+    ChatValidationModule,
+    PrismaModule,
+    CacheModule,
+  ],
   providers: [ReactionService, ReactionRepository],
   exports: [ReactionService],
 })

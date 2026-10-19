@@ -5,6 +5,7 @@ import {
 } from '@nestjs/common';
 import { PrismaClientKnownRequestError } from '@prisma/client/runtime/client';
 import { PinoLogger } from 'nestjs-pino';
+import { CacheService } from '../cache/cache.service';
 import { ChatValidationService } from '../chat/validation/chat-validation.service';
 import { MessageRepository } from '../message/repository/message.repository';
 import { AddReactionDto } from './dto/add-reaction.dto';
@@ -18,6 +19,7 @@ export class ReactionService {
     private readonly messageRepo: MessageRepository,
     private readonly chatValidator: ChatValidationService,
     private readonly logger: PinoLogger,
+    private readonly cache: CacheService,
   ) {
     this.logger.setContext(ReactionService.name);
   }
@@ -55,6 +57,8 @@ export class ReactionService {
         'Added reaction to message',
       );
 
+      await this.cache.incrChatMessageVersion(chatId);
+
       return reaction;
     } catch (e) {
       if (e instanceof PrismaClientKnownRequestError && e.code === 'P2002') {
@@ -88,6 +92,8 @@ export class ReactionService {
         'Updated reaction of message',
       );
 
+      await this.cache.incrChatMessageVersion(chatId);
+
       return reaction;
     } catch (e) {
       if (e instanceof PrismaClientKnownRequestError && e.code === 'P2025') {
@@ -99,7 +105,7 @@ export class ReactionService {
   }
 
   async removeReaction(userId: number, messageId: number) {
-    await this.validateReactionPermission(userId, messageId);
+    const chatId = await this.validateReactionPermission(userId, messageId);
 
     try {
       const reaction = await this.reactionRepo.removeReaction(
@@ -108,6 +114,8 @@ export class ReactionService {
       );
 
       this.logger.info({ userId, messageId }, 'Deleted reaction to message');
+
+      await this.cache.incrChatMessageVersion(chatId);
       return reaction;
     } catch (e) {
       if (e instanceof PrismaClientKnownRequestError && e.code === 'P2025') {
