@@ -39,15 +39,12 @@ export class ChatMemberRepository {
     return this.prisma.chatToUser.findMany({
       where: { chatId },
       select: {
+        role: true,
         user: {
-          omit: {
-            email: true,
-            password: true,
-            verificationCode: true,
-            otpAttempts: true,
-            otpHash: true,
-            otpExpiresAt: true,
-            provider: true,
+          select: {
+            id: true,
+            nickname: true,
+            avatarName: true,
           },
         },
       },

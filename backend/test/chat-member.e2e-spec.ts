@@ -224,6 +224,7 @@ describe('ChatMemberController (e2e)', () => {
           expect.objectContaining({
             id: ownerId,
             nickname: 'chatmemberowner',
+            chatRole: ChatRole.OWNER,
           }),
         ],
         nextCursor: ownerId,
