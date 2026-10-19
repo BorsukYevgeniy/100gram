@@ -18,12 +18,12 @@ export class ChatMessageService {
 
   async getAllMessagesInChat(
     chatId: number,
-    { userId: id }: AccessTokenPayload,
+    { userId }: AccessTokenPayload,
     paginationDto: PaginationDto,
   ): Promise<PaginatedMessageFilesReactionCount> {
-    await this.chatValidation.validateChatParticipation(id, chatId);
+    await this.chatValidation.validateChatParticipation(userId, chatId);
 
-    return this.messageService.getMessagesInChat(chatId, paginationDto);
+    return this.messageService.getMessagesInChat(chatId, paginationDto, userId);
   }
 
   async createMessageInChat(

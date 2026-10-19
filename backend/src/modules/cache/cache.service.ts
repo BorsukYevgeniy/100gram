@@ -34,10 +34,11 @@ export class CacheService {
 
   buildChatMessageKey(
     chatId: number,
+    userId: number,
     version: number,
     { cursor, limit }: PaginationDto,
   ): string {
-    return `chat:${chatId}:messages:v${version}:cursor:${cursor ?? 'start'}:limit:${limit}`;
+    return `chat:${chatId}:messages:user:${userId}:v${version}:cursor:${cursor ?? 'start'}:limit:${limit}`;
   }
 
   buildMyChatsKey(userId: number, paginationDto: PaginationDto) {
