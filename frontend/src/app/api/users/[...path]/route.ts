@@ -33,6 +33,7 @@ async function proxyUserRequest(request: NextRequest, context: RouteContext) {
 		Number(path[1]) > 0;
 
 	const isSelfRoute = path.length === 1 && path[0] === 'me';
+	const isSearchRoute = path.length === 1 && path[0] === 'search';
 	const isBlockedListRoute =
 		path.length === 2 && path[0] === 'me' && path[1] === 'blocked';
 	const isBlockActionRoute =
@@ -52,6 +53,7 @@ async function proxyUserRequest(request: NextRequest, context: RouteContext) {
 
 	if (
 		!isSelfRoute &&
+		!isSearchRoute &&
 		!isUserId &&
 		!isAdminRoute &&
 		!isBlockedListRoute &&
@@ -62,17 +64,21 @@ async function proxyUserRequest(request: NextRequest, context: RouteContext) {
 		return NextResponse.json({ message: 'Not found.' }, { status: 404 });
 	}
 
-	const allowedMethods = isAdminRoute
-		? ['PATCH']
-		: isBlockedListRoute
-			? ['GET']
-			: isBlockActionRoute
-				? ['POST', 'DELETE']
-				: isOwnAvatarRoute
-					? ['PATCH', 'DELETE']
-					: isUserAvatarRoute
-						? ['DELETE']
-						: ['GET', 'DELETE'];
+	const allowedMethods = isSearchRoute
+		? ['GET']
+		: isAdminRoute
+			? ['PATCH']
+			: isBlockedListRoute
+				? ['GET']
+				: isBlockActionRoute
+					? ['POST', 'DELETE']
+					: isOwnAvatarRoute
+						? ['PATCH', 'DELETE']
+						: isUserAvatarRoute
+							? ['DELETE']
+							: isSelfRoute
+								? ['GET', 'PATCH', 'DELETE']
+								: ['GET', 'DELETE'];
 
 	if (!allowedMethods.includes(request.method)) {
 		return NextResponse.json(

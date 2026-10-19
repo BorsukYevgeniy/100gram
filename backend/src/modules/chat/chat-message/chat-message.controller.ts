@@ -20,7 +20,7 @@ import { AccessTokenPayload } from '../../../common/types';
 import { CurrentUser } from '../../auth/decorator/current-user.decorator';
 import { VerifiedUserGuard } from '../../auth/guards/verified-user.guard';
 import { CreateMessageDto } from '../../message/dto/create-message.dto';
-import { PaginatedMessageFiles } from '../../message/types/message.types';
+import { PaginatedMessageFilesReactionCount } from '../../message/types/message.types';
 import { ChatMessageService } from './chat-message.service';
 import { ChatMessageControllerDocs, ChatMessageRoutes } from './docs';
 
@@ -36,7 +36,7 @@ export class ChatMessageController {
     @CurrentUser() user: AccessTokenPayload,
     @Param('chatId', ParseIntPipe) chatId: number,
     @Query() paginationDto: PaginationDto,
-  ): Promise<PaginatedMessageFiles> {
+  ): Promise<PaginatedMessageFilesReactionCount> {
     return this.chatMessageService.getAllMessagesInChat(
       chatId,
       user,

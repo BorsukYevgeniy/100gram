@@ -4,6 +4,7 @@ import { PaginationDto } from '../../../common/dto/pagination.dto';
 import { AccessTokenPayload } from '../../../common/types';
 import { CreateMessageDto } from '../../message/dto/create-message.dto';
 import { MessageService } from '../../message/message.service';
+import { PaginatedMessageFilesReactionCount } from '../../message/types/message.types';
 import { ChatRepository } from '../repository/chat.repository';
 import { ChatValidationService } from '../validation/chat-validation.service';
 
@@ -19,7 +20,7 @@ export class ChatMessageService {
     chatId: number,
     { userId: id }: AccessTokenPayload,
     paginationDto: PaginationDto,
-  ) {
+  ): Promise<PaginatedMessageFilesReactionCount> {
     await this.chatValidation.validateChatParticipation(id, chatId);
 
     return this.messageService.getMessagesInChat(chatId, paginationDto);

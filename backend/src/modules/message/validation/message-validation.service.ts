@@ -7,6 +7,7 @@ import { PinoLogger } from 'nestjs-pino';
 import { ChatRole, Role } from '../../../../generated/prisma/enums';
 import { AccessTokenPayload } from '../../../common/types';
 import { ChatMemberRepository } from '../../chat/chat-member/repository/chat-member.repository';
+import { MessageMapperService } from '../mapper/message-mapper.service';
 import { MessageRepository } from '../repository/message.repository';
 import { MessageFiles } from '../types/message.types';
 
@@ -16,6 +17,7 @@ export class MessageValidationService {
     private readonly messageRepo: MessageRepository,
     private readonly chatUserRepo: ChatMemberRepository,
     private readonly logger: PinoLogger,
+    private readonly mapper: MessageMapperService,
   ) {
     this.logger.setContext(MessageValidationService.name);
   }
@@ -46,7 +48,7 @@ export class MessageValidationService {
       );
     }
 
-    return message;
+    return this.mapper.toMessageFile(message);
   }
 
   async canUpdate(
@@ -75,7 +77,7 @@ export class MessageValidationService {
       );
     }
 
-    return message;
+    return this.mapper.toMessageFile(message);
   }
 
   async canDelete(user: AccessTokenPayload, messageId: number): Promise<void> {

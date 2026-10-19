@@ -32,8 +32,11 @@ verification page.
 The interface covers Google login/callback, registration, login, logout,
 logout-all, email verification, token refresh, verification email resend,
 one-time password reset email, and password reset. It also includes the user
-controller features: view the current profile, fetch a user by ID, assign an
-admin role, and delete the current account or another user as an administrator.
+controller features: view and update the current nickname, search users by
+nickname, fetch a user by ID, assign an admin role, and delete the current
+account or another user as an administrator.
+The profile settings on `/user` let users update their nickname and upload or
+remove their avatar.
 The `/controllers` page exposes the existing chat membership and moderation,
 chat invite/pinning/reaction settings, message CRUD and pinning, REST reactions,
 blocked-user management, user/chat avatar operations, and attachment upload
@@ -44,8 +47,14 @@ searchable conversation list and message view. It uses the existing Socket.IO
 gateway to join and leave rooms, send/edit/delete messages, and
 add/update/remove reactions. Users can create private chats, group chats with
 selected user IDs, and public or private channels from the chat list. The
+group creation form finds participants by nickname through `GET /users/search`
+and submits their selected IDs to the existing group creation endpoint. The
 owners of groups and channels can update the chat title, description, and
-visibility from the conversation header. The profile is available at `/user`,
+visibility, chat avatar, and allowed reactions from the conversation header.
+The same chat settings menu lists current members and lets owners add users by
+nickname. The backend chat detail response includes allowed reactions, and
+member and avatar operations support both groups and channels. The profile is
+available at `/user`,
 and `/chats` remains an alias for the chat interface. Private chat names are
 resolved from the other participant's nickname using the existing
 chat-members endpoint.
@@ -56,10 +65,6 @@ The current frontend uses existing routes and does not require backend changes
 for the controller tools. To support a more complete self-service product,
 consider adding:
 
-- `PATCH /users/me` with validated nickname and description fields so users can
-  edit their profile without an administrator.
-- A paginated, searchable `GET /users` endpoint with privacy-safe results for
-  selecting users by nickname instead of manually entering IDs.
 - A paginated `GET /chats/public` endpoint so users can discover public groups
   and channels before joining them.
 - A file download or signed-URL endpoint for attachment records returned with

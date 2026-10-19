@@ -213,7 +213,7 @@ describe('MessageController (e2e)', () => {
           text: 'Original message',
           userId: ownerId,
           chatId: groupChatId,
-          files: [],
+          fileNames: [],
         }),
       );
     });
@@ -266,7 +266,7 @@ describe('MessageController (e2e)', () => {
           text: 'Updated message',
           userId: ownerId,
           chatId: groupChatId,
-          files: [],
+          fileNames: [],
         }),
       );
     });
@@ -432,7 +432,7 @@ describe('MessageController (e2e)', () => {
           text: 'Updated message',
           userId: ownerId,
           chatId: groupChatId,
-          files: [],
+          fileNames: [],
         }),
       );
     });
