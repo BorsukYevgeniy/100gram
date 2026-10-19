@@ -5,13 +5,16 @@ import {
 } from '@nestjs/common';
 import { PrismaClientKnownRequestError } from '@prisma/client/runtime/client';
 import { PinoLogger } from 'nestjs-pino';
-import { ChatType } from '../../../../generated/prisma/enums';
+import { ChatRole, ChatType } from '../../../../generated/prisma/enums';
 import { PaginationDto } from '../../../common/dto/pagination.dto';
 import { AccessTokenPayload } from '../../../common/types';
-import { PaginatedUserNoCredOtpVCode } from '../../user/types/user.types';
 import { UpdateRoleDto } from '../dto/role/update-role.dto';
 import { ChatValidationService } from '../validation/chat-validation.service';
 import { ChatMemberRepository } from './repository/chat-member.repository';
+import {
+  ChatMemberWithRole,
+  PaginatedChatMembers,
+} from './types/chat-member.types';
 
 @Injectable()
 export class ChatMemberService {
@@ -88,13 +91,20 @@ export class ChatMemberService {
     userId: number,
     chatId: number,
     paginationDto: PaginationDto,
-  ): Promise<PaginatedUserNoCredOtpVCode> {
+  ): Promise<PaginatedChatMembers> {
     await this.chatValidator.validateChatParticipation(userId, chatId);
 
     const { limit, cursor } = paginationDto;
 
     const users = await this.chatRepo.getUsersInChat(chatId, limit, cursor);
-    const formattedUsers = users.map(({ user }) => user);
+    const formattedUsers: ChatMemberWithRole[] = users.map(
+      ({ role, user }) => ({
+        id: user.id,
+        avatarName: user.avatarName,
+        nickname: user.nickname,
+        chatRole: role as ChatRole,
+      }),
+    );
 
     const nextCursor =
       formattedUsers.length === limit ? formattedUsers.at(-1).id : null;
@@ -117,7 +127,7 @@ export class ChatMemberService {
     currentUser: AccessTokenPayload,
     chatId: number,
     userId: number,
-    { role }: UpdateRoleDto,
+    dto: UpdateRoleDto,
   ) {
     await this.chatValidator.validateOwner(currentUser, chatId);
 
@@ -134,10 +144,10 @@ export class ChatMemberService {
       throw new NotFoundException('User is not a participant of the chat');
     }
 
-    const chatUser = await this.chatRepo.updateChatRole(chatId, userId, role);
+    const chatUser = await this.chatRepo.updateChatRole(chatId, userId, dto);
 
     this.logger.info(
-      { chatId, userId, newRole: role },
+      { chatId, userId, newRole: dto.role },
       'Updated user role in chat',
     );
 
