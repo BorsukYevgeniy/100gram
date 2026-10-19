@@ -13,8 +13,8 @@ import {
 	Reaction,
 } from './chat/chat-types';
 import {
-	addPrivateChatParticipantNames,
 	fetchPayload,
+	getChatTitle,
 	getErrorMessage,
 	isChatListPayload,
 	isChatMessage,
@@ -45,6 +45,7 @@ export default function ChatPanel() {
 	const [showCreateForm, setShowCreateForm] = useState(false);
 	const [chatSearch, setChatSearch] = useState('');
 	const [showChatSettings, setShowChatSettings] = useState(false);
+	const [pinningChatId, setPinningChatId] = useState<number | null>(null);
 	const [reactionSettings, setReactionSettings] =
 		useState<ReactionSettings | null>(null);
 	const [socket, setSocket] = useState<Socket | null>(null);
@@ -68,6 +69,8 @@ export default function ChatPanel() {
 	const chatSettings = useChatSettings({
 		selectedChat,
 		setChats,
+		setSelectedChatId,
+		setMessages,
 		setError,
 		setShowChatSettings,
 		setReactionSettings,
@@ -117,17 +120,12 @@ export default function ChatPanel() {
 					throw new Error('Сервер повернув некоректний список чатів.');
 				}
 				if (!active) return;
-				const chatsWithNames = await addPrivateChatParticipantNames(
-					chatPayload.chats,
-					profile.id,
-				);
-				if (!active) return;
 				setCurrentUserId(profile.id);
-				setChats(chatsWithNames);
+				setChats(chatPayload.chats);
 				setSelectedChatId((selected) =>
-					chatsWithNames.some((chat) => chat.id === selected)
+					chatPayload.chats.some((chat) => chat.id === selected)
 						? selected
-						: (chatsWithNames[0]?.id ?? null),
+						: (chatPayload.chats[0]?.id ?? null),
 				);
 				setConnection('connecting');
 			} catch (loadError) {
@@ -377,6 +375,42 @@ export default function ChatPanel() {
 		setSelectedChatId(chatId);
 	}
 
+	async function toggleChatPin(chatId: number) {
+		const chat = chats.find((item) => item.id === chatId);
+		if (!chat || pinningChatId !== null) return;
+
+		setPinningChatId(chatId);
+		setError(null);
+		try {
+			const action = chat.isPinned ? 'unpin' : 'pin';
+			const response = await fetch(`/api/chats/${chatId}/${action}`, {
+				method: 'PATCH',
+			});
+			const payload: unknown = await response.json().catch(() => null);
+			if (!response.ok) {
+				throw new Error(
+					getErrorMessage(
+						payload,
+						`Не вдалося ${chat.isPinned ? 'відкріпити' : 'закріпити'} чат (${response.status}).`,
+					),
+				);
+			}
+			setChats((current) =>
+				current.map((item) =>
+					item.id === chatId ? { ...item, isPinned: !chat.isPinned } : item,
+				),
+			);
+		} catch (pinError) {
+			setError(
+				pinError instanceof Error
+					? pinError.message
+					: 'Не вдалося змінити закріплення чату.',
+			);
+		} finally {
+			setPinningChatId(null);
+		}
+	}
+
 	function handleSendMessage(event: FormEvent<HTMLFormElement>) {
 		event.preventDefault();
 		const text = messageText.trim();
@@ -477,10 +511,9 @@ export default function ChatPanel() {
 					);
 	const displayError = error ?? socketConfigError;
 	const displayedConnection = socketConfigError ? 'error' : connection;
-	const selectedChatTitle =
-		selectedChat?.participantName ||
-		selectedChat?.title ||
-		(selectedChat ? `Чат #${selectedChat.id}` : '');
+	const selectedChatTitle = selectedChat
+		? getChatTitle(selectedChat) || `Чат #${selectedChat.id}`
+		: '';
 
 	return (
 		<main
@@ -505,9 +538,6 @@ export default function ChatPanel() {
 					</span>
 					<Link className='docs-link' href='/user'>
 						Профіль <span aria-hidden='true'>↗</span>
-					</Link>
-					<Link className='docs-link' href='/controllers'>
-						Інструменти <span aria-hidden='true'>↗</span>
 					</Link>
 				</div>
 			</header>
@@ -557,6 +587,7 @@ export default function ChatPanel() {
 					onRemoveGroupUser={chatCreation.removeGroupUser}
 					onCreationVisibilityChange={chatCreation.setCreationVisibility}
 					onSelectChat={selectChat}
+					onToggleChatPin={(chatId) => void toggleChatPin(chatId)}
 				/>
 				<ChatConversation
 					chat={selectedChat}
@@ -578,6 +609,8 @@ export default function ChatPanel() {
 					savingSettings={chatSettings.savingChatSettings}
 					savingReactions={chatSettings.savingAllowedReactions}
 					savingAvatar={chatSettings.savingChatAvatar}
+					managingChat={chatSettings.managingChat}
+					inviteToken={chatSettings.inviteToken}
 					reactionOptions={reactionOptions}
 					messages={messages}
 					currentUserId={currentUserId}
@@ -603,6 +636,16 @@ export default function ChatPanel() {
 					onUserSearchChange={chatSettings.setChatUserSearch}
 					onSearchUsers={() => void chatSettings.searchChatUsers()}
 					onAddUser={(user) => void chatSettings.addChatUser(user)}
+					onManageMember={(action, memberId, role) =>
+						void chatSettings.manageMember(action, memberId, role)
+					}
+					onRefreshInviteToken={() =>
+						void chatSettings.refreshInviteToken()
+					}
+					onClearMessages={() =>
+						void chatSettings.clearChatMessages()
+					}
+					onDeleteChat={() => void chatSettings.deleteChat()}
 					onUpdateMessage={handleUpdateMessage}
 					onEditTextChange={setEditText}
 					onCancelEdit={() => setEditingMessageId(null)}

@@ -12,7 +12,7 @@ import {
 	ReactionOption,
 	ChatVisibility,
 } from './chat-types';
-import { fileProxyUrl } from './chat-utils';
+import { fileProxyUrl, getChatAvatarName } from './chat-utils';
 import ChatMessageList from './chat-message-list';
 import ChatSettingsDialog from './chat-settings-dialog';
 
@@ -36,6 +36,8 @@ type ChatConversationProps = {
 	savingSettings: boolean;
 	savingReactions: boolean;
 	savingAvatar: boolean;
+	managingChat: boolean;
+	inviteToken: string | null;
 	reactionOptions: ReactionOption[];
 	messages: ChatMessage[];
 	currentUserId: number | null;
@@ -59,6 +61,14 @@ type ChatConversationProps = {
 	onUserSearchChange: (value: string) => void;
 	onSearchUsers: () => void;
 	onAddUser: (user: GroupUserOption) => void;
+	onManageMember: (
+		action: 'remove' | 'role' | 'owner',
+		memberId: number,
+		role?: 'MODERATOR' | 'MEMBER',
+	) => void;
+	onRefreshInviteToken: () => void;
+	onClearMessages: () => void;
+	onDeleteChat: () => void;
 	onUpdateMessage: (event: FormEvent<HTMLFormElement>) => void;
 	onEditTextChange: (value: string) => void;
 	onCancelEdit: () => void;
@@ -89,6 +99,8 @@ export default function ChatConversation({
 	savingSettings,
 	savingReactions,
 	savingAvatar,
+	managingChat,
+	inviteToken,
 	reactionOptions,
 	messages,
 	currentUserId,
@@ -112,6 +124,10 @@ export default function ChatConversation({
 	onUserSearchChange,
 	onSearchUsers,
 	onAddUser,
+	onManageMember,
+	onRefreshInviteToken,
+	onClearMessages,
+	onDeleteChat,
 	onUpdateMessage,
 	onEditTextChange,
 	onCancelEdit,
@@ -136,6 +152,8 @@ export default function ChatConversation({
 		);
 	}
 
+	const avatarName = getChatAvatarName(chat);
+
 	return (
 		<section className='messenger-conversation' aria-label='Повідомлення чату'>
 			<header className='messenger-conversation-heading'>
@@ -147,18 +165,18 @@ export default function ChatConversation({
 				>
 					←
 				</button>
-				{chat.title !== null ? (
+				{chat.chatType !== 'PRIVATE' ? (
 					<button
 						className='messenger-avatar conversation-avatar messenger-chat-avatar-button'
 						type='button'
-						aria-label='Відкрити інформацію про чат'
-						title='Інформація про чат'
+						aria-label='Керування чатом'
+						title='Керування чатом'
 						onClick={onOpenSettings}
 						disabled={loadingSettings}
 					>
-						{chat.avatarPreview || chat.avatarName ? (
+						{chat.avatarPreview || avatarName ? (
 							<Image
-								src={chat.avatarPreview ?? fileProxyUrl(chat.avatarName ?? '')}
+								src={chat.avatarPreview ?? fileProxyUrl(avatarName ?? '')}
 								alt=''
 								width={48}
 								height={48}
@@ -173,7 +191,17 @@ export default function ChatConversation({
 						className='messenger-avatar conversation-avatar'
 						aria-hidden='true'
 					>
-						{chatTitle.slice(0, 1).toLocaleUpperCase('uk-UA')}
+						{avatarName ? (
+							<Image
+								src={fileProxyUrl(avatarName, 'users')}
+								alt=''
+								width={48}
+								height={48}
+								unoptimized
+							/>
+						) : (
+							chatTitle.slice(0, 1).toLocaleUpperCase('uk-UA')
+						)}
 					</span>
 				)}
 				<div className='messenger-chat-info'>
@@ -183,7 +211,7 @@ export default function ChatConversation({
 					</span>
 				</div>
 			</header>
-			{showSettings && (
+			{showSettings && chat.chatType !== 'PRIVATE' && (
 				<ChatSettingsDialog
 					chat={chat}
 					chatTitle={chatTitle}
@@ -201,6 +229,8 @@ export default function ChatConversation({
 					savingChat={savingSettings}
 					savingReactions={savingReactions}
 					savingAvatar={savingAvatar}
+					managingChat={managingChat}
+					inviteToken={inviteToken}
 					reactionOptions={reactionOptions}
 					onClose={onCloseSettings}
 					onUpdateChat={onUpdateChat}
@@ -215,6 +245,10 @@ export default function ChatConversation({
 					onUserSearchChange={onUserSearchChange}
 					onSearchUsers={onSearchUsers}
 					onAddUser={onAddUser}
+					onManageMember={onManageMember}
+					onRefreshInviteToken={onRefreshInviteToken}
+					onClearMessages={onClearMessages}
+					onDeleteChat={onDeleteChat}
 				/>
 			)}
 			<ChatMessageList

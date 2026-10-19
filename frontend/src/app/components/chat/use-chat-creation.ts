@@ -4,7 +4,6 @@ import { FormEvent, useState } from 'react';
 import type { Dispatch, SetStateAction } from 'react';
 import { ChatCreationMode, ChatMessage, ChatSummary, GroupUserOption } from './chat-types';
 import {
-	addPrivateChatParticipantNames,
 	fetchPayload,
 	getErrorMessage,
 	isChatListPayload,
@@ -110,11 +109,7 @@ export function useChatCreation({
 			if (!isChatListPayload(listPayload)) {
 				throw new Error('Сервер повернув некоректний список чатів.');
 			}
-			const chatsWithNames = await addPrivateChatParticipantNames(
-				listPayload.chats,
-				currentUserId,
-			);
-			setChats(chatsWithNames);
+			setChats(listPayload.chats);
 			setSelectedChatId(createdPayload.id);
 			setMessages([]);
 			setCreationTitle('');

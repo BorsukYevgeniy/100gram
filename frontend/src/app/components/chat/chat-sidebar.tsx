@@ -9,6 +9,7 @@ import {
 } from './chat-types';
 import ChatCreationForm from './chat-creation-form';
 import ChatList from './chat-list';
+import { getChatTitle } from './chat-utils';
 
 type ChatSidebarProps = {
 	chats: ChatSummary[];
@@ -38,6 +39,7 @@ type ChatSidebarProps = {
 	onRemoveGroupUser: (userId: number) => void;
 	onCreationVisibilityChange: (visibility: ChatVisibility) => void;
 	onSelectChat: (chatId: number) => void;
+	onToggleChatPin: (chatId: number) => void;
 };
 
 export default function ChatSidebar({
@@ -68,9 +70,10 @@ export default function ChatSidebar({
 	onRemoveGroupUser,
 	onCreationVisibilityChange,
 	onSelectChat,
+	onToggleChatPin,
 }: ChatSidebarProps) {
 	const filteredChats = chats.filter((chat) =>
-		(chat.participantName || chat.title || `Чат #${chat.id}`)
+		(getChatTitle(chat) || `Чат #${chat.id}`)
 			.toLocaleLowerCase('uk-UA')
 			.includes(chatSearch.trim().toLocaleLowerCase('uk-UA')),
 	);
@@ -133,6 +136,7 @@ export default function ChatSidebar({
 						: 'Чатів не знайдено'
 				}
 				onSelectChat={onSelectChat}
+				onTogglePin={onToggleChatPin}
 			/>
 		</aside>
 	);
