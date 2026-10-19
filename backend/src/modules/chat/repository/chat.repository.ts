@@ -7,7 +7,6 @@ import { AllowReactionDto } from '../dto/allow-reaction.dto';
 import { CreateChannelDto } from '../dto/create-channel.dto';
 import { CreateGroupChatDto } from '../dto/create-group-chat.dto';
 import { UpdateGroupChatDto } from '../dto/update-group-chat.dto';
-import { MyChat } from '../types/chat.types';
 
 @Injectable()
 export class ChatRepository {
@@ -135,11 +134,7 @@ export class ChatRepository {
     });
   }
 
-  async getMyChats(
-    userId: number,
-    take: number,
-    lastMessageIdCursor?: number,
-  ): Promise<MyChat[]> {
+  async getMyChats(userId: number, take: number, lastMessageIdCursor?: number) {
     const r = await this.prisma.chat.findMany({
       where: {
         chatToUsers: {
@@ -155,28 +150,25 @@ export class ChatRepository {
         id: true,
         title: true,
         avatarName: true,
+
         lastMessage: {
           select: {
             text: true,
             createdAt: true,
           },
         },
+        chatType: true,
         chatToUsers: {
           where: { userId },
           select: {
             isPinned: true,
+            userId: true,
           },
         },
       },
     });
 
-    return r.map(({ avatarName, chatToUsers, id, title, lastMessage }) => ({
-      id: id,
-      title: title,
-      avatarName: avatarName,
-      lastMessage: lastMessage,
-      isPinned: chatToUsers[0]?.isPinned ?? false,
-    }));
+    return r;
   }
 
   async findChatType(chatId: number): Promise<{ chatType: ChatType }> {

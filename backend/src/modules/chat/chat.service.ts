@@ -21,9 +21,10 @@ import { CacheService } from '../cache/cache.service';
 import { ChatMemberRepository } from './chat-member/repository/chat-member.repository';
 import { AllowReactionDto } from './dto/allow-reaction.dto';
 import { ChannelGroupChatResponseDto } from './dto/channel-group-chat-response.dto';
+import { ChatParticipantResponseDto } from './dto/chat-participant-response.dto';
 import { CreateChannelDto } from './dto/create-channel.dto';
 import { PrivateChatResponseDto } from './dto/private-chat-response.dto';
-import { PaginatedMyChats } from './types/chat.types';
+import { MyChat, PaginatedMyChats } from './types/chat.types';
 
 @Injectable()
 export class ChatService {
@@ -81,10 +82,10 @@ export class ChatService {
         'Private chat created',
       );
 
-      const users = await this.chatUserRepo.getUsersInChat(chat.id, 2);
-
-      const withWhom = users.find((users) => userId !== users.user.id);
-      return new PrivateChatResponseDto(chat, withWhom.user.nickname);
+      return new PrivateChatResponseDto(
+        chat,
+        await this.getParticipant(chat.id, userId),
+      );
     } catch (e) {
       if (e instanceof PrismaClientKnownRequestError && e.code === 'P2003') {
         this.logger.warn({ peerId: dto.userId }, 'Peer user not found');
@@ -207,6 +208,22 @@ export class ChatService {
     return this.chatRepo.updateInviteToken(chatId, this.generateInviteToken());
   }
 
+  private async getParticipant(
+    chatId: number,
+    currentUserId: number,
+  ): Promise<ChatParticipantResponseDto> {
+    const users = await this.chatUserRepo.getUsersInChat(chatId, 2);
+
+    const participant = users.find(
+      (users) => currentUserId !== users.user.id,
+    ).user;
+
+    return {
+      avatarName: participant.avatarName,
+      nickname: participant.nickname,
+    };
+  }
+
   async findById(
     user: AccessTokenPayload,
     chatId: number,
@@ -223,10 +240,10 @@ export class ChatService {
 
     switch (chat.chatType) {
       case ChatType.PRIVATE:
-        const users = await this.chatUserRepo.getUsersInChat(chatId, 2);
-
-        const withWhom = users.find((users) => user.userId !== users.user.id);
-        return new PrivateChatResponseDto(chat, withWhom.user.nickname);
+        return new PrivateChatResponseDto(
+          chat,
+          await this.getParticipant(chatId, user.userId),
+        );
       case ChatType.GROUP:
         return new ChannelGroupChatResponseDto(chat);
       case ChatType.CHANNEL:
@@ -338,10 +355,42 @@ export class ChatService {
 
     const chats = await this.chatRepo.getMyChats(userId, limit, cursor);
 
+    const fc: MyChat[] = await Promise.all(
+      chats.map(async (c): Promise<MyChat> => {
+        const isPinned = c.chatToUsers.find(
+          (ctu) => ctu.userId === userId,
+        ).isPinned;
+
+        const base = {
+          id: c.id,
+          lastMessage: c.lastMessage,
+          isPinned,
+        };
+
+        switch (c.chatType) {
+          case ChatType.PRIVATE:
+            return {
+              ...base,
+              chatType: ChatType.PRIVATE,
+              participant: await this.getParticipant(c.id, userId),
+            };
+
+          case ChatType.CHANNEL:
+          case ChatType.GROUP:
+            return {
+              ...base,
+              chatType: c.chatType,
+              title: c.title,
+              avatarName: c.avatarName,
+            };
+        }
+      }),
+    );
+
     const nextCursor = chats.length === limit ? chats.at(-1).id : null;
     const hasMore = chats.length === limit;
 
-    const result = { limit, hasMore, nextCursor, chats };
+    const result = { limit, hasMore, nextCursor, chats: fc };
 
     await this.cache.set(
       this.cache.buildMyChatsKey(userId, { limit, cursor }),
