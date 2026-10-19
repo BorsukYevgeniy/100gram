@@ -233,7 +233,7 @@ describe('ChatMessageController (e2e)', () => {
           replyId: null,
           userId: expect.any(Number),
           chatId: groupChatId,
-          files: [],
+          fileNames: [],
         }),
       );
       firstMessageId = body.id;
@@ -261,7 +261,7 @@ describe('ChatMessageController (e2e)', () => {
           replyId: firstMessageId,
           userId: expect.any(Number),
           chatId: groupChatId,
-          files: [],
+          fileNames: [],
         }),
       );
       replyMessageId = body.id;
@@ -286,7 +286,7 @@ describe('ChatMessageController (e2e)', () => {
         expect.objectContaining({
           text: 'Channel message',
           chatId: channelId,
-          files: [],
+          fileNames: [],
         }),
       );
     });
@@ -343,7 +343,14 @@ describe('ChatMessageController (e2e)', () => {
             id: replyMessageId,
             text: 'A reply',
             replyId: firstMessageId,
-            files: [],
+            fileNames: [],
+            reactionCount: {
+              likeCount: 0,
+              dislikeCount: 0,
+              heartCount: 0,
+              heartWithFire: 0,
+              fireCount: 0,
+            },
           }),
         ],
         limit: 1,
@@ -360,6 +367,14 @@ describe('ChatMessageController (e2e)', () => {
         expect.objectContaining({
           id: firstMessageId,
           text: 'First message',
+          fileNames: [],
+          reactionCount: {
+            likeCount: 0,
+            dislikeCount: 0,
+            heartCount: 0,
+            heartWithFire: 0,
+            fireCount: 0,
+          },
         }),
       );
     });

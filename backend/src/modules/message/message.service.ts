@@ -10,8 +10,12 @@ import { ChatValidationService } from '../chat/validation/chat-validation.servic
 import { FileService } from '../file/file.service';
 import { CreateMessageDto } from './dto/create-message.dto';
 import { UpdateMessageDto } from './dto/update-message.dto';
+import { MessageMapperService } from './mapper/message-mapper.service';
 import { MessageRepository } from './repository/message.repository';
-import { MessageFiles, PaginatedMessageFiles } from './types/message.types';
+import {
+  MessageFiles,
+  PaginatedMessageFilesReactionCount,
+} from './types/message.types';
 import { MessageValidationService } from './validation/message-validation.service';
 
 @Injectable()
@@ -24,6 +28,7 @@ export class MessageService {
     private readonly chatValidator: ChatValidationService,
     private readonly logger: PinoLogger,
     private readonly cache: CacheService,
+    private readonly mapper: MessageMapperService,
   ) {
     this.logger.setContext(MessageService.name);
   }
@@ -31,11 +36,11 @@ export class MessageService {
   async getMessagesInChat(
     chatId: number,
     paginationDto: PaginationDto,
-  ): Promise<PaginatedMessageFiles> {
+  ): Promise<PaginatedMessageFilesReactionCount> {
     const { cursor, limit } = paginationDto;
 
     const chatMessageVersion = await this.cache.getChatMessageVersion(chatId);
-    const cacheData = await this.cache.get<PaginatedMessageFiles>(
+    const cacheData = await this.cache.get<PaginatedMessageFilesReactionCount>(
       this.cache.buildChatMessageKey(chatId, chatMessageVersion, paginationDto),
     );
 
@@ -141,7 +146,7 @@ export class MessageService {
 
       await this.cache.incrChatMessageVersion(chatId);
 
-      return message;
+      return this.mapper.toMessageFile(message);
     } catch (e) {
       if (e instanceof PrismaClientKnownRequestError) {
         switch (e.code) {
@@ -174,7 +179,9 @@ export class MessageService {
     if (!msg) throw new NotFoundException('Message not found');
 
     await this.chatValidator.validateChatParticipation(userId, msg.chatId);
-    return this.messageRepository.findById(messageId);
+    return this.mapper.toMessageFile(
+      await this.messageRepository.findById(messageId),
+    );
   }
 
   async update(
@@ -188,12 +195,14 @@ export class MessageService {
       FileType.ATTACHMENT,
     );
 
-    return this.updateInternal(
-      user,
-      messageId,
-      dto,
-      createdFiles.map(({ name }) => name),
-      'http',
+    return this.mapper.toMessageFile(
+      await this.updateInternal(
+        user,
+        messageId,
+        dto,
+        createdFiles.map(({ name }) => name),
+        'http',
+      ),
     );
   }
 
@@ -203,7 +212,9 @@ export class MessageService {
     dto: UpdateMessageDto,
     filenames: string[],
   ): Promise<MessageFiles> {
-    return this.updateInternal(user, messageId, dto, filenames, 'ws');
+    return this.mapper.toMessageFile(
+      await this.updateInternal(user, messageId, dto, filenames, 'ws'),
+    );
   }
 
   private async updateInternal(
@@ -252,7 +263,7 @@ export class MessageService {
     this.logger.info({ messageId, deletedBy: user.userId }, 'Message deleted');
 
     await this.cache.incrChatMessageVersion(message.chatId);
-    return message;
+    return this.mapper.toMessageFile(message);
   }
 
   async pinMessage(userId: number, messageId: number) {

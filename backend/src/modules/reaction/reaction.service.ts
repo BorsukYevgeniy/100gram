@@ -7,7 +7,6 @@ import { PrismaClientKnownRequestError } from '@prisma/client/runtime/client';
 import { PinoLogger } from 'nestjs-pino';
 import { ChatValidationService } from '../chat/validation/chat-validation.service';
 import { MessageRepository } from '../message/repository/message.repository';
-import { MessageFiles } from '../message/types/message.types';
 import { AddReactionDto } from './dto/add-reaction.dto';
 import { UpdateReactionDto } from './dto/update-reaction.dto';
 import { ReactionRepository } from './reaction.repository';
@@ -26,7 +25,7 @@ export class ReactionService {
   private async validateReactionPermission(
     userId: number,
     messageId: number,
-  ): Promise<MessageFiles> {
+  ): Promise<number> {
     this.logger.debug({ userId, messageId }, 'Validating reaction permission');
     const msg = await this.messageRepo.findById(messageId);
 
@@ -37,15 +36,12 @@ export class ReactionService {
 
     await this.chatValidator.validateChatParticipation(userId, msg.chatId);
 
-    return msg;
+    return msg.chatId;
   }
 
   async addReaction(userId: number, messageId: number, dto: AddReactionDto) {
     try {
-      const { chatId } = await this.validateReactionPermission(
-        userId,
-        messageId,
-      );
+      const chatId = await this.validateReactionPermission(userId, messageId);
       await this.chatValidator.checkReactionAllowed(chatId, dto.reaction);
 
       const reaction = await this.reactionRepo.addReaction(
@@ -77,7 +73,7 @@ export class ReactionService {
     messageId: number,
     dto: UpdateReactionDto,
   ) {
-    const { chatId } = await this.validateReactionPermission(userId, messageId);
+    const chatId = await this.validateReactionPermission(userId, messageId);
     await this.chatValidator.checkReactionAllowed(chatId, dto.reaction);
 
     try {

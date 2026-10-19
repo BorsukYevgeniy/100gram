@@ -72,11 +72,14 @@ export default function ChatSidebar({
 	onSelectChat,
 	onToggleChatPin,
 }: ChatSidebarProps) {
-	const filteredChats = chats.filter((chat) =>
-		(getChatTitle(chat) || `Чат #${chat.id}`)
-			.toLocaleLowerCase('uk-UA')
-			.includes(chatSearch.trim().toLocaleLowerCase('uk-UA')),
-	);
+	const search = chatSearch.trim().toLocaleLowerCase('uk-UA');
+	const filteredChats = chats
+		.filter((chat) =>
+			(getChatTitle(chat) || `Чат #${chat.id}`)
+				.toLocaleLowerCase('uk-UA')
+				.includes(search),
+		)
+		.sort((left, right) => Number(right.isPinned) - Number(left.isPinned));
 
 	return (
 		<aside className='messenger-sidebar' aria-label='Список чатів'>

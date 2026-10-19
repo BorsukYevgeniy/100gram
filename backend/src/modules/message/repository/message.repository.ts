@@ -1,8 +1,9 @@
 import { Injectable } from '@nestjs/common';
+import { Reaction } from '../../../../generated/prisma/enums';
 import { PrismaService } from '../../../infra/prisma/prisma.service';
 import { CreateMessageDto } from '../dto/create-message.dto';
 import { UpdateMessageDto } from '../dto/update-message.dto';
-import { MessageFiles } from '../types/message.types';
+import { MessageFilesReactionCount } from '../types/message.types';
 
 @Injectable()
 export class MessageRepository {
@@ -12,8 +13,8 @@ export class MessageRepository {
     chatId: number,
     take: number,
     cursor: number,
-  ): Promise<MessageFiles[]> {
-    return this.prisma.message.findMany({
+  ): Promise<MessageFilesReactionCount[]> {
+    const msg = await this.prisma.message.findMany({
       where: {
         chatId,
         ...(cursor && { id: { lt: cursor } }),
@@ -22,7 +23,59 @@ export class MessageRepository {
       orderBy: {
         id: 'desc',
       },
-      include: { files: true },
+      include: {
+        files: {
+          select: { name: true },
+        },
+      },
+    });
+
+    if (msg.length === 0) {
+      return [] as MessageFilesReactionCount[];
+    }
+
+    const reactions = await this.prisma.reactionToMessage.groupBy({
+      by: ['messageId', 'reaction'],
+      where: {
+        messageId: {
+          in: msg.map((m) => m.id),
+        },
+      },
+      _count: {
+        _all: true,
+      },
+    });
+
+    const reactionCounts = new Map<number, Partial<Record<Reaction, number>>>();
+
+    for (const r of reactions) {
+      const counts = reactionCounts.get(r.messageId) ?? {};
+
+      counts[r.reaction] = r._count._all;
+
+      reactionCounts.set(r.messageId, counts);
+    }
+
+    return msg.map((m) => {
+      const counts = reactionCounts.get(m.id) ?? {};
+
+      return {
+        id: m.id,
+        chatId: m.chatId,
+        createdAt: m.createdAt,
+        fileNames: m.files.map(({ name }) => name),
+        isPinned: m.isPinned,
+        replyId: m.replyId,
+        text: m.text,
+        userId: m.userId,
+        reactionCount: {
+          likeCount: counts[Reaction.LIKE] ?? 0,
+          dislikeCount: counts[Reaction.DISLIKE] ?? 0,
+          heartCount: counts[Reaction.HEART] ?? 0,
+          heartWithFire: counts[Reaction.HEART_WITH_FIRE] ?? 0,
+          fireCount: counts[Reaction.FIRE] ?? 0,
+        },
+      };
     });
   }
 
@@ -31,7 +84,7 @@ export class MessageRepository {
     chatId: number,
     { replyId, text }: CreateMessageDto,
     filenames: string[] = [],
-  ): Promise<MessageFiles> {
+  ) {
     return this.prisma.$transaction(async (p) => {
       const msg = await p.message.create({
         data: {
@@ -43,7 +96,7 @@ export class MessageRepository {
             connect: filenames.map((name) => ({ name })),
           },
         },
-        include: { files: true },
+        include: { files: { select: { name: true } } },
       });
 
       await p.chat.update({
@@ -55,18 +108,14 @@ export class MessageRepository {
     });
   }
 
-  async findById(id: number): Promise<MessageFiles> {
+  async findById(id: number) {
     return this.prisma.message.findUnique({
       where: { id },
       include: { files: true },
     });
   }
 
-  async update(
-    id: number,
-    dto: UpdateMessageDto,
-    filenames: string[],
-  ): Promise<MessageFiles> {
+  async update(id: number, dto: UpdateMessageDto, filenames: string[]) {
     return this.prisma.message.update({
       where: { id },
       data: {
@@ -79,7 +128,7 @@ export class MessageRepository {
     });
   }
 
-  async delete(id: number): Promise<MessageFiles> {
+  async delete(id: number) {
     return this.prisma.message.delete({
       where: { id },
       include: { files: true },
