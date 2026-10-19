@@ -14,6 +14,7 @@ import {
 } from './chat/chat-types';
 import {
 	fetchPayload,
+	emptyReactionCount,
 	getChatTitle,
 	getErrorMessage,
 	isChatListPayload,
@@ -84,13 +85,13 @@ export default function ChatPanel() {
 			current.map((message) => {
 				if (!snapshots.has(message.id)) return message;
 				const previous = snapshots.get(message.id);
-				const reactions = message.reactions.filter(
-					(item) => item.userId !== currentUserId,
+				const currentReaction = message.reactions.find(
+					(item) => item.userId === currentUserId,
 				);
-				return {
-					...message,
-					reactions: previous ? [...reactions, previous] : reactions,
-				};
+				if (previous) return updateReaction([message], previous)[0];
+				return currentReaction
+					? updateReaction([message], currentReaction, true)[0]
+					: message;
 			}),
 		);
 		snapshots.clear();
@@ -186,7 +187,11 @@ export default function ChatPanel() {
 			if (!isChatMessage(payload) || payload.chatId !== activeChatId.current)
 				return;
 			setMessages((current) =>
-				upsertMessage(current, { ...payload, reactions: [] }),
+				upsertMessage(current, {
+					...payload,
+					reactionCount: emptyReactionCount,
+					reactions: [],
+				}),
 			);
 			setChats((current) =>
 				current.map((chat) =>
@@ -209,6 +214,8 @@ export default function ChatPanel() {
 				const existing = current.find((item) => item.id === payload.id);
 				return upsertMessage(current, {
 					...payload,
+					reactionCount:
+						existing?.reactionCount ?? payload.reactionCount ?? emptyReactionCount,
 					reactions: existing?.reactions ?? [],
 				});
 			});
@@ -233,9 +240,46 @@ export default function ChatPanel() {
 				}
 			}
 		};
+		async function refreshReactionCount(messageId: number) {
+			const chatId = activeChatId.current;
+			if (chatId === null) return;
+			try {
+				const payload = await fetchPayload(
+					`/api/chats/${chatId}/messages?limit=50`,
+				);
+				if (
+					!payload ||
+					typeof payload !== 'object' ||
+					!('messages' in payload) ||
+					!Array.isArray(payload.messages) ||
+					!payload.messages.every(isChatMessage)
+				) {
+					throw new Error('Сервер повернув некоректний список повідомлень.');
+				}
+				const updatedMessage = payload.messages.find(
+					(message) => message.id === messageId,
+				);
+				if (!updatedMessage?.reactionCount || activeChatId.current !== chatId)
+					return;
+				setMessages((current) =>
+					current.map((message) =>
+						message.id === messageId
+							? { ...message, reactionCount: updatedMessage.reactionCount }
+							: message,
+					),
+				);
+			} catch (reactionError) {
+				setError(
+					reactionError instanceof Error
+						? reactionError.message
+						: 'Не вдалося оновити кількість реакцій.',
+				);
+			}
+		}
 		const handleUpdatedReaction = (payload: unknown) => {
 			if (isMessageReaction(payload)) {
-				setMessages((current) => updateReaction(current, payload));
+				setMessages((current) => updateReaction(current, payload, false, false));
+				void refreshReactionCount(payload.messageId);
 				if (payload.userId === currentUserId) {
 					pendingReactionSnapshots.current.delete(payload.messageId);
 					setPendingReactionMessageIds((current) => {
@@ -248,7 +292,12 @@ export default function ChatPanel() {
 		};
 		const handleDeletedReaction = (payload: unknown) => {
 			if (isMessageReaction(payload)) {
-				setMessages((current) => updateReaction(current, payload, true));
+				const isOptimisticAck =
+					payload.userId === currentUserId &&
+					pendingReactionSnapshots.current.has(payload.messageId);
+				setMessages((current) =>
+					updateReaction(current, payload, true, !isOptimisticAck),
+				);
 				if (payload.userId === currentUserId) {
 					pendingReactionSnapshots.current.delete(payload.messageId);
 					setPendingReactionMessageIds((current) => {
@@ -343,7 +392,10 @@ export default function ChatPanel() {
 					setMessages(
 						[...payload.messages]
 							.reverse()
-							.map((message) => ({ ...message, reactions: [] })),
+							.map((message) => ({
+								...message,
+								reactions: [],
+							})),
 					);
 				}
 			} catch (loadError) {

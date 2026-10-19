@@ -4,6 +4,8 @@ import {
   ChatMessage,
   ChatSummary,
   MessageReaction,
+  Reaction,
+  ReactionCount,
   ReactionOption,
 } from "./chat-types";
 
@@ -14,6 +16,40 @@ export const reactionOptions: ReactionOption[] = [
   { value: "HEART", label: "❤️" },
   { value: "HEART_WITH_FIRE", label: "❤️‍🔥" },
 ];
+
+export const emptyReactionCount: ReactionCount = {
+  likeCount: 0,
+  dislikeCount: 0,
+  heartCount: 0,
+  heartWithFire: 0,
+  fireCount: 0,
+};
+
+const reactionCountKeys: Record<Reaction, keyof ReactionCount> = {
+  LIKE: "likeCount",
+  DISLIKE: "dislikeCount",
+  FIRE: "fireCount",
+  HEART: "heartCount",
+  HEART_WITH_FIRE: "heartWithFire",
+};
+
+function isReactionCount(payload: unknown): payload is ReactionCount {
+  if (!payload || typeof payload !== "object") return false;
+  const counts = payload as Record<string, unknown>;
+  return Object.values(reactionCountKeys).every(
+    (key) =>
+      typeof counts[key] === "number" &&
+      Number.isInteger(counts[key]) &&
+      counts[key] >= 0,
+  );
+}
+
+export function getReactionCount(
+  counts: ReactionCount | undefined,
+  reaction: Reaction,
+) {
+  return (counts ?? emptyReactionCount)[reactionCountKeys[reaction]];
+}
 
 export function fileProxyUrl(
   fileName: string,
@@ -176,7 +212,10 @@ export function isChatMessage(payload: unknown): payload is ChatMessage {
     typeof message.text === "string" &&
     typeof message.createdAt === "string" &&
     typeof message.userId === "number" &&
-    Array.isArray(message.files)
+    Array.isArray(message.fileNames) &&
+    message.fileNames.every((fileName) => typeof fileName === "string") &&
+    (message.reactionCount === undefined ||
+      isReactionCount(message.reactionCount))
   );
 }
 
@@ -202,15 +241,37 @@ export function updateReaction(
   messages: ChatMessage[],
   reaction: MessageReaction,
   remove = false,
+  updateCounts = true,
 ) {
   return messages.map((message) => {
     if (message.id !== reaction.messageId) return message;
+    const previousReaction = message.reactions.find(
+      (item) => item.userId === reaction.userId,
+    );
     const reactions = message.reactions.filter(
       (item) => item.userId !== reaction.userId,
     );
+    const reactionCount = { ...emptyReactionCount, ...message.reactionCount };
+    if (updateCounts) {
+      if (remove) {
+        const key = reactionCountKeys[reaction.reaction];
+        reactionCount[key] = Math.max(0, reactionCount[key] - 1);
+      } else if (previousReaction?.reaction !== reaction.reaction) {
+        if (previousReaction) {
+          const previousKey = reactionCountKeys[previousReaction.reaction];
+          reactionCount[previousKey] = Math.max(
+            0,
+            reactionCount[previousKey] - 1,
+          );
+        }
+        const key = reactionCountKeys[reaction.reaction];
+        reactionCount[key] += 1;
+      }
+    }
     return {
       ...message,
       reactions: remove ? reactions : [...reactions, reaction],
+      reactionCount,
     };
   });
 }

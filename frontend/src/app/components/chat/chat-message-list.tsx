@@ -7,6 +7,7 @@ import {
 	Reaction,
 	ReactionOption,
 } from './chat-types';
+import { getReactionCount } from './chat-utils';
 
 type ChatMessageListProps = {
 	messages: ChatMessage[];
@@ -89,17 +90,18 @@ export default function ChatMessageList({
 							) : (
 								<p className='messenger-message-text'>{message.text}</p>
 							)}
-							{message.files.length > 0 && (
+							{message.fileNames.length > 0 && (
 								<p className='chat-muted'>
-									Вкладення: {message.files.map((file) => file.name).join(', ')}
+									Вкладення: {message.fileNames.join(', ')}
 								</p>
 							)}
 							<div className='messenger-message-footer'>
 								<div className='chat-message-actions'>
 									{availableReactionOptions.map((option) => {
-										const count = message.reactions.filter(
-											(item) => item.reaction === option.value,
-										).length;
+										const count = getReactionCount(
+											message.reactionCount,
+											option.value,
+										);
 										const selected = message.reactions.some(
 											(item) =>
 												item.userId === currentUserId &&

@@ -40,8 +40,17 @@ export type ChatMessage = {
   replyId: number | null;
   userId: number;
   isPinned: boolean;
-  files: { name: string }[];
+  fileNames: string[];
+  reactionCount?: ReactionCount;
   reactions: MessageReaction[];
+};
+
+export type ReactionCount = {
+  likeCount: number;
+  dislikeCount: number;
+  heartCount: number;
+  heartWithFire: number;
+  fireCount: number;
 };
 
 export type MessageReaction = {
