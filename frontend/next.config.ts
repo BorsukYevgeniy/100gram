@@ -5,6 +5,15 @@ const nextConfig: NextConfig = {
 	cacheComponents: true,
 	partialPrefetching: true,
 	allowedDevOrigins: ['192.168.0.106'],
+	async redirects() {
+		return [
+			{
+				source: '/auth/success',
+				destination: '/',
+				permanent: false,
+			},
+		];
+	},
 };
 
 export default nextConfig;

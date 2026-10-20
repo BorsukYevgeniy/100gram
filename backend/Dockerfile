@@ -1,12 +1,12 @@
 FROM node:24.21.0-alpine3.24
 
-WORKDIR /app
+WORKDIR /backend
 
-COPY package.json package-lock.json ./
+COPY ./backend/package.json ./backend/package-lock.json ./
 
 RUN npm ci
 
-COPY . .
+COPY ./backend/ ./
 
 EXPOSE 3000
 

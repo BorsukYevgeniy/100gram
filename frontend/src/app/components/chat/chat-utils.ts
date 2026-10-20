@@ -4,8 +4,8 @@ import {
   ChatMessage,
   ChatSummary,
   MessageReaction,
+  MessageReactionSummary,
   Reaction,
-  ReactionCount,
   ReactionOption,
 } from "./chat-types";
 
@@ -17,38 +17,55 @@ export const reactionOptions: ReactionOption[] = [
   { value: "HEART_WITH_FIRE", label: "❤️‍🔥" },
 ];
 
-export const emptyReactionCount: ReactionCount = {
-  likeCount: 0,
-  dislikeCount: 0,
-  heartCount: 0,
-  heartWithFire: 0,
-  fireCount: 0,
+export const emptyMessageReactions: MessageReactionSummary = {
+  like: { count: 0, isReactedByMe: false },
+  dislike: { count: 0, isReactedByMe: false },
+  fire: { count: 0, isReactedByMe: false },
+  heart: { count: 0, isReactedByMe: false },
+  heartWithFire: { count: 0, isReactedByMe: false },
 };
 
-const reactionCountKeys: Record<Reaction, keyof ReactionCount> = {
-  LIKE: "likeCount",
-  DISLIKE: "dislikeCount",
-  FIRE: "fireCount",
-  HEART: "heartCount",
+const reactionKeys: Record<Reaction, keyof MessageReactionSummary> = {
+  LIKE: "like",
+  DISLIKE: "dislike",
+  FIRE: "fire",
+  HEART: "heart",
   HEART_WITH_FIRE: "heartWithFire",
 };
 
-function isReactionCount(payload: unknown): payload is ReactionCount {
+function isMessageReactionSummary(
+  payload: unknown,
+): payload is MessageReactionSummary {
   if (!payload || typeof payload !== "object") return false;
-  const counts = payload as Record<string, unknown>;
-  return Object.values(reactionCountKeys).every(
-    (key) =>
-      typeof counts[key] === "number" &&
-      Number.isInteger(counts[key]) &&
-      counts[key] >= 0,
-  );
+  const reactions = payload as Record<string, unknown>;
+  return Object.values(reactionKeys).every((key) => {
+    const reaction = reactions[key];
+    if (!reaction || typeof reaction !== "object") return false;
+    const summary = reaction as Record<string, unknown>;
+    return (
+      typeof summary.count === "number" &&
+      Number.isInteger(summary.count) &&
+      summary.count >= 0 &&
+      typeof summary.isReactedByMe === "boolean"
+    );
+  });
 }
 
-export function getReactionCount(
-  counts: ReactionCount | undefined,
+export function getReactionSummary(
+  reactions: MessageReactionSummary,
   reaction: Reaction,
 ) {
-  return (counts ?? emptyReactionCount)[reactionCountKeys[reaction]];
+  return reactions[reactionKeys[reaction]];
+}
+
+export function getMyReaction(
+  reactions: MessageReactionSummary,
+): Reaction | null {
+  return (
+    reactionOptions.find(
+      (option) => reactions[reactionKeys[option.value]].isReactedByMe,
+    )?.value ?? null
+  );
 }
 
 export function fileProxyUrl(
@@ -214,8 +231,8 @@ export function isChatMessage(payload: unknown): payload is ChatMessage {
     typeof message.userId === "number" &&
     Array.isArray(message.fileNames) &&
     message.fileNames.every((fileName) => typeof fileName === "string") &&
-    (message.reactionCount === undefined ||
-      isReactionCount(message.reactionCount))
+    (message.reactions === undefined ||
+      isMessageReactionSummary(message.reactions))
   );
 }
 
@@ -240,38 +257,50 @@ export function upsertMessage(messages: ChatMessage[], message: ChatMessage) {
 export function updateReaction(
   messages: ChatMessage[],
   reaction: MessageReaction,
+  currentUserId: number | null,
   remove = false,
   updateCounts = true,
 ) {
   return messages.map((message) => {
     if (message.id !== reaction.messageId) return message;
-    const previousReaction = message.reactions.find(
-      (item) => item.userId === reaction.userId,
-    );
-    const reactions = message.reactions.filter(
-      (item) => item.userId !== reaction.userId,
-    );
-    const reactionCount = { ...emptyReactionCount, ...message.reactionCount };
+    const reactions: MessageReactionSummary = {
+      like: { ...message.reactions.like },
+      dislike: { ...message.reactions.dislike },
+      fire: { ...message.reactions.fire },
+      heart: { ...message.reactions.heart },
+      heartWithFire: { ...message.reactions.heartWithFire },
+    };
+    const previousReaction =
+      reaction.userId === currentUserId
+        ? (Object.entries(reactions).find(
+            ([, summary]) => summary.isReactedByMe,
+          )?.[0] as keyof MessageReactionSummary | undefined)
+        : undefined;
+    const nextKey = reactionKeys[reaction.reaction];
+
     if (updateCounts) {
       if (remove) {
-        const key = reactionCountKeys[reaction.reaction];
-        reactionCount[key] = Math.max(0, reactionCount[key] - 1);
-      } else if (previousReaction?.reaction !== reaction.reaction) {
+        reactions[nextKey].count = Math.max(0, reactions[nextKey].count - 1);
+      } else if (previousReaction !== nextKey) {
         if (previousReaction) {
-          const previousKey = reactionCountKeys[previousReaction.reaction];
-          reactionCount[previousKey] = Math.max(
+          reactions[previousReaction].count = Math.max(
             0,
-            reactionCount[previousKey] - 1,
+            reactions[previousReaction].count - 1,
           );
         }
-        const key = reactionCountKeys[reaction.reaction];
-        reactionCount[key] += 1;
+        reactions[nextKey].count += 1;
       }
     }
+    if (reaction.userId === currentUserId) {
+      for (const summary of Object.values(reactions)) {
+        summary.isReactedByMe = false;
+      }
+      if (!remove) reactions[nextKey].isReactedByMe = true;
+    }
+
     return {
       ...message,
-      reactions: remove ? reactions : [...reactions, reaction],
-      reactionCount,
+      reactions,
     };
   });
 }

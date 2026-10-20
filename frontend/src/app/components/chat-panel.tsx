@@ -14,7 +14,8 @@ import {
 } from './chat/chat-types';
 import {
 	fetchPayload,
-	emptyReactionCount,
+	emptyMessageReactions,
+	getMyReaction,
 	getChatTitle,
 	getErrorMessage,
 	isChatListPayload,
@@ -35,9 +36,7 @@ export default function ChatPanel() {
 	const [pendingReactionMessageIds, setPendingReactionMessageIds] = useState<
 		Set<number>
 	>(() => new Set());
-	const pendingReactionSnapshots = useRef(
-		new Map<number, MessageReaction | null>(),
-	);
+	const pendingReactionSnapshots = useRef(new Map<number, Reaction | null>());
 	const [connection, setConnection] = useState<ConnectionState>('loading');
 	const [error, setError] = useState<string | null>(null);
 	const [messageText, setMessageText] = useState('');
@@ -51,13 +50,6 @@ export default function ChatPanel() {
 		useState<ReactionSettings | null>(null);
 	const [socket, setSocket] = useState<Socket | null>(null);
 	const activeChatId = useRef<number | null>(null);
-	const configuredBackendUrl = process.env.NEXT_PUBLIC_BACKEND_URL?.trim();
-	const socketConfigError =
-		currentUserId !== null &&
-		!configuredBackendUrl &&
-		process.env.NODE_ENV !== 'development'
-			? 'Для чату задайте NEXT_PUBLIC_BACKEND_URL — адресу NestJS API.'
-			: null;
 	const selectedChat = chats.find((chat) => chat.id === selectedChatId);
 	const chatCreation = useChatCreation({
 		currentUserId,
@@ -85,12 +77,31 @@ export default function ChatPanel() {
 			current.map((message) => {
 				if (!snapshots.has(message.id)) return message;
 				const previous = snapshots.get(message.id);
-				const currentReaction = message.reactions.find(
-					(item) => item.userId === currentUserId,
-				);
-				if (previous) return updateReaction([message], previous)[0];
+				const currentReaction = getMyReaction(message.reactions);
+				if (previous !== null && previous !== undefined) {
+					return updateReaction(
+						[message],
+						{
+							messageId: message.id,
+							userId: currentUserId,
+							reaction: previous,
+							createdAt: new Date().toISOString(),
+						},
+						currentUserId,
+					)[0];
+				}
 				return currentReaction
-					? updateReaction([message], currentReaction, true)[0]
+					? updateReaction(
+							[message],
+							{
+								messageId: message.id,
+								userId: currentUserId,
+								reaction: currentReaction,
+								createdAt: new Date().toISOString(),
+							},
+							currentUserId,
+							true,
+						)[0]
 					: message;
 			}),
 		);
@@ -148,16 +159,9 @@ export default function ChatPanel() {
 
 	useEffect(() => {
 		if (currentUserId === null) return;
-		const backendUrl = configuredBackendUrl
-			? configuredBackendUrl
-			: process.env.NODE_ENV === 'development'
-				? `${window.location.protocol}//${window.location.hostname}:3000`
-				: '';
-		if (!backendUrl) {
-			return;
-		}
+		const socketUrl = window.location.origin;
 
-		const client = io(backendUrl, {
+		const client = io(socketUrl, {
 			autoConnect: false,
 			transports: ['websocket'],
 			withCredentials: true,
@@ -176,7 +180,7 @@ export default function ChatPanel() {
 			rollbackPendingReactions();
 			setConnection('error');
 			setError(
-				`Не вдалося під’єднатися до чату (${backendUrl}): ${connectError.message}. Перевірте, що сервер доступний з цього пристрою та використовується правильна адреса.`,
+				`Не вдалося під’єднатися до чату (${socketUrl}): ${connectError.message}. Перевірте, що сервер доступний з цього пристрою та використовується правильна адреса.`,
 			);
 		};
 		const handleException = (payload: unknown) => {
@@ -189,8 +193,7 @@ export default function ChatPanel() {
 			setMessages((current) =>
 				upsertMessage(current, {
 					...payload,
-					reactionCount: emptyReactionCount,
-					reactions: [],
+					reactions: emptyMessageReactions,
 				}),
 			);
 			setChats((current) =>
@@ -214,9 +217,8 @@ export default function ChatPanel() {
 				const existing = current.find((item) => item.id === payload.id);
 				return upsertMessage(current, {
 					...payload,
-					reactionCount:
-						existing?.reactionCount ?? payload.reactionCount ?? emptyReactionCount,
-					reactions: existing?.reactions ?? [],
+					reactions:
+						existing?.reactions ?? payload.reactions ?? emptyMessageReactions,
 				});
 			});
 		};
@@ -229,7 +231,18 @@ export default function ChatPanel() {
 		};
 		const handleAddedReaction = (payload: unknown) => {
 			if (isMessageReaction(payload)) {
-				setMessages((current) => updateReaction(current, payload));
+				const isOptimisticAck =
+					payload.userId === currentUserId &&
+					pendingReactionSnapshots.current.has(payload.messageId);
+				setMessages((current) =>
+					updateReaction(
+						current,
+						payload,
+						currentUserId,
+						false,
+						!isOptimisticAck,
+					),
+				);
 				if (payload.userId === currentUserId) {
 					pendingReactionSnapshots.current.delete(payload.messageId);
 					setPendingReactionMessageIds((current) => {
@@ -240,7 +253,7 @@ export default function ChatPanel() {
 				}
 			}
 		};
-		async function refreshReactionCount(messageId: number) {
+		async function refreshMessageReactions(messageId: number) {
 			const chatId = activeChatId.current;
 			if (chatId === null) return;
 			try {
@@ -259,12 +272,11 @@ export default function ChatPanel() {
 				const updatedMessage = payload.messages.find(
 					(message) => message.id === messageId,
 				);
-				if (!updatedMessage?.reactionCount || activeChatId.current !== chatId)
-					return;
+				if (!updatedMessage || activeChatId.current !== chatId) return;
 				setMessages((current) =>
 					current.map((message) =>
 						message.id === messageId
-							? { ...message, reactionCount: updatedMessage.reactionCount }
+							? { ...message, reactions: updatedMessage.reactions }
 							: message,
 					),
 				);
@@ -272,14 +284,16 @@ export default function ChatPanel() {
 				setError(
 					reactionError instanceof Error
 						? reactionError.message
-						: 'Не вдалося оновити кількість реакцій.',
+						: 'Не вдалося оновити реакції повідомлення.',
 				);
 			}
 		}
 		const handleUpdatedReaction = (payload: unknown) => {
 			if (isMessageReaction(payload)) {
-				setMessages((current) => updateReaction(current, payload, false, false));
-				void refreshReactionCount(payload.messageId);
+				setMessages((current) =>
+					updateReaction(current, payload, currentUserId, false, false),
+				);
+				void refreshMessageReactions(payload.messageId);
 				if (payload.userId === currentUserId) {
 					pendingReactionSnapshots.current.delete(payload.messageId);
 					setPendingReactionMessageIds((current) => {
@@ -296,7 +310,13 @@ export default function ChatPanel() {
 					payload.userId === currentUserId &&
 					pendingReactionSnapshots.current.has(payload.messageId);
 				setMessages((current) =>
-					updateReaction(current, payload, true, !isOptimisticAck),
+					updateReaction(
+						current,
+						payload,
+						currentUserId,
+						true,
+						!isOptimisticAck,
+					),
 				);
 				if (payload.userId === currentUserId) {
 					pendingReactionSnapshots.current.delete(payload.messageId);
@@ -327,7 +347,7 @@ export default function ChatPanel() {
 			client.removeAllListeners();
 			setSocket(null);
 		};
-	}, [configuredBackendUrl, currentUserId, rollbackPendingReactions]);
+	}, [currentUserId, rollbackPendingReactions]);
 
 	useEffect(() => {
 		activeChatId.current = selectedChatId;
@@ -390,12 +410,10 @@ export default function ChatPanel() {
 				}
 				if (active) {
 					setMessages(
-						[...payload.messages]
-							.reverse()
-							.map((message) => ({
-								...message,
-								reactions: [],
-							})),
+						[...payload.messages].reverse().map((message) => ({
+							...message,
+							reactions: message.reactions ?? emptyMessageReactions,
+						})),
 					);
 				}
 			} catch (loadError) {
@@ -512,12 +530,10 @@ export default function ChatPanel() {
 		) {
 			return;
 		}
-		const ownReaction = message.reactions.find(
-			(item) => item.userId === currentUserId,
-		);
+		const ownReaction = getMyReaction(message.reactions);
 		const method = !ownReaction
 			? 'POST'
-			: ownReaction.reaction === reaction
+			: ownReaction === reaction
 				? 'DELETE'
 				: 'PATCH';
 		pendingReactionSnapshots.current.set(message.id, ownReaction ?? null);
@@ -530,7 +546,12 @@ export default function ChatPanel() {
 			createdAt: new Date().toISOString(),
 		};
 		setMessages((current) =>
-			updateReaction(current, optimisticReaction, method === 'DELETE'),
+			updateReaction(
+				current,
+				optimisticReaction,
+				currentUserId,
+				method === 'DELETE',
+			),
 		);
 
 		if (method === 'POST') {
@@ -561,8 +582,8 @@ export default function ChatPanel() {
 				: reactionOptions.filter((option) =>
 						reactionSettings.allowedReactions.includes(option.value),
 					);
-	const displayError = error ?? socketConfigError;
-	const displayedConnection = socketConfigError ? 'error' : connection;
+	const displayError = error;
+	const displayedConnection = connection;
 	const selectedChatTitle = selectedChat
 		? getChatTitle(selectedChat) || `Чат #${selectedChat.id}`
 		: '';
@@ -571,14 +592,14 @@ export default function ChatPanel() {
 		<main
 			className={`messenger-shell${selectedChatId !== null ? ' has-selection' : ''}`}
 		>
-			<header className='messenger-topbar'>
-				<Link className='brand' href='/' aria-label='100gram — на головну'>
-					<span className='brand-mark'>1</span>
+			<header className="messenger-topbar">
+				<Link className="brand" href="/" aria-label="100gram — на головну">
+					<span className="brand-mark">1</span>
 					<span>100gram</span>
 				</Link>
-				<div className='messenger-topbar-links'>
+				<div className="messenger-topbar-links">
 					<span className={`messenger-connection ${displayedConnection}`}>
-						<span className='live-dot' />
+						<span className="live-dot" />
 						{displayedConnection === 'connected'
 							? 'Онлайн'
 							: displayedConnection === 'connecting' ||
@@ -588,21 +609,21 @@ export default function ChatPanel() {
 									? 'Немає з’єднання'
 									: 'Помилка з’єднання'}
 					</span>
-					<Link className='docs-link' href='/user'>
-						Профіль <span aria-hidden='true'>↗</span>
+					<Link className="docs-link" href="/user">
+						Профіль <span aria-hidden="true">↗</span>
 					</Link>
 				</div>
 			</header>
 			{displayError && (
-				<div className='notice notice-error messenger-error' role='alert'>
-					<span className='notice-symbol' aria-hidden='true'>
+				<div className="notice notice-error messenger-error" role="alert">
+					<span className="notice-symbol" aria-hidden="true">
 						!
 					</span>
 					{displayError}
 					<button
-						type='button'
-						className='notice-close'
-						aria-label='Закрити повідомлення'
+						type="button"
+						className="notice-close"
+						aria-label="Закрити повідомлення"
 						onClick={() => setError(null)}
 					>
 						×
@@ -610,7 +631,7 @@ export default function ChatPanel() {
 				</div>
 			)}
 
-			<div className='messenger-layout'>
+			<div className="messenger-layout">
 				<ChatSidebar
 					chats={chats}
 					selectedChatId={selectedChatId}
@@ -691,12 +712,8 @@ export default function ChatPanel() {
 					onManageMember={(action, memberId, role) =>
 						void chatSettings.manageMember(action, memberId, role)
 					}
-					onRefreshInviteToken={() =>
-						void chatSettings.refreshInviteToken()
-					}
-					onClearMessages={() =>
-						void chatSettings.clearChatMessages()
-					}
+					onRefreshInviteToken={() => void chatSettings.refreshInviteToken()}
+					onClearMessages={() => void chatSettings.clearChatMessages()}
 					onDeleteChat={() => void chatSettings.deleteChat()}
 					onUpdateMessage={handleUpdateMessage}
 					onEditTextChange={setEditText}
