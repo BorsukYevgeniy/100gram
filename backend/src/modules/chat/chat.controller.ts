@@ -13,7 +13,7 @@ import {
 import { PaginationDto } from '../../common/dto/pagination.dto';
 import { AccessTokenPayload } from '../../common/types';
 import { CurrentUser } from '../auth/decorator/current-user.decorator';
-import { VerifiedUserGuard } from '../auth/guards/verified-user.guard';
+import { AuthGuard } from '../auth/guards/auth.guard';
 import { ChatService } from './chat.service';
 import { ChatControllerDocs, ChatRoutesDocs } from './docs';
 import { AllowReactionDto } from './dto/allow-reaction.dto';
@@ -24,7 +24,7 @@ import { UpdateGroupChatDto } from './dto/update-group-chat.dto';
 
 @ChatControllerDocs()
 @Controller('chats')
-@UseGuards(VerifiedUserGuard)
+@UseGuards(AuthGuard)
 export class ChatController {
   constructor(private readonly chatService: ChatService) {}
 

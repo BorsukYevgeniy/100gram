@@ -35,7 +35,7 @@
     "prisma:migrate:dev": "cross-env NODE_ENV=dev prisma migrate dev",
     "prisma:generate:dev": "cross-env NODE_ENV=dev prisma generate",
     "prisma:studio:dev": "cross-env NODE_ENV=dev prisma studio",
-    "docker:start:dev": "npm run prisma:generate:dev && npm run start:dev"
+    "docker:start:dev": "npm run prisma:generate:dev  && npm run start:dev"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1131.0",

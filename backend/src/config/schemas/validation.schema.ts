@@ -7,8 +7,8 @@ export const validationSchema = J.object({
   POSTGRES_PASSWORD: J.string().required(),
   POSTGRES_DB: J.string().required(),
 
-  APP_PORT: J.number().port().required(),
-  APP_URL: J.string().uri().required(),
+  BACKEND_PORT: J.number().port().required(),
+  FRONTEND_URL: J.string().uri().required(),
 
   PASSWORD_SALT: J.number().integer().positive().required(),
 

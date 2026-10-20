@@ -50,13 +50,6 @@ export default function ChatPanel() {
 		useState<ReactionSettings | null>(null);
 	const [socket, setSocket] = useState<Socket | null>(null);
 	const activeChatId = useRef<number | null>(null);
-	const configuredBackendUrl = process.env.NEXT_PUBLIC_BACKEND_URL?.trim();
-	const socketConfigError =
-		currentUserId !== null &&
-		!configuredBackendUrl &&
-		process.env.NODE_ENV !== 'development'
-			? 'Для чату задайте NEXT_PUBLIC_BACKEND_URL — адресу NestJS API.'
-			: null;
 	const selectedChat = chats.find((chat) => chat.id === selectedChatId);
 	const chatCreation = useChatCreation({
 		currentUserId,
@@ -166,16 +159,9 @@ export default function ChatPanel() {
 
 	useEffect(() => {
 		if (currentUserId === null) return;
-		const backendUrl = configuredBackendUrl
-			? configuredBackendUrl
-			: process.env.NODE_ENV === 'development'
-				? `${window.location.protocol}//${window.location.hostname}:3000`
-				: '';
-		if (!backendUrl) {
-			return;
-		}
+		const socketUrl = window.location.origin;
 
-		const client = io(backendUrl, {
+		const client = io(socketUrl, {
 			autoConnect: false,
 			transports: ['websocket'],
 			withCredentials: true,
@@ -194,7 +180,7 @@ export default function ChatPanel() {
 			rollbackPendingReactions();
 			setConnection('error');
 			setError(
-				`Не вдалося під’єднатися до чату (${backendUrl}): ${connectError.message}. Перевірте, що сервер доступний з цього пристрою та використовується правильна адреса.`,
+				`Не вдалося під’єднатися до чату (${socketUrl}): ${connectError.message}. Перевірте, що сервер доступний з цього пристрою та використовується правильна адреса.`,
 			);
 		};
 		const handleException = (payload: unknown) => {
@@ -361,7 +347,7 @@ export default function ChatPanel() {
 			client.removeAllListeners();
 			setSocket(null);
 		};
-	}, [configuredBackendUrl, currentUserId, rollbackPendingReactions]);
+	}, [currentUserId, rollbackPendingReactions]);
 
 	useEffect(() => {
 		activeChatId.current = selectedChatId;
@@ -596,8 +582,8 @@ export default function ChatPanel() {
 				: reactionOptions.filter((option) =>
 						reactionSettings.allowedReactions.includes(option.value),
 					);
-	const displayError = error ?? socketConfigError;
-	const displayedConnection = socketConfigError ? 'error' : connection;
+	const displayError = error;
+	const displayedConnection = connection;
 	const selectedChatTitle = selectedChat
 		? getChatTitle(selectedChat) || `Чат #${selectedChat.id}`
 		: '';
