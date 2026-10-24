@@ -59,10 +59,25 @@ export class ChatMemberRoutesDocs {
     );
   }
 
+  static LeaveChat() {
+    return applyDecorators(
+      ApiOperation({
+        summary: 'Remove a user from a group chat or channel',
+        description:
+          'Removes yourself from the group chat or channel by himself.',
+      }),
+      ApiOkResponse({ description: 'User removed from chat successfully' }),
+      ApiBadRequestResponse({ description: 'Chat must be a private' }),
+      UserIsNotParticipantOfChatDocs(),
+      ApiChatMustBeGroupOrChannelResponse(),
+      ApiVerifiedAuthDocs(),
+    );
+  }
+
   static DeleteUserFromChat() {
     return applyDecorators(
       ApiOperation({
-        summary: 'Remove a user from a group chat',
+        summary: 'Remove a user from a group chat or channel',
         description:
           'Removes the specified participant from the group chat or channel. Only the chat owner or an admin can do this.',
       }),

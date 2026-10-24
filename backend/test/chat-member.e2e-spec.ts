@@ -402,6 +402,76 @@ describe('ChatMemberController (e2e)', () => {
     });
   });
 
+  describe('DELETE /chats/:chatId/users/me - Should leave a chat', () => {
+    it('DELETE /chats/:chatId/users/me - 401 UNAUTHORIZED - Should return 401 because user is unauthorized', async () => {
+      const { body } = await request(app.getHttpServer())
+        .delete(`/chats/${groupChatId}/users/me`)
+        .expect(401);
+
+      expect(body).toEqual(unauthorizedResponse);
+    });
+
+    it('DELETE /chats/:chatId/users/me - 403 FORBIDDEN - Should return 403 because user is not verified', async () => {
+      const { body } = await request(app.getHttpServer())
+        .delete(`/chats/${groupChatId}/users/me`)
+        .set('Cookie', [`access_token=${unverifiedAccessToken}`])
+        .expect(403);
+
+      expect(body).toEqual(verifiedForbiddenResponse);
+    });
+
+    it('DELETE /chats/:chatId/users/me - 400 BAD REQUEST - Should return 400 because chatId is invalid', async () => {
+      await request(app.getHttpServer())
+        .delete('/chats/invalid/users/me')
+        .set('Cookie', [`access_token=${memberAccessToken}`])
+        .expect(400);
+    });
+
+    it('DELETE /chats/:chatId/users/me - 400 BAD REQUEST - Should only allow leaving group chats and channels', async () => {
+      await request(app.getHttpServer())
+        .delete(`/chats/${privateChatId}/users/me`)
+        .set('Cookie', [`access_token=${memberAccessToken}`])
+        .expect(400);
+    });
+
+    it('DELETE /chats/:chatId/users/me - 403 FORBIDDEN - Should return 403 because user is not a participant', async () => {
+      await request(app.getHttpServer())
+        .delete(`/chats/${groupChatId}/users/me`)
+        .set('Cookie', [`access_token=${outsiderAccessToken}`])
+        .expect(403);
+    });
+
+    it('DELETE /chats/:chatId/users/me - 404 NOT FOUND - Should return 404 because chat does not exist', async () => {
+      await request(app.getHttpServer())
+        .delete('/chats/9999999/users/me')
+        .set('Cookie', [`access_token=${memberAccessToken}`])
+        .expect(404);
+    });
+
+    it('DELETE /chats/:chatId/users/me - 200 OK - Should remove the current user from the chat', async () => {
+      const { body } = await request(app.getHttpServer())
+        .delete(`/chats/${groupChatId}/users/me`)
+        .set('Cookie', [`access_token=${memberAccessToken}`])
+        .expect(200);
+
+      expect(body[0]).toEqual(
+        expect.objectContaining({
+          chatId: groupChatId,
+          userId: memberId,
+          role: ChatRole.MODERATOR,
+          isPinned: false,
+          connectedAt: expect.any(String),
+        }),
+      );
+      expect(body[1]).toEqual({ membersCount: 1 });
+      await expect(
+        prisma.chatToUser.findUnique({
+          where: { chatId_userId: { chatId: groupChatId, userId: memberId } },
+        }),
+      ).resolves.toBeNull();
+    });
+  });
+
   describe('DELETE /chats/:chatId/users/:userId - Should remove a user from chat', () => {
     it('DELETE /chats/:chatId/users/:userId - 401 UNAUTHORIZED - Should return 401 because user is unauthorized', async () => {
       const { body } = await request(app.getHttpServer())
@@ -468,7 +538,7 @@ describe('ChatMemberController (e2e)', () => {
           role: ChatRole.MEMBER,
         }),
       );
-      expect(body[1]).toEqual({ membersCount: 1 });
+      expect(body[1]).toEqual({ membersCount: 0 });
     });
   });
 
