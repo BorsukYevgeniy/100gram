@@ -153,4 +153,19 @@ export class ChatMemberService {
 
     return chatUser;
   }
+
+  async leaveChat(chatId: number, userId: number) {
+    await this.chatValidator.validateChatType(
+      chatId,
+      ChatType.CHANNEL,
+      ChatType.GROUP,
+    );
+    await this.chatValidator.validateChatParticipation(userId, chatId);
+
+    const user = await this.chatRepo.deleteUserFromChat(chatId, userId);
+
+    this.logger.info({ chatId, userId }, 'User leaved chat');
+
+    return user;
+  }
 }
