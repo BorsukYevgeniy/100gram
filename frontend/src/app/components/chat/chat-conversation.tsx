@@ -47,6 +47,7 @@ type ChatConversationProps = {
 	editingMessageId: number | null;
 	editText: string;
 	pendingReactionMessageIds: Set<number>;
+	pendingPinnedMessageIds: Set<number>;
 	availableReactionOptions: ReactionOption[];
 	messageText: string;
 	messageFiles: File[];
@@ -83,6 +84,7 @@ type ChatConversationProps = {
 	onStartEdit: (message: ChatMessage) => void;
 	onDeleteMessage: (messageId: number) => void;
 	onDeleteForMe: (messageId: number) => void;
+	onTogglePinMessage: (message: ChatMessage) => void;
 	onToggleReaction: (message: ChatMessage, reaction: Reaction) => void;
 	onOpenUserProfile: (userId: number) => void;
 	onMessageTextChange: (value: string) => void;
@@ -119,6 +121,7 @@ export default function ChatConversation({
 	editingMessageId,
 	editText,
 	pendingReactionMessageIds,
+	pendingPinnedMessageIds,
 	availableReactionOptions,
 	messageText,
 	messageFiles,
@@ -151,6 +154,7 @@ export default function ChatConversation({
 	onStartEdit,
 	onDeleteMessage,
 	onDeleteForMe,
+	onTogglePinMessage,
 	onToggleReaction,
 	onOpenUserProfile,
 	onMessageTextChange,
@@ -280,6 +284,7 @@ export default function ChatConversation({
 				editingMessageId={editingMessageId}
 				editText={editText}
 				pendingReactionMessageIds={pendingReactionMessageIds}
+				pendingPinnedMessageIds={pendingPinnedMessageIds}
 				availableReactionOptions={availableReactionOptions}
 				onUpdateMessage={onUpdateMessage}
 				onEditTextChange={onEditTextChange}
@@ -287,6 +292,7 @@ export default function ChatConversation({
 				onStartEdit={onStartEdit}
 				onDelete={onDeleteMessage}
 				onDeleteForMe={onDeleteForMe}
+				onTogglePin={onTogglePinMessage}
 				onToggleReaction={onToggleReaction}
 				onOpenUserProfile={onOpenUserProfile}
 			/>

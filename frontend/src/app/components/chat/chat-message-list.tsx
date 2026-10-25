@@ -26,6 +26,8 @@ type ChatMessageListProps = {
 	onStartEdit: (message: ChatMessage) => void;
 	onDelete: (messageId: number) => void;
 	onDeleteForMe: (messageId: number) => void;
+	onTogglePin: (message: ChatMessage) => void;
+	pendingPinnedMessageIds: Set<number>;
 	onToggleReaction: (message: ChatMessage, reaction: Reaction) => void;
 	onOpenUserProfile: (userId: number) => void;
 };
@@ -73,6 +75,7 @@ export default function ChatMessageList({
 	editingMessageId,
 	editText,
 	pendingReactionMessageIds,
+	pendingPinnedMessageIds,
 	availableReactionOptions,
 	onUpdateMessage,
 	onEditTextChange,
@@ -80,11 +83,13 @@ export default function ChatMessageList({
 	onStartEdit,
 	onDelete,
 	onDeleteForMe,
+	onTogglePin,
 	onToggleReaction,
 	onOpenUserProfile,
 }: ChatMessageListProps) {
 	const messagesContainerRef = useRef<HTMLDivElement>(null);
 	const previousScrollTrigger = useRef(messageScrollTrigger);
+	const [openDeleteMenuId, setOpenDeleteMenuId] = useState<number | null>(null);
 
 	useEffect(() => {
 		if (previousScrollTrigger.current === messageScrollTrigger) return;
@@ -96,6 +101,7 @@ export default function ChatMessageList({
 	}, [messageScrollTrigger]);
 
 	const visibleMessages = messages.filter((message) => !message.isDeletedForMe);
+	const pinnedMessages = visibleMessages.filter((message) => message.isPinned);
 
 	if (visibleMessages.length === 0) {
 		return (
@@ -118,18 +124,50 @@ export default function ChatMessageList({
 	}
 
 	return (
-		<div
-			className="messenger-messages"
-			aria-live="polite"
-			ref={messagesContainerRef}
-		>
-			{visibleMessages.map((message) => {
-				const isOwnMessage = message.user.id === currentUserId;
-				return (
-					<article
-						className={`messenger-message${isOwnMessage ? ' own' : ''}${message.fileNames.length > 0 ? ' has-attachments' : ''}`}
-						key={message.id}
-					>
+		<>
+			{pinnedMessages.length > 0 && (
+				<aside
+					className="messenger-pinned-messages"
+					aria-label="Закріплені повідомлення"
+				>
+					<strong>Закріплені</strong>
+					<div className="messenger-pinned-message-list">
+						{pinnedMessages.map((message) => (
+							<button
+								className="messenger-pinned-message"
+								type="button"
+								key={message.id}
+								onClick={() => {
+									const element =
+										messagesContainerRef.current?.querySelector<HTMLElement>(
+											`[data-message-id="${message.id}"]`,
+										);
+									element?.scrollIntoView({
+										behavior: 'smooth',
+										block: 'center',
+									});
+								}}
+							>
+								<span>{message.user.nickname}</span>
+								<span>{message.text || 'Вкладення'}</span>
+							</button>
+						))}
+					</div>
+				</aside>
+			)}
+			<div
+				className="messenger-messages"
+				aria-live="polite"
+				ref={messagesContainerRef}
+			>
+				{visibleMessages.map((message) => {
+					const isOwnMessage = message.user.id === currentUserId;
+					return (
+						<article
+							className={`messenger-message${isOwnMessage ? ' own' : ''}${message.fileNames.length > 0 ? ' has-attachments' : ''}`}
+							key={message.id}
+							data-message-id={message.id}
+						>
 						<ChatMessageAvatar
 							avatarName={message.user.avatarName}
 							nickname={message.user.nickname}
@@ -162,7 +200,83 @@ export default function ChatMessageList({
 									</button>
 								</form>
 							) : (
-								<p className="messenger-message-text">{message.text}</p>
+								<div className="messenger-message-content">
+									<p className="messenger-message-text">{message.text}</p>
+									<div className="messenger-message-menu">
+										<button
+											className="messenger-message-menu-trigger"
+											type="button"
+											aria-label="Дії з повідомленням"
+											aria-haspopup="menu"
+											aria-expanded={openDeleteMenuId === message.id}
+											disabled={
+												connection !== 'connected' ||
+												(!!message.isPinned &&
+													pendingPinnedMessageIds.has(message.id))
+											}
+											onClick={() =>
+												setOpenDeleteMenuId((current) =>
+													current === message.id ? null : message.id,
+												)
+											}
+										>
+											⋮
+										</button>
+										{openDeleteMenuId === message.id && (
+											<div
+												className="messenger-message-menu-options"
+												role="menu"
+												aria-label="Дії з повідомленням"
+											>
+												<button
+													type="button"
+													role="menuitem"
+													disabled={pendingPinnedMessageIds.has(message.id)}
+													onClick={() => {
+														setOpenDeleteMenuId(null);
+														onTogglePin(message);
+													}}
+												>
+													{message.isPinned ? 'Відкріпити' : 'Прикріпити'}
+												</button>
+												{isOwnMessage && (
+													<button
+														type="button"
+														role="menuitem"
+														onClick={() => {
+															setOpenDeleteMenuId(null);
+															onStartEdit(message);
+														}}
+													>
+														Змінити
+													</button>
+												)}
+												<button
+													type="button"
+													role="menuitem"
+													onClick={() => {
+														setOpenDeleteMenuId(null);
+														onDeleteForMe(message.id);
+													}}
+												>
+													Видалити для мене
+												</button>
+												{isOwnMessage && (
+													<button
+														type="button"
+														role="menuitem"
+														onClick={() => {
+															setOpenDeleteMenuId(null);
+															onDelete(message.id);
+														}}
+													>
+														Видалити для всіх
+													</button>
+												)}
+											</div>
+										)}
+									</div>
+								</div>
 							)}
 							{message.fileNames.length > 0 && (
 								<div className="messenger-message-attachments">
@@ -251,39 +365,12 @@ export default function ChatMessageList({
 										minute: '2-digit',
 									})}
 								</time>
-								{isOwnMessage && editingMessageId !== message.id && (
-									<div className="messenger-edit-actions">
-										<button
-											className="text-button"
-											type="button"
-											disabled={connection !== 'connected'}
-											onClick={() => onStartEdit(message)}
-										>
-											Редагувати
-										</button>
-										<button
-											className="text-button"
-											type="button"
-											disabled={connection !== 'connected'}
-											onClick={() => onDelete(message.id)}
-										>
-											Видалити
-										</button>
-									</div>
-								)}
-								<button
-									className="text-button"
-									type="button"
-									disabled={connection !== 'connected'}
-									onClick={() => onDeleteForMe(message.id)}
-								>
-									Видалити для мене
-								</button>
 							</div>
 						</div>
-					</article>
-				);
-			})}
-		</div>
+						</article>
+					);
+				})}
+			</div>
+		</>
 	);
 }

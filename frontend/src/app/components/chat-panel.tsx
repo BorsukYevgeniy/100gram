@@ -40,6 +40,9 @@ export default function ChatPanel() {
 	const [pendingReactionMessageIds, setPendingReactionMessageIds] = useState<
 		Set<number>
 	>(() => new Set());
+	const [pendingPinnedMessageIds, setPendingPinnedMessageIds] = useState<
+		Set<number>
+	>(() => new Set());
 	const pendingReactionSnapshots = useRef(new Map<number, Reaction | null>());
 	const [connection, setConnection] = useState<ConnectionState>('loading');
 	const [error, setError] = useState<string | null>(null);
@@ -665,7 +668,7 @@ export default function ChatPanel() {
 
 	function deleteMessage(messageId: number) {
 		if (!socket?.connected || selectedChatId === null) return;
-		if (!window.confirm('Видалити це повідомлення?')) return;
+		if (!window.confirm('Видалити це повідомлення для всіх?')) return;
 		setError(null);
 		socket.emit('deleteMessage', { chatId: selectedChatId, messageId });
 	}
@@ -694,6 +697,47 @@ export default function ChatPanel() {
 					? deleteError.message
 					: 'Не вдалося прибрати повідомлення для себе.',
 			);
+		}
+	}
+
+	async function toggleMessagePin(message: ChatMessage) {
+		if (pendingPinnedMessageIds.has(message.id)) return;
+
+		setPendingPinnedMessageIds((current) => new Set(current).add(message.id));
+		try {
+			const action = message.isPinned ? 'unpin' : 'pin';
+			const response = await fetch(
+				`/api/controller-api/messages/${message.id}/${action}`,
+				{ method: 'PATCH' },
+			);
+			const payload: unknown = await response.json().catch(() => null);
+			if (!response.ok) {
+				throw new Error(
+					getErrorMessage(
+						payload,
+						`Не вдалося ${message.isPinned ? 'відкріпити' : 'закріпити'} повідомлення (${response.status}).`,
+					),
+				);
+			}
+			setMessages((current) =>
+				current.map((item) =>
+					item.id === message.id
+						? { ...item, isPinned: !message.isPinned }
+						: item,
+				),
+			);
+		} catch (pinError) {
+			setError(
+				pinError instanceof Error
+					? pinError.message
+					: 'Не вдалося змінити закріплення повідомлення.',
+			);
+		} finally {
+			setPendingPinnedMessageIds((current) => {
+				const next = new Set(current);
+				next.delete(message.id);
+				return next;
+			});
 		}
 	}
 
@@ -877,6 +921,7 @@ export default function ChatPanel() {
 					editingMessageId={editingMessageId}
 					editText={editText}
 					pendingReactionMessageIds={pendingReactionMessageIds}
+					pendingPinnedMessageIds={pendingPinnedMessageIds}
 					availableReactionOptions={availableReactionOptions}
 					messageText={messageText}
 					messageFiles={messageFiles}
@@ -923,6 +968,7 @@ export default function ChatPanel() {
 					}}
 					onDeleteMessage={deleteMessage}
 					onDeleteForMe={(messageId) => void deleteMessageForMe(messageId)}
+					onTogglePinMessage={(message) => void toggleMessagePin(message)}
 					onToggleReaction={(message, reaction) =>
 						void toggleReaction(message, reaction)
 					}

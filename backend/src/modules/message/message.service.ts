@@ -284,7 +284,9 @@ export class MessageService {
     if (!msg) throw new NotFoundException('Message not found');
 
     await this.chatValidator.validateChatParticipation(userId, msg.chatId);
-    return this.messageRepository.pinMessage(messageId);
+    const pinnedMessage = await this.messageRepository.pinMessage(messageId);
+    await this.cache.incrChatMessageVersion(msg.chatId);
+    return pinnedMessage;
   }
 
   async unpinMessage(userId: number, messageId: number) {
@@ -293,7 +295,9 @@ export class MessageService {
     if (!msg) throw new NotFoundException('Message not found');
 
     await this.chatValidator.validateChatParticipation(userId, msg.chatId);
-    return this.messageRepository.unpinMessage(messageId);
+    const unpinnedMessage = await this.messageRepository.unpinMessage(messageId);
+    await this.cache.incrChatMessageVersion(msg.chatId);
+    return unpinnedMessage;
   }
 
   async deleteAllMessagesInChat(chatId: number) {
