@@ -62,6 +62,7 @@ export default function ChatPanel() {
 		setError,
 	});
 	const chatSettings = useChatSettings({
+		socket,
 		selectedChat,
 		setChats,
 		setSelectedChatId,
@@ -761,6 +762,13 @@ export default function ChatPanel() {
 					savingReactions={chatSettings.savingAllowedReactions}
 					savingAvatar={chatSettings.savingChatAvatar}
 					managingChat={chatSettings.managingChat}
+					canLeaveChat={
+						currentUserId !== null &&
+						chatSettings.chatMembers.some(
+							(member) =>
+								member.id === currentUserId && member.chatRole !== 'OWNER',
+						)
+					}
 					inviteToken={chatSettings.inviteToken}
 					reactionOptions={reactionOptions}
 					messages={messages}
@@ -804,6 +812,7 @@ export default function ChatPanel() {
 					onRefreshInviteToken={() => void chatSettings.refreshInviteToken()}
 					onClearMessages={() => void chatSettings.clearChatMessages()}
 					onDeleteChat={() => void chatSettings.deleteChat()}
+					onLeaveChat={() => void chatSettings.leaveChat()}
 					onUpdateMessage={handleUpdateMessage}
 					onEditTextChange={setEditText}
 					onCancelEdit={() => setEditingMessageId(null)}

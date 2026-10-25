@@ -30,6 +30,7 @@ type ChatSettingsDialogProps = {
   savingReactions: boolean;
   savingAvatar: boolean;
   managingChat: boolean;
+  canLeaveChat: boolean;
   inviteToken: string | null;
   reactionOptions: ReactionOption[];
   onClose: () => void;
@@ -53,6 +54,7 @@ type ChatSettingsDialogProps = {
   onRefreshInviteToken: () => void;
   onClearMessages: () => void;
   onDeleteChat: () => void;
+  onLeaveChat: () => void;
 };
 
 export default function ChatSettingsDialog({
@@ -73,6 +75,7 @@ export default function ChatSettingsDialog({
   savingReactions,
   savingAvatar,
   managingChat,
+  canLeaveChat,
   inviteToken,
   reactionOptions,
   onClose,
@@ -92,6 +95,7 @@ export default function ChatSettingsDialog({
   onRefreshInviteToken,
   onClearMessages,
   onDeleteChat,
+  onLeaveChat,
 }: ChatSettingsDialogProps) {
   const [openMemberMenuId, setOpenMemberMenuId] = useState<number | null>(null);
 
@@ -426,6 +430,16 @@ export default function ChatSettingsDialog({
             >
               Видалити чат
             </button>
+            {canLeaveChat && (
+              <button
+                className="button button-quiet"
+                type="button"
+                onClick={onLeaveChat}
+                disabled={managingChat}
+              >
+                Вийти з чату
+              </button>
+            )}
           </div>
         </section>
       </section>

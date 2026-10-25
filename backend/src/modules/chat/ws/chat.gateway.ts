@@ -195,7 +195,7 @@ export class ChatGateway
     @WsCurrentUser() user: AccessTokenPayload,
     @MessageBody() { chatId, userId }: CommonChatMemberDto,
   ) {
-    const chatToUser = await this.chatMember.addUserToChat(
+    const [member, { membersCount }] = await this.chatMember.addUserToChat(
       user,
       chatId,
       userId,
@@ -207,7 +207,9 @@ export class ChatGateway
       socket.join(`chat-${chatId}`);
     }
 
-    this.server.to(`chat-${chatId}`).emit('chatAddedUser', chatToUser);
+    const response = { member, membersCount };
+    this.server.to(`chat-${chatId}`).emit('chatAddedUser', response);
+    return response;
   }
 
   @ChatGatewayDocs.DeleteUserFromChat()
@@ -216,7 +218,7 @@ export class ChatGateway
     @WsCurrentUser() user: AccessTokenPayload,
     @MessageBody() { chatId, userId }: CommonChatMemberDto,
   ) {
-    const chatToUser = await this.chatMember.deleteUserFromChat(
+    const [member, { membersCount }] = await this.chatMember.deleteUserFromChat(
       chatId,
       userId,
       user,
@@ -228,7 +230,9 @@ export class ChatGateway
       socket.leave(`chat-${chatId}`);
     }
 
-    this.server.to(`chat-${chatId}`).emit('chatRemovedUser', chatToUser);
+    const response = { member, membersCount };
+    this.server.to(`chat-${chatId}`).emit('chatRemovedUser', response);
+    return response;
   }
 
   @ChatGatewayDocs.UpdateChatRole()
@@ -245,6 +249,7 @@ export class ChatGateway
     );
 
     this.server.to(`chat-${chatId}`).emit('chatUpdatedChatRole', userToChat);
+    return userToChat;
   }
 
   @ChatGatewayDocs.LeaveChat()
@@ -254,10 +259,15 @@ export class ChatGateway
     @ConnectedSocket() client: Socket,
     @MessageBody() { chatId }: WsJoinLeaveChatDto,
   ) {
-    const chatToUser = await this.chatMember.leaveChat(chatId, userId);
+    const [member, { membersCount }] = await this.chatMember.leaveChat(
+      chatId,
+      userId,
+    );
 
     client.leave(`chat-${chatId}`);
-    this.server.to(`chat-${chatId}`).emit('chatLeavedUser', chatToUser);
+    const response = { member, membersCount };
+    this.server.to(`chat-${chatId}`).emit('chatLeavedUser', response);
+    return response;
   }
 
   @ChatGatewayDocs.JoinToChat()
@@ -267,9 +277,14 @@ export class ChatGateway
     @ConnectedSocket() client: Socket,
     @MessageBody() { chatId }: WsJoinLeaveChatDto,
   ) {
-    const chatToUser = await this.chatMember.joinToChat(chatId, userId);
+    const [member, { membersCount }] = await this.chatMember.joinToChat(
+      chatId,
+      userId,
+    );
 
     client.join(`chat-${chatId}`);
-    this.server.to(`chat-${chatId}`).emit('chatJoinedUser', chatToUser);
+    const response = { member, membersCount };
+    this.server.to(`chat-${chatId}`).emit('chatJoinedUser', response);
+    return response;
   }
 }

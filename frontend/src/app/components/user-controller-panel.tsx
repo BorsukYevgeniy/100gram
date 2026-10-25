@@ -1,109 +1,22 @@
 "use client";
 
-import Image from "next/image";
-import Link from "next/link";
 import { FormEvent, useEffect, useRef, useState } from "react";
-
-type UserProfile = {
-  id: number;
-  nickname: string;
-  avatarName: string | null;
-  role: "ADMIN" | "USER";
-  isVerified: boolean;
-  createdAt: string;
-  description: string | null;
-};
-
-type UserSearchResult = {
-  users: UserProfile[];
-  nextCursor: number | null;
-  hasMore: boolean;
-};
-
-type Notice = {
-  kind: "success" | "error";
-  text: string;
-};
-
-type ApiError = {
-  message?: string | string[];
-  error?: string;
-};
-
-function fileProxyUrl(fileName: string, kind: "users" | "chats") {
-	const fileKey = fileName.startsWith("avatars/")
-		? fileName
-		: `avatars/${kind}/${fileName}`;
-	return `/api/files?key=${encodeURIComponent(fileKey)}`;
-}
-
-function errorMessage(payload: unknown, fallback: string) {
-  if (payload && typeof payload === "object" && "message" in payload) {
-    const message = (payload as ApiError).message;
-    if (Array.isArray(message)) return message.join(". ");
-    if (typeof message === "string") return message;
-  }
-  if (payload && typeof payload === "object" && "error" in payload) {
-    const error = (payload as ApiError).error;
-    if (typeof error === "string") return error;
-  }
-  return fallback;
-}
-
-function isUserProfile(payload: unknown): payload is UserProfile {
-  if (!payload || typeof payload !== "object") return false;
-  const user = payload as Partial<UserProfile>;
-  return (
-    typeof user.id === "number" &&
-    typeof user.nickname === "string" &&
-    (typeof user.avatarName === "string" || user.avatarName === null) &&
-    (user.role === "ADMIN" || user.role === "USER") &&
-    typeof user.isVerified === "boolean" &&
-    typeof user.createdAt === "string" &&
-    (typeof user.description === "string" || user.description === null)
-  );
-}
-
-function ProfileDetails({ profile }: { profile: UserProfile }) {
-  return (
-    <dl className="profile-details">
-      <div>
-        <dt>ID</dt>
-        <dd>{profile.id}</dd>
-      </div>
-      <div>
-        <dt>Нікнейм</dt>
-        <dd>{profile.nickname}</dd>
-      </div>
-      <div>
-        <dt>Роль</dt>
-        <dd>{profile.role === "ADMIN" ? "Адміністратор" : "Користувач"}</dd>
-      </div>
-      <div>
-        <dt>Статус</dt>
-        <dd>{profile.isVerified ? "Підтверджено" : "Не підтверджено"}</dd>
-      </div>
-      <div>
-        <dt>Створено</dt>
-        <dd>{new Date(profile.createdAt).toLocaleDateString("uk-UA")}</dd>
-      </div>
-      {profile.description && (
-        <div>
-          <dt>Опис</dt>
-          <dd>{profile.description}</dd>
-        </div>
-      )}
-    </dl>
-  );
-}
+import UserAdminCard from "./user-controller/user-admin-card";
+import ProfileSettingsCard from "./user-controller/profile-settings-card";
+import type {
+  Notice,
+  ProfileStatus,
+  UserProfile,
+  UserSearchResult,
+} from "./user-controller/types";
+import { errorMessage, isUserProfile } from "./user-controller/utils";
+import UserSearchCard from "./user-controller/user-search-card";
 
 export default function UserControllerPanel() {
   const [busy, setBusy] = useState<string | null>(null);
   const [notice, setNotice] = useState<Notice | null>(null);
   const [profile, setProfile] = useState<UserProfile | null>(null);
-  const [profileStatus, setProfileStatus] = useState<
-    "loading" | "authenticated" | "unauthenticated" | "error"
-  >("loading");
+  const [profileStatus, setProfileStatus] = useState<ProfileStatus>("loading");
   const [targetProfile, setTargetProfile] = useState<UserProfile | null>(null);
   const [targetUserId, setTargetUserId] = useState("");
   const [profileNickname, setProfileNickname] = useState("");
@@ -512,247 +425,61 @@ export default function UserControllerPanel() {
       )}
 
       <div className="user-tools-grid">
-        <article className="tool-card user-tool-card">
-          <div className="tool-icon icon-green">01</div>
-          <h3>Налаштування профілю</h3>
-          <p>Змініть аватар і нікнейм або видаліть акаунт.</p>
-          <div className="button-row">
-            <button
-              className="button button-soft"
-              type="button"
-              disabled={busy !== null}
-              onClick={() =>
-                void request(
-                  "get-me",
-                  "me",
-                  "GET",
-                  "Ваш профіль завантажено.",
-                  "current",
-                )
-              }
-            >
-              {busy === "get-me" ? "Завантаження…" : "Мій профіль"}
-            </button>
-            {profile && (
-              <button
-                className="button button-danger"
-                type="button"
-                disabled={busy !== null}
-                onClick={deleteCurrentUser}
-              >
-                {busy === "delete-me" ? "Видалення…" : "Видалити акаунт"}
-              </button>
-            )}
-          </div>
-          {profileStatus === "loading" && (
-            <p className="profile-auth-message">Завантажуємо налаштування…</p>
-          )}
-          {profileStatus === "unauthenticated" && (
-            <p className="profile-auth-message">
-              Увійдіть, щоб змінити нікнейм або аватар.{" "}
-              <Link href="/login">Увійти</Link>
-            </p>
-          )}
-          {profileStatus === "error" && !profile && (
-            <p className="profile-auth-message">
-              Не вдалося завантажити налаштування профілю.
-            </p>
-          )}
-          {profileStatus === "authenticated" && profile && (
-            <>
-              <div className="profile-avatar-settings">
-                <span className="profile-avatar-preview">
-                  {avatarPreview || profile.avatarName ? (
-                    <Image
-                      src={
-                        avatarPreview ??
-                        fileProxyUrl(profile.avatarName ?? "", "users")
-                      }
-                      alt={
-                        avatarPreview
-                          ? "Попередній перегляд нового аватара"
-                          : "Аватар користувача"
-                      }
-                      width={72}
-                      height={72}
-                      unoptimized
-                    />
-                  ) : (
-                    profile.nickname.slice(0, 1).toLocaleUpperCase("uk-UA")
-                  )}
-                </span>
-                <div className="profile-avatar-controls">
-                  <label htmlFor="profile-avatar">Аватар користувача</label>
-                  <input
-                    id="profile-avatar"
-                    type="file"
-                    accept="image/*"
-                    onChange={(event) =>
-                      selectAvatar(event.target.files?.[0] ?? null)
-                    }
-                    disabled={busy !== null}
-                  />
-                  <div className="button-row">
-                    <button
-                      className="button button-primary"
-                      type="button"
-                      onClick={() => void updateAvatar()}
-                      disabled={!avatarFile || busy !== null}
-                    >
-                      {busy === "update-avatar" ? "Завантаження…" : "Зберегти аватар"}
-                    </button>
-                    {profile.avatarName && (
-                      <button
-                        className="button button-quiet"
-                        type="button"
-                        onClick={() => void deleteAvatar()}
-                        disabled={busy !== null}
-                      >
-                        {busy === "delete-avatar" ? "Видалення…" : "Видалити"}
-                      </button>
-                    )}
-                  </div>
-                </div>
-              </div>
-              <ProfileDetails profile={profile} />
-              <form className="profile-edit-form" onSubmit={updateProfile}>
-                <label htmlFor="profile-nickname">Нікнейм</label>
-                <div className="inline-form">
-                  <input
-                    id="profile-nickname"
-                    value={profileNickname}
-                    minLength={3}
-                    maxLength={25}
-                    onChange={(event) =>
-                      setProfileNickname(event.target.value)
-                    }
-                    required
-                  />
-                  <button
-                    className="button button-primary"
-                    type="submit"
-                    disabled={busy !== null}
-                  >
-                    {busy === "update-profile" ? "Збереження…" : "Зберегти"}
-                  </button>
-                </div>
-              </form>
-            </>
-          )}
-        </article>
-
-        <article className="tool-card user-tool-card">
-          <div className="tool-icon icon-violet">02</div>
-          <h3>Пошук користувача</h3>
-          <p>Знайдіть користувача за нікнеймом або завантажте його за ID.</p>
-          <form
-            className="inline-form user-search-form"
-            onSubmit={(event) => void searchUsers(event)}
-          >
-            <input
-              aria-label="Нікнейм для пошуку"
-              value={searchNickname}
-              minLength={3}
-              maxLength={25}
-              placeholder="Частина нікнейму"
-              onChange={(event) => {
-                setSearchNickname(event.target.value);
-                setSearchResults([]);
-                setSearchCursor(null);
-                setSearchHasMore(false);
-              }}
-              required
-            />
-            <button
-              className="button button-soft"
-              type="submit"
-              disabled={busy !== null}
-            >
-              {busy === "search-users" ? "Пошук…" : "Знайти"}
-            </button>
-          </form>
-          {searchResults.length > 0 && (
-            <ul className="user-search-results">
-              {searchResults.map((user) => (
-                <li key={user.id}>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setTargetUserId(String(user.id));
-                      setTargetProfile(user);
-                    }}
-                  >
-                    <strong>{user.nickname}</strong>
-                    <span>ID {user.id}</span>
-                  </button>
-                </li>
-              ))}
-            </ul>
-          )}
-          {searchHasMore && searchCursor !== null && (
-            <button
-              className="button button-quiet"
-              type="button"
-              disabled={busy !== null}
-              onClick={() => void searchUsers(undefined, searchCursor)}
-            >
-              {busy === "search-users" ? "Завантаження…" : "Ще користувачі"}
-            </button>
-          )}
-          <form className="inline-form" onSubmit={handleFindUser}>
-            <label className="sr-only" htmlFor="user-id">
-              ID користувача
-            </label>
-            <input
-              id="user-id"
-              type="number"
-              min={1}
-              step={1}
-              placeholder="ID користувача"
-              value={targetUserId}
-              onChange={(event) => setTargetUserId(event.target.value)}
-              required
-            />
-            <button
-              className="button button-soft"
-              type="submit"
-              disabled={busy !== null}
-            >
-              {busy === "find-user" ? "Пошук…" : "Знайти"}
-            </button>
-          </form>
-          {targetProfile && (
-            <div className="target-profile">
-              <div className="card-kicker">ЗНАЙДЕНИЙ ПРОФІЛЬ</div>
-              <ProfileDetails profile={targetProfile} />
-            </div>
-          )}
-        </article>
-
+        <ProfileSettingsCard
+          busy={busy}
+          profile={profile}
+          profileStatus={profileStatus}
+          profileNickname={profileNickname}
+          avatarFile={avatarFile}
+          avatarPreview={avatarPreview}
+          onGetProfile={() =>
+            void request(
+              "get-me",
+              "me",
+              "GET",
+              "Ваш профіль завантажено.",
+              "current",
+            )
+          }
+          onDeleteCurrentUser={deleteCurrentUser}
+          onSelectAvatar={selectAvatar}
+          onUpdateAvatar={() => void updateAvatar()}
+          onDeleteAvatar={() => void deleteAvatar()}
+          onNicknameChange={setProfileNickname}
+          onUpdateProfile={updateProfile}
+        />
+        <UserSearchCard
+          busy={busy}
+          searchNickname={searchNickname}
+          searchResults={searchResults}
+          searchCursor={searchCursor}
+          searchHasMore={searchHasMore}
+          targetUserId={targetUserId}
+          targetProfile={targetProfile}
+          onSearchUsers={(event) => void searchUsers(event)}
+          onSearchNicknameChange={(nickname) => {
+            setSearchNickname(nickname);
+            setSearchResults([]);
+            setSearchCursor(null);
+            setSearchHasMore(false);
+          }}
+          onSelectUser={(user) => {
+            setTargetUserId(String(user.id));
+            setTargetProfile(user);
+          }}
+          onLoadMore={() => {
+            if (searchCursor !== null) void searchUsers(undefined, searchCursor);
+          }}
+          onFindUser={handleFindUser}
+          onTargetUserIdChange={setTargetUserId}
+        />
         {profile?.role === "ADMIN" && (
-          <article className="tool-card user-tool-card">
-            <div className="tool-icon icon-orange">03</div>
-            <h3>Адміністрування</h3>
-            <p>Призначте роль адміністратора або видаліть користувача за ID.</p>
-            <div className="button-row">
-              <button
-                className="button button-soft"
-                type="button"
-                disabled={busy !== null || !targetUserId}
-                onClick={assignAdmin}
-              >
-                {busy === "assign-admin" ? "Призначення…" : "Призначити адміна"}
-              </button>
-              <button
-                className="button button-danger"
-                type="button"
-                disabled={busy !== null || !targetUserId}
-                onClick={deleteTargetUser}
-              >
-                {busy === "delete-user" ? "Видалення…" : "Видалити"}
-              </button>
-            </div>
-          </article>
+          <UserAdminCard
+            busy={busy}
+            hasTargetUserId={Boolean(targetUserId)}
+            onAssignAdmin={assignAdmin}
+            onDeleteUser={deleteTargetUser}
+          />
         )}
       </div>
     </section>

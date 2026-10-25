@@ -2,6 +2,7 @@
 
 import { FormEvent, useEffect, useRef, useState } from "react";
 import type { Dispatch, SetStateAction } from "react";
+import type { Socket } from "socket.io-client";
 import {
   ChatMember,
   ChatMessage,
@@ -22,6 +23,7 @@ export type ReactionSettings = {
 };
 
 type UseChatSettingsOptions = {
+  socket: Socket | null;
   selectedChat: ChatSummary | undefined;
   setChats: Dispatch<SetStateAction<ChatSummary[]>>;
   setSelectedChatId: Dispatch<SetStateAction<number | null>>;
@@ -31,11 +33,59 @@ type UseChatSettingsOptions = {
   setReactionSettings: Dispatch<SetStateAction<ReactionSettings | null>>;
 };
 
+function getChatIdFromMemberEvent(payload: unknown): number | null {
+  const data = Array.isArray(payload) ? payload[0] : payload;
+  if (!data || typeof data !== "object") return null;
+  const member =
+    "member" in data && data.member && typeof data.member === "object"
+      ? data.member
+      : data;
+  return "chatId" in member && typeof member.chatId === "number"
+    ? member.chatId
+    : null;
+}
+
+function emitChatCommand(
+  socket: Socket,
+  event: string,
+  payload: object,
+): Promise<unknown> {
+  return new Promise((resolve, reject) => {
+    let settled = false;
+    const cleanup = () => {
+      if (settled) return;
+      settled = true;
+      socket.off("exception", handleException);
+    };
+    const handleException = (exception: unknown) => {
+      cleanup();
+      reject(
+        new Error(getErrorMessage(exception, "Не вдалося виконати дію в чаті.")),
+      );
+    };
+
+    socket.once("exception", handleException);
+    socket.timeout(8000).emit(
+      event,
+      payload,
+      (timeoutError: Error | null, response: unknown) => {
+        cleanup();
+        if (timeoutError) {
+          reject(new Error("Сервер не підтвердив WebSocket-операцію."));
+          return;
+        }
+        resolve(response);
+      },
+    );
+  });
+}
+
 function isVisibility(value: string): value is "PUBLIC" | "PRIVATE" {
   return value === "PUBLIC" || value === "PRIVATE";
 }
 
 export function useChatSettings({
+  socket,
   selectedChat,
   setChats,
   setSelectedChatId,
@@ -68,6 +118,50 @@ export function useChatSettings({
   const [managingChat, setManagingChat] = useState(false);
   const [inviteToken, setInviteToken] = useState<string | null>(null);
   const chatAvatarPreviewUrls = useRef(new Set<string>());
+  const selectedChatIdRef = useRef<number | null>(selectedChat?.id ?? null);
+
+  useEffect(() => {
+    selectedChatIdRef.current = selectedChat?.id ?? null;
+  }, [selectedChat?.id]);
+
+  async function reloadChatMembers(chatId: number) {
+    const members = await fetchChatMembers(chatId);
+    if (selectedChatIdRef.current === chatId) setChatMembers(members);
+  }
+
+  useEffect(() => {
+    if (!socket || !selectedChat) return;
+    let active = true;
+    const refreshMembers = (payload: unknown) => {
+      if (getChatIdFromMemberEvent(payload) !== selectedChat.id) return;
+      void reloadChatMembers(selectedChat.id).catch(
+        (refreshError: unknown) => {
+          if (active) {
+            setError(
+              refreshError instanceof Error
+                ? refreshError.message
+                : "Не вдалося оновити список учасників чату.",
+            );
+          }
+        },
+      );
+    };
+
+    socket.on("chatAddedUser", refreshMembers);
+    socket.on("chatRemovedUser", refreshMembers);
+    socket.on("chatUpdatedChatRole", refreshMembers);
+    socket.on("chatLeavedUser", refreshMembers);
+    socket.on("chatJoinedUser", refreshMembers);
+
+    return () => {
+      active = false;
+      socket.off("chatAddedUser", refreshMembers);
+      socket.off("chatRemovedUser", refreshMembers);
+      socket.off("chatUpdatedChatRole", refreshMembers);
+      socket.off("chatLeavedUser", refreshMembers);
+      socket.off("chatJoinedUser", refreshMembers);
+    };
+  }, [socket, selectedChat, setError]);
 
   useEffect(() => {
     const previewUrls = chatAvatarPreviewUrls.current;
@@ -245,30 +339,19 @@ export function useChatSettings({
       addingChatUserId !== null
     )
       return;
+    if (!socket?.connected) {
+      setError("Під’єднайтеся до чату, щоб керувати його учасниками.");
+      return;
+    }
 
     setAddingChatUserId(user.id);
     setError(null);
     try {
-      const response = await fetch(
-        `/api/chats/${selectedChat.id}/users/${user.id}`,
-        { method: "POST" },
-      );
-      const payload: unknown = await response.json().catch(() => null);
-      if (!response.ok) {
-        throw new Error(
-          getErrorMessage(
-            payload,
-            `Не вдалося додати користувача (${response.status}).`,
-          ),
-        );
-      }
-      setChatMembers((current) =>
-        current.some((member) => member.id === user.id)
-          ? current
-          : [...current, { ...user, chatRole: "MEMBER" as const }].sort((left, right) =>
-              left.nickname.localeCompare(right.nickname, "uk-UA"),
-            ),
-      );
+      await emitChatCommand(socket, "addUserToChat", {
+        chatId: selectedChat.id,
+        userId: user.id,
+      });
+      await reloadChatMembers(selectedChat.id);
       setChatUserResults((current) =>
         current.filter((result) => result.id !== user.id),
       );
@@ -471,6 +554,10 @@ export function useChatSettings({
     if (!selectedChat || selectedChat.chatType === "PRIVATE" || managingChat) {
       return;
     }
+    if (action !== "owner" && !socket?.connected) {
+      setError("Під’єднайтеся до чату, щоб керувати його учасниками.");
+      return;
+    }
 
     if (!Number.isSafeInteger(memberId) || memberId < 1) {
       setError("Некоректний учасник чату.");
@@ -496,39 +583,20 @@ export function useChatSettings({
     setManagingChat(true);
     setError(null);
     try {
-      const path =
-        action === "owner"
-          ? `/api/chats/${selectedChat.id}/owner/${memberId}`
-          : `/api/chats/${selectedChat.id}/users/${memberId}${action === "role" ? "/role" : ""}`;
-      const response = await fetch(path, {
-        method: action === "remove" ? "DELETE" : "PATCH",
-        ...(action === "role"
-          ? {
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ role }),
-            }
-          : {}),
-      });
-      const payload: unknown = await response.json().catch(() => null);
-      if (!response.ok) {
-        throw new Error(
-          getErrorMessage(
-            payload,
-            `Не вдалося виконати дію з учасником (${response.status}).`,
-          ),
+      if (action === "owner") {
+        const response = await fetch(
+          `/api/chats/${selectedChat.id}/owner/${memberId}`,
+          { method: "PATCH" },
         );
-      }
-      if (action === "remove") {
-        setChatMembers((current) =>
-          current.filter((member) => member.id !== memberId),
-        );
-      } else if (action === "role" && role) {
-        setChatMembers((current) =>
-          current.map((member) =>
-            member.id === memberId ? { ...member, chatRole: role } : member,
-          ),
-        );
-      } else if (action === "owner") {
+        const payload: unknown = await response.json().catch(() => null);
+        if (!response.ok) {
+          throw new Error(
+            getErrorMessage(
+              payload,
+              `Не вдалося передати права власника (${response.status}).`,
+            ),
+          );
+        }
         setChatMembers((current) =>
           current.map((member) => ({
             ...member,
@@ -540,12 +608,56 @@ export function useChatSettings({
                   : member.chatRole,
           })),
         );
+      } else {
+        if (!socket?.connected) {
+          throw new Error("Під’єднайтеся до чату, щоб керувати його учасниками.");
+        }
+        await emitChatCommand(
+          socket,
+          action === "remove" ? "deleteUserFromChat" : "updateChatRole",
+          action === "remove"
+            ? { chatId: selectedChat.id, userId: memberId }
+            : { chatId: selectedChat.id, userId: memberId, dto: { role } },
+        );
+        await reloadChatMembers(selectedChat.id);
       }
     } catch (memberError) {
       setError(
         memberError instanceof Error
           ? memberError.message
           : "Не вдалося виконати дію з учасником.",
+      );
+    } finally {
+      setManagingChat(false);
+    }
+  }
+
+  async function leaveChat() {
+    if (!selectedChat || selectedChat.chatType === "PRIVATE" || managingChat) {
+      return;
+    }
+    if (!socket?.connected) {
+      setError("Під’єднайтеся до чату, щоб вийти з нього.");
+      return;
+    }
+    if (!window.confirm("Вийти з цього чату?")) return;
+
+    setManagingChat(true);
+    setError(null);
+    try {
+      await emitChatCommand(socket, "leaveChat", { chatId: selectedChat.id });
+      setChats((current) =>
+        current.filter((chat) => chat.id !== selectedChat.id),
+      );
+      setSelectedChatId(null);
+      setMessages([]);
+      setShowChatSettings(false);
+      setReactionSettings(null);
+    } catch (leaveError) {
+      setError(
+        leaveError instanceof Error
+          ? leaveError.message
+          : "Не вдалося вийти з чату.",
       );
     } finally {
       setManagingChat(false);
@@ -708,6 +820,7 @@ export function useChatSettings({
     deleteChatAvatar,
     handleUpdateChat,
     manageMember,
+    leaveChat,
     refreshInviteToken,
     clearChatMessages,
     deleteChat,

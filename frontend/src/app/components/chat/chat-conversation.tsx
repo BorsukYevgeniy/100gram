@@ -37,6 +37,7 @@ type ChatConversationProps = {
 	savingReactions: boolean;
 	savingAvatar: boolean;
 	managingChat: boolean;
+	canLeaveChat: boolean;
 	inviteToken: string | null;
 	reactionOptions: ReactionOption[];
 	messages: ChatMessage[];
@@ -73,6 +74,7 @@ type ChatConversationProps = {
 	onRefreshInviteToken: () => void;
 	onClearMessages: () => void;
 	onDeleteChat: () => void;
+	onLeaveChat: () => void;
 	onUpdateMessage: (event: FormEvent<HTMLFormElement>) => void;
 	onEditTextChange: (value: string) => void;
 	onCancelEdit: () => void;
@@ -104,6 +106,7 @@ export default function ChatConversation({
 	savingReactions,
 	savingAvatar,
 	managingChat,
+	canLeaveChat,
 	inviteToken,
 	reactionOptions,
 	messages,
@@ -136,6 +139,7 @@ export default function ChatConversation({
 	onRefreshInviteToken,
 	onClearMessages,
 	onDeleteChat,
+	onLeaveChat,
 	onUpdateMessage,
 	onEditTextChange,
 	onCancelEdit,
@@ -238,6 +242,7 @@ export default function ChatConversation({
 					savingReactions={savingReactions}
 					savingAvatar={savingAvatar}
 					managingChat={managingChat}
+					canLeaveChat={canLeaveChat}
 					inviteToken={inviteToken}
 					reactionOptions={reactionOptions}
 					onClose={onCloseSettings}
@@ -257,6 +262,7 @@ export default function ChatConversation({
 					onRefreshInviteToken={onRefreshInviteToken}
 					onClearMessages={onClearMessages}
 					onDeleteChat={onDeleteChat}
+					onLeaveChat={onLeaveChat}
 				/>
 			)}
 			<ChatMessageList
