@@ -16,6 +16,7 @@ import { SearchUserDto } from './dto/search-user.dto';
 import { UpdateUserProfileDto } from './dto/update-user-profile.dto';
 import {
   PaginatedUserNoCredOtpVCode,
+  PublicUserProfile,
   UserNoCredOtpVCode,
 } from './types/user.types';
 import { UserRepository } from './user.repository';
@@ -72,6 +73,17 @@ export class UserService {
     }
 
     return user;
+  }
+
+  async findPublicProfileById(id: number): Promise<PublicUserProfile> {
+    const profile = await this.userRepository.findPublicProfileById(id);
+
+    if (!profile) {
+      this.logger.warn({ userId: id }, "User doesn't exist");
+      throw new NotFoundException('User not found');
+    }
+
+    return profile;
   }
 
   async assignAdmin(userId: number): Promise<UserNoCredOtpVCode> {

@@ -5,6 +5,7 @@ import {
   ChatSummary,
   MessageReaction,
   MessageReactionSummary,
+  PublicUserProfile,
   Reaction,
   ReactionOption,
 } from "./chat-types";
@@ -141,6 +142,8 @@ function isChatSummary(payload: unknown): payload is ChatSummary {
     return (
       !!chat.participant &&
       typeof chat.participant === "object" &&
+      "id" in chat.participant &&
+      typeof chat.participant.id === "number" &&
       "nickname" in chat.participant &&
       typeof chat.participant.nickname === "string" &&
       "avatarName" in chat.participant &&
@@ -153,6 +156,20 @@ function isChatSummary(payload: unknown): payload is ChatSummary {
     (chat.chatType === "GROUP" || chat.chatType === "CHANNEL") &&
     typeof chat.title === "string" &&
     (typeof chat.avatarName === "string" || chat.avatarName === null)
+  );
+}
+
+export function isPublicUserProfile(
+  payload: unknown,
+): payload is PublicUserProfile {
+  if (!payload || typeof payload !== "object") return false;
+  const profile = payload as Record<string, unknown>;
+  return (
+    typeof profile.id === "number" &&
+    typeof profile.nickname === "string" &&
+    (typeof profile.description === "string" || profile.description === null) &&
+    (typeof profile.avatarName === "string" || profile.avatarName === null) &&
+    typeof profile.createdAt === "string"
   );
 }
 
@@ -235,6 +252,8 @@ export function isChatMessage(payload: unknown): payload is ChatMessage {
     typeof message.user === "object" &&
     typeof message.user.id === "number" &&
     typeof message.user.nickname === "string" &&
+    (message.user.avatarName === null ||
+      typeof message.user.avatarName === "string") &&
     Array.isArray(message.fileNames) &&
     message.fileNames.every((fileName) => typeof fileName === "string") &&
     (message.reactions === undefined ||

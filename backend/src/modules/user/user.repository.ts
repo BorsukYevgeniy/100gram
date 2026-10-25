@@ -5,7 +5,7 @@ import { PrismaService } from '../../infra/prisma/prisma.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { SearchUserDto } from './dto/search-user.dto';
 import { UpdateUserProfileDto } from './dto/update-user-profile.dto';
-import { UserNoCredOtpVCode } from './types/user.types';
+import { PublicUserProfile, UserNoCredOtpVCode } from './types/user.types';
 
 @Injectable()
 export class UserRepository {
@@ -58,6 +58,19 @@ export class UserRepository {
         otpHash: true,
         otpExpiresAt: true,
         otpAttempts: true,
+      },
+    });
+  }
+
+  async findPublicProfileById(id: number): Promise<PublicUserProfile | null> {
+    return this.prisma.user.findUnique({
+      where: { id },
+      select: {
+        id: true,
+        nickname: true,
+        description: true,
+        avatarName: true,
+        createdAt: true,
       },
     });
   }

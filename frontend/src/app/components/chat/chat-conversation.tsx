@@ -42,6 +42,7 @@ type ChatConversationProps = {
 	inviteToken: string | null;
 	reactionOptions: ReactionOption[];
 	messages: ChatMessage[];
+	messageScrollTrigger: number;
 	currentUserId: number | null;
 	editingMessageId: number | null;
 	editText: string;
@@ -82,6 +83,7 @@ type ChatConversationProps = {
 	onStartEdit: (message: ChatMessage) => void;
 	onDeleteMessage: (messageId: number) => void;
 	onToggleReaction: (message: ChatMessage, reaction: Reaction) => void;
+	onOpenUserProfile: (userId: number) => void;
 	onMessageTextChange: (value: string) => void;
 	onSendMessage: (event: FormEvent<HTMLFormElement>) => void;
 };
@@ -111,6 +113,7 @@ export default function ChatConversation({
 	inviteToken,
 	reactionOptions,
 	messages,
+	messageScrollTrigger,
 	currentUserId,
 	editingMessageId,
 	editText,
@@ -147,6 +150,7 @@ export default function ChatConversation({
 	onStartEdit,
 	onDeleteMessage,
 	onToggleReaction,
+	onOpenUserProfile,
 	onMessageTextChange,
 	onSendMessage,
 }: ChatConversationProps) {
@@ -268,6 +272,7 @@ export default function ChatConversation({
 			)}
 			<ChatMessageList
 				messages={messages}
+				messageScrollTrigger={messageScrollTrigger}
 				currentUserId={currentUserId}
 				connection={connection}
 				editingMessageId={editingMessageId}
@@ -280,6 +285,7 @@ export default function ChatConversation({
 				onStartEdit={onStartEdit}
 				onDelete={onDeleteMessage}
 				onToggleReaction={onToggleReaction}
+				onOpenUserProfile={onOpenUserProfile}
 			/>
 			<form className='messenger-compose' onSubmit={onSendMessage}>
 				{messageFiles.length > 0 && (

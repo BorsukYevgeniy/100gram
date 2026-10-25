@@ -55,6 +55,15 @@ export class UserController {
     return this.userService.findById(userId);
   }
 
+  @ApiUserRoutesDocs.GetPublicProfile()
+  @UseGuards(AuthGuard)
+  @Get(':userId/public-profile')
+  async getPublicProfile(
+    @Param('userId', ParseIntPipe) userId: number,
+  ) {
+    return this.userService.findPublicProfileById(userId);
+  }
+
   @ApiUserRoutesDocs.AssignAdmin()
   @UseGuards(AdminGuard)
   @Patch('assign-admin/:userId')

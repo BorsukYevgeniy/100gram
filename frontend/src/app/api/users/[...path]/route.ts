@@ -24,6 +24,12 @@ async function proxyUserRequest(request: NextRequest, context: RouteContext) {
 		/^\d+$/.test(path[0]) &&
 		Number.isSafeInteger(Number(path[0])) &&
 		Number(path[0]) > 0;
+	const isPublicProfileRoute =
+		path.length === 2 &&
+		/^\d+$/.test(path[0]) &&
+		Number.isSafeInteger(Number(path[0])) &&
+		Number(path[0]) > 0 &&
+		path[1] === 'public-profile';
 
 	const isAdminRoute =
 		path.length === 2 &&
@@ -55,6 +61,7 @@ async function proxyUserRequest(request: NextRequest, context: RouteContext) {
 		!isSelfRoute &&
 		!isSearchRoute &&
 		!isUserId &&
+		!isPublicProfileRoute &&
 		!isAdminRoute &&
 		!isBlockedListRoute &&
 		!isBlockActionRoute &&
@@ -66,19 +73,21 @@ async function proxyUserRequest(request: NextRequest, context: RouteContext) {
 
 	const allowedMethods = isSearchRoute
 		? ['GET']
-		: isAdminRoute
-			? ['PATCH']
-			: isBlockedListRoute
-				? ['GET']
-				: isBlockActionRoute
-					? ['POST', 'DELETE']
-					: isOwnAvatarRoute
-						? ['PATCH', 'DELETE']
-						: isUserAvatarRoute
-							? ['DELETE']
-							: isSelfRoute
-								? ['GET', 'PATCH', 'DELETE']
-								: ['GET', 'DELETE'];
+		: isPublicProfileRoute
+			? ['GET']
+			: isAdminRoute
+				? ['PATCH']
+				: isBlockedListRoute
+					? ['GET']
+					: isBlockActionRoute
+						? ['POST', 'DELETE']
+						: isOwnAvatarRoute
+							? ['PATCH', 'DELETE']
+							: isUserAvatarRoute
+								? ['DELETE']
+								: isSelfRoute
+									? ['GET', 'PATCH', 'DELETE']
+									: ['GET', 'DELETE'];
 
 	if (!allowedMethods.includes(request.method)) {
 		return NextResponse.json(

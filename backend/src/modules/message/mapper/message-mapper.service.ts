@@ -7,7 +7,7 @@ export class MessageMapperService {
   toMessageFile(
     obj: Omit<Message, 'userId'> & {
       userId: number;
-      user: { nickname: string };
+      user: { nickname: string; avatarName: string | null };
       files: { name: string }[];
     },
   ): MessageFiles {
@@ -15,7 +15,11 @@ export class MessageMapperService {
 
     return {
       ...msg,
-      user: { id: userId, nickname: user.nickname },
+      user: {
+        id: userId,
+        nickname: user.nickname,
+        avatarName: user.avatarName,
+      },
       fileNames: files.map(({ name }) => name),
     };
   }

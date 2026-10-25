@@ -53,6 +53,21 @@ export class ChatRepository {
     });
   }
 
+  async findPrivateChat(
+    userId: number,
+    participantId: number,
+  ): Promise<Chat | null> {
+    return this.prisma.chat.findFirst({
+      where: {
+        chatType: ChatType.PRIVATE,
+        AND: [
+          { chatToUsers: { some: { userId } } },
+          { chatToUsers: { some: { userId: participantId } } },
+        ],
+      },
+    });
+  }
+
   async createGroupChat(
     ownerId: number,
     { title, userIds, visibility, description }: CreateGroupChatDto,

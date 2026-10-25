@@ -5,11 +5,13 @@ import Link from 'next/link';
 import { io, Socket } from 'socket.io-client';
 import ChatConversation from './chat/chat-conversation';
 import ChatSidebar from './chat/chat-sidebar';
+import UserProfileDialog from './chat/user-profile-dialog';
 import {
 	ChatMessage,
 	ChatSummary,
 	ConnectionState,
 	MessageReaction,
+	PrivateChatSummary,
 	Reaction,
 } from './chat/chat-types';
 import {
@@ -32,7 +34,9 @@ export default function ChatPanel() {
 	const [chats, setChats] = useState<ChatSummary[]>([]);
 	const [currentUserId, setCurrentUserId] = useState<number | null>(null);
 	const [selectedChatId, setSelectedChatId] = useState<number | null>(null);
+	const [profileUserId, setProfileUserId] = useState<number | null>(null);
 	const [messages, setMessages] = useState<ChatMessage[]>([]);
+	const [messageScrollTrigger, setMessageScrollTrigger] = useState(0);
 	const [pendingReactionMessageIds, setPendingReactionMessageIds] = useState<
 		Set<number>
 	>(() => new Set());
@@ -199,6 +203,9 @@ export default function ChatPanel() {
 					reactions: emptyMessageReactions,
 				}),
 			);
+			if (payload.user.id === currentUserId) {
+				setMessageScrollTrigger((current) => current + 1);
+			}
 			setChats((current) =>
 				current.map((chat) =>
 					chat.id === payload.chatId
@@ -447,6 +454,72 @@ export default function ChatPanel() {
 		setShowChatSettings(false);
 		setError(null);
 		setSelectedChatId(chatId);
+	}
+
+	async function startPrivateChat(userId: number) {
+		if (currentUserId === null || userId === currentUserId) {
+			throw new Error('Неможливо почати приватний чат із цим користувачем.');
+		}
+
+		const existingChat = chats.find(
+			(chat) =>
+				chat.chatType === 'PRIVATE' && chat.participant.id === userId,
+		);
+		if (existingChat) {
+			selectChat(existingChat.id);
+			setProfileUserId(null);
+			return;
+		}
+
+		const response = await fetch('/api/chats/private', {
+			method: 'POST',
+			headers: { 'Content-Type': 'application/json' },
+			body: JSON.stringify({ userId }),
+		});
+		const payload: unknown = await response.json().catch(() => null);
+		if (!response.ok) {
+			throw new Error(
+				getErrorMessage(
+					payload,
+					`Не вдалося почати приватний чат (${response.status}).`,
+				),
+			);
+		}
+		if (
+			!payload ||
+			typeof payload !== 'object' ||
+			!('id' in payload) ||
+			typeof payload.id !== 'number' ||
+			!('participant' in payload) ||
+			!payload.participant ||
+			typeof payload.participant !== 'object' ||
+			!('nickname' in payload.participant) ||
+			typeof payload.participant.nickname !== 'string' ||
+			!('avatarName' in payload.participant) ||
+			(payload.participant.avatarName !== null &&
+				typeof payload.participant.avatarName !== 'string')
+		) {
+			throw new Error('Сервер повернув некоректні дані приватного чату.');
+		}
+
+		const newChat: PrivateChatSummary = {
+			id: payload.id,
+			chatType: 'PRIVATE',
+			participant: {
+				id: userId,
+				nickname: payload.participant.nickname,
+				avatarName: payload.participant.avatarName,
+			},
+			lastMessage: null,
+			isPinned: false,
+		};
+		setChats((current) => [
+			newChat,
+			...current.filter((chat) => chat.id !== newChat.id),
+		]);
+		setMessages([]);
+		setSelectedChatId(newChat.id);
+		setProfileUserId(null);
 	}
 
 	async function toggleChatPin(chatId: number) {
@@ -772,6 +845,7 @@ export default function ChatPanel() {
 					inviteToken={chatSettings.inviteToken}
 					reactionOptions={reactionOptions}
 					messages={messages}
+					messageScrollTrigger={messageScrollTrigger}
 					currentUserId={currentUserId}
 					editingMessageId={editingMessageId}
 					editText={editText}
@@ -824,10 +898,20 @@ export default function ChatPanel() {
 					onToggleReaction={(message, reaction) =>
 						void toggleReaction(message, reaction)
 					}
+					onOpenUserProfile={setProfileUserId}
 					onMessageTextChange={setMessageText}
 					onSendMessage={handleSendMessage}
 				/>
 			</div>
+			{profileUserId !== null && (
+				<UserProfileDialog
+					key={profileUserId}
+					userId={profileUserId}
+					currentUserId={currentUserId}
+					onClose={() => setProfileUserId(null)}
+					onStartPrivateChat={startPrivateChat}
+				/>
+			)}
 		</main>
 	);
 }

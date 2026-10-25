@@ -30,7 +30,7 @@ export class MessageRepository {
           select: { name: true },
         },
         user: {
-          select: { id: true, nickname: true },
+          select: { id: true, nickname: true, avatarName: true },
         },
       },
     });
@@ -137,7 +137,7 @@ export class MessageRepository {
         },
         include: {
           files: { select: { name: true } },
-          user: { select: { nickname: true } },
+          user: { select: { nickname: true, avatarName: true } },
         },
       });
 
@@ -155,7 +155,7 @@ export class MessageRepository {
       where: { id },
       include: {
         files: true,
-        user: { select: { nickname: true } },
+        user: { select: { nickname: true, avatarName: true } },
       },
     });
   }
@@ -171,7 +171,7 @@ export class MessageRepository {
       },
       include: {
         files: true,
-        user: { select: { nickname: true } },
+        user: { select: { nickname: true, avatarName: true } },
       },
     });
   }
@@ -181,7 +181,7 @@ export class MessageRepository {
       where: { id },
       include: {
         files: true,
-        user: { select: { nickname: true } },
+        user: { select: { nickname: true, avatarName: true } },
       },
     });
   }

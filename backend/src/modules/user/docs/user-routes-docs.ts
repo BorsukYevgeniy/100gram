@@ -36,6 +36,17 @@ export class ApiUserRoutesDocs {
     );
   }
 
+  static GetPublicProfile() {
+    return applyDecorators(
+      ApiOperation({
+        summary: 'Get public user profile',
+        description: 'Returns public profile information for a user',
+      }),
+      ApiOkResponse({ description: 'Public profile fetched successfully' }),
+      ApiUserIdDocs(),
+    );
+  }
+
   static GetMe() {
     return applyDecorators(
       ApiOperation({

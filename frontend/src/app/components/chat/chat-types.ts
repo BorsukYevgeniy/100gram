@@ -7,9 +7,18 @@ type BaseChatSummary = {
 export type PrivateChatSummary = BaseChatSummary & {
   chatType: "PRIVATE";
   participant: {
+    id: number;
     nickname: string;
     avatarName: string | null;
   };
+};
+
+export type PublicUserProfile = {
+  id: number;
+  nickname: string;
+  description: string | null;
+  avatarName: string | null;
+  createdAt: string;
 };
 
 export type GroupChannelChatSummary = BaseChatSummary & {
@@ -38,7 +47,7 @@ export type ChatMessage = {
   text: string;
   createdAt: string;
   replyId: number | null;
-  user: { id: number; nickname: string };
+  user: { id: number; nickname: string; avatarName: string | null };
   isPinned: boolean;
   fileNames: string[];
   reactions: MessageReactionSummary;

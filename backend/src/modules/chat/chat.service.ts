@@ -75,11 +75,13 @@ export class ChatService {
     }
 
     try {
-      const chat = await this.chatRepo.createPrivateChat(userId, dto.userId);
+      const chat =
+        (await this.chatRepo.findPrivateChat(userId, dto.userId)) ??
+        (await this.chatRepo.createPrivateChat(userId, dto.userId));
 
       this.logger.info(
         { chatId: chat.id, userId, peerId: dto.userId },
-        'Private chat created',
+        'Private chat opened',
       );
 
       return new PrivateChatResponseDto(
@@ -219,6 +221,7 @@ export class ChatService {
     ).user;
 
     return {
+      id: participant.id,
       avatarName: participant.avatarName,
       nickname: participant.nickname,
     };

@@ -1,17 +1,12 @@
 import { Message } from '../../../../generated/prisma/client';
 import { Paginated } from '../../../common/types/paginated.types';
 
-export type MessageFilesWithUserObject = Omit<Message, 'userId'> & {
-  fileNames: string[];
-  user: { id: number; nickname: string };
-};
-
 export type MessageFiles = Omit<Message, 'userId'> & {
   fileNames: string[];
-  user: { id: number; nickname: string };
+  user: { id: number; nickname: string; avatarName: string | null };
 };
 
-export type MessageFilesReactionCount = MessageFilesWithUserObject & {
+export type MessageFilesReactionCount = MessageFiles & {
   reactions: {
     like: { count: number; isReactedByMe: boolean };
     dislike: { count: number; isReactedByMe: boolean };

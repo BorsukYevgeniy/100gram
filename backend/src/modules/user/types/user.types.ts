@@ -19,3 +19,8 @@ export type PaginatedUserNoCredOtpVCode = Paginated<
   'users',
   UserNoCredOtpVCode
 >;
+
+export type PublicUserProfile = Pick<
+  User,
+  'id' | 'nickname' | 'description' | 'avatarName' | 'createdAt'
+>;
