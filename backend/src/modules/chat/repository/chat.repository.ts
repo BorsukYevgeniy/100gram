@@ -15,7 +15,7 @@ export class ChatRepository {
   async createChannel(
     dto: CreateChannelDto,
     ownerId: number,
-    inviteLink?: string,
+    inviteToken?: string,
   ) {
     return this.prisma.chat.create({
       data: {
@@ -24,7 +24,7 @@ export class ChatRepository {
         chatToUsers: {
           create: { userId: ownerId, role: ChatRole.OWNER },
         },
-        inviteLink,
+        inviteToken,
       },
     });
   }
