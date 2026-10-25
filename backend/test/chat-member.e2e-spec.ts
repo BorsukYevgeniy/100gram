@@ -6,7 +6,7 @@ import { hashSync } from 'bcryptjs';
 import cookieParser from 'cookie-parser';
 import { LoggerModule } from 'nestjs-pino';
 import request from 'supertest';
-import { ChatRole, ChatType } from '../generated/prisma/enums';
+import { ChatRole, ChatType, Visibility } from '../generated/prisma/enums';
 import authConfig from '../src/config/auth.config';
 import databaseConfig from '../src/config/database.config';
 import pinoConfig from '../src/config/pino.config';
@@ -33,6 +33,7 @@ describe('ChatMemberController (e2e)', () => {
   let invitedUserId: number;
   let outsiderId: number;
   let groupChatId: number;
+  let publicGroupId: number;
   let privateChatId: number;
 
   beforeAll(async () => {
@@ -159,6 +160,18 @@ describe('ChatMemberController (e2e)', () => {
         { chatId: groupChatId, userId: ownerId, role: ChatRole.OWNER },
         { chatId: groupChatId, userId: memberId },
       ],
+    });
+
+    const publicGroup = await prisma.chat.create({
+      data: { chatType: ChatType.GROUP, visibility: Visibility.PUBLIC },
+    });
+    publicGroupId = publicGroup.id;
+    await prisma.chatToUser.create({
+      data: {
+        chatId: publicGroupId,
+        userId: ownerId,
+        role: ChatRole.OWNER,
+      },
     });
 
     const privateChat = await prisma.chat.create({
@@ -321,6 +334,65 @@ describe('ChatMemberController (e2e)', () => {
       await request(app.getHttpServer())
         .post(`/chats/${groupChatId}/users/${invitedUserId}`)
         .set('Cookie', [`access_token=${ownerAccessToken}`])
+        .expect(409);
+    });
+  });
+
+  describe('POST /chats/:chatId/users/me - Should join a public chat', () => {
+    it('POST /chats/:chatId/users/me - 401 UNAUTHORIZED - Should reject requests without authentication', async () => {
+      await request(app.getHttpServer())
+        .post(`/chats/${publicGroupId}/users/me`)
+        .expect(401);
+    });
+
+    it('POST /chats/:chatId/users/me - 403 FORBIDDEN - Should reject unverified users', async () => {
+      await request(app.getHttpServer())
+        .post(`/chats/${publicGroupId}/users/me`)
+        .set('Cookie', [`access_token=${unverifiedAccessToken}`])
+        .expect(403);
+    });
+
+    it('POST /chats/:chatId/users/me - 400 BAD REQUEST - Should reject an invalid chat id', async () => {
+      await request(app.getHttpServer())
+        .post('/chats/invalid/users/me')
+        .set('Cookie', [`access_token=${outsiderAccessToken}`])
+        .expect(400);
+    });
+
+    it('POST /chats/:chatId/users/me - 400 BAD REQUEST - Should only allow joining public groups and channels', async () => {
+      await request(app.getHttpServer())
+        .post(`/chats/${groupChatId}/users/me`)
+        .set('Cookie', [`access_token=${outsiderAccessToken}`])
+        .expect(400);
+    });
+
+    it('POST /chats/:chatId/users/me - 201 CREATED - Should join a public chat', async () => {
+      const { body } = await request(app.getHttpServer())
+        .post(`/chats/${publicGroupId}/users/me`)
+        .set('Cookie', [`access_token=${outsiderAccessToken}`])
+        .expect(201);
+
+      expect(body[0]).toEqual(
+        expect.objectContaining({
+          chatId: publicGroupId,
+          userId: outsiderId,
+          role: ChatRole.MEMBER,
+        }),
+      );
+      expect(body[1]).toEqual({ membersCount: 2 });
+    });
+
+    it('POST /chats/:chatId/users/me - 404 NOT FOUND - Should return 404 if chat does not exist', async () => {
+      await request(app.getHttpServer())
+        .post(`/chats/999999999/users/me`)
+        .set('Cookie', [`access_token=${outsiderAccessToken}`])
+        .expect(404);
+    });
+
+    it('POST /chats/:chatId/users/me - 409 CONFLICT - Should return 409 if user is already a participant', async () => {
+      await request(app.getHttpServer())
+        .post(`/chats/${publicGroupId}/users/me`)
+        .set('Cookie', [`access_token=${outsiderAccessToken}`])
         .expect(409);
     });
   });

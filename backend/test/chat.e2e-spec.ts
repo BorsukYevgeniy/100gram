@@ -643,48 +643,6 @@ describe('ChatController (e2e)', () => {
     });
   });
 
-  describe('POST /chats/join/:chatId - Should join to public chat', () => {
-    it('POST /chats/join/:chatId - 401 UNAUTHORIZED - Should return 401 because user is unauthorized', async () => {
-      const { body } = await request(app.getHttpServer())
-        .post(`/chats/join/${groupChatId}`)
-        .expect(401);
-
-      expect(body).toEqual(unauthorizedResponse);
-    });
-
-    it('POST /chats/join/:chatId - 403 FORBIDDEN - Should return 403 because user is not verified', async () => {
-      await request(app.getHttpServer())
-        .post(`/chats/join/${publicGroupId}`)
-        .set('Cookie', [`access_token=${unverifiedAccessToken}`])
-        .expect(403);
-    });
-
-    it('POST /chats/join/:chatId - 400 BAD REQUEST - Should return 400 because chatId is invalid', async () => {
-      await request(app.getHttpServer())
-        .post('/chats/join/invalid')
-        .set('Cookie', [`access_token=${guestAccessToken}`])
-        .expect(400);
-    });
-
-    it('POST /chats/join/:chatId - 201 CREATED - Should join a public group', async () => {
-      const { body } = await request(app.getHttpServer())
-        .post(`/chats/join/${publicGroupId}`)
-        .set('Cookie', [`access_token=${guestAccessToken}`])
-        .expect(201);
-
-      expect(body[0]).toEqual(
-        expect.objectContaining({ chatId: publicGroupId, userId: guestId }),
-      );
-    });
-
-    it('POST /chats/join/:chatId - 409 CONFLICT - Should return 409 if user already joined', async () => {
-      await request(app.getHttpServer())
-        .post(`/chats/join/${publicGroupId}`)
-        .set('Cookie', [`access_token=${guestAccessToken}`])
-        .expect(409);
-    });
-  });
-
   describe('PATCH /chats/:chatId/pin - Should pin a chat', () => {
     it('PATCH /chats/:chatId/pin - 401 UNAUTHORIZED - Should return 401 because user is unauthorized', async () => {
       const { body } = await request(app.getHttpServer())

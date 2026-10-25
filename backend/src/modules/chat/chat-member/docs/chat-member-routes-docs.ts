@@ -16,7 +16,7 @@ import {
   ApiChatMustBeGroupOrChannelResponse,
   ApiYouMustBeChatOwnerResponse,
 } from '../../docs/shared';
-import { UpdateRoleDto } from '../../dto/role/update-role.dto';
+import { UpdateRoleDto } from '../dto/update-role.dto';
 
 function UserIsNotParticipantOfChatDocs() {
   return applyDecorators(
@@ -71,6 +71,22 @@ export class ChatMemberRoutesDocs {
       UserIsNotParticipantOfChatDocs(),
       ApiChatMustBeGroupOrChannelResponse(),
       ApiVerifiedAuthDocs(),
+    );
+  }
+
+  static JoinToChat() {
+    return applyDecorators(
+      ApiOperation({
+        summary: 'Join to chat',
+        description: 'Adds the authenticated user to a public group or channel',
+      }),
+      ApiCreatedResponse({ description: 'User added to chat successfully' }),
+      ApiConflictResponse({
+        description: 'User already is a participant of the chat',
+      }),
+      ApiBadRequestResponse({
+        description: 'Only public groups and channels can be joined',
+      }),
     );
   }
 

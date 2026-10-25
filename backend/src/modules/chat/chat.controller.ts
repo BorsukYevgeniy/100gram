@@ -13,7 +13,7 @@ import {
 import { PaginationDto } from '../../common/dto/pagination.dto';
 import { AccessTokenPayload } from '../../common/types';
 import { CurrentUser } from '../auth/decorator/current-user.decorator';
-import { AuthGuard } from '../auth/guards/auth.guard';
+import { VerifiedUserGuard } from '../auth/guards/verified-user.guard';
 import { ChatService } from './chat.service';
 import { ChatControllerDocs, ChatRoutesDocs } from './docs';
 import { AllowReactionDto } from './dto/allow-reaction.dto';
@@ -24,7 +24,7 @@ import { UpdateGroupChatDto } from './dto/update-group-chat.dto';
 
 @ChatControllerDocs()
 @Controller('chats')
-@UseGuards(AuthGuard)
+@UseGuards(VerifiedUserGuard)
 export class ChatController {
   constructor(private readonly chatService: ChatService) {}
 
@@ -122,15 +122,6 @@ export class ChatController {
     @Param('chatId', ParseIntPipe) chatId: number,
   ) {
     return this.chatService.delete(user, chatId);
-  }
-
-  @ChatRoutesDocs.JoinToChat()
-  @Post('join/:chatId')
-  async join(
-    @Param('chatId', ParseIntPipe) chatId: number,
-    @CurrentUser() { userId }: AccessTokenPayload,
-  ) {
-    return this.chatService.joinToChat(chatId, userId);
   }
 
   @ChatRoutesDocs.PinChat()

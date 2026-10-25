@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { ChatToUser } from '../../../../../generated/prisma/browser';
 import { ChatRole } from '../../../../../generated/prisma/enums';
 import { PrismaService } from '../../../../infra/prisma/prisma.service';
-import { UpdateRoleDto } from '../../dto/role/update-role.dto';
+import { UpdateRoleDto } from '../dto/update-role.dto';
 
 @Injectable()
 export class ChatMemberRepository {

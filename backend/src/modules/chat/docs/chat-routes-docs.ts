@@ -200,23 +200,6 @@ export class ChatRoutesDocs {
     );
   }
 
-  static JoinToChat() {
-    return applyDecorators(
-      ApiOperation({
-        summary: 'Join to chat',
-        description: 'Adds the authenticated user to a public group or channel',
-      }),
-      ApiOkResponse({ description: 'User added to chat successfully' }),
-      ApiChatIdDocs(),
-      ApiConflictResponse({
-        description: 'User already is a participant of the chat',
-      }),
-      ApiBadRequestResponse({
-        description: 'Only public groups and channels can be joined',
-      }),
-    );
-  }
-
   static PinChat() {
     return applyDecorators(
       ApiOperation({
@@ -251,11 +234,13 @@ export class ChatRoutesDocs {
     return applyDecorators(
       ApiOperation({
         summary: 'Update allowed reactions',
-        description: 'Update the list of reactions allowed in a group chat or channel',
+        description:
+          'Update the list of reactions allowed in a group chat or channel',
       }),
       ApiOkResponse({ description: 'Allowed reactions updated successfully' }),
       ApiBadRequestResponse({
-        description: 'Chat must be a group or a channel or reaction list is invalid',
+        description:
+          'Chat must be a group or a channel or reaction list is invalid',
       }),
       ApiYouMustBeChatOwnerResponse(),
       ApiVerifiedAuthDocs(),

@@ -29,6 +29,10 @@ import { WsAddReactionDto } from '../../reaction/dto/ws/ws-add-reaction.dto';
 import { WsRemoveReactionDto } from '../../reaction/dto/ws/ws-remove-reaction.dto';
 import { WsUpdateReactionDto } from '../../reaction/dto/ws/ws-update-reaction.dto';
 import { ReactionService } from '../../reaction/reaction.service';
+import { ChatMemberService } from '../chat-member/chat-member.service';
+import { CommonChatMemberDto } from '../chat-member/dto/ws/common-chat-member.dto';
+import { WsJoinLeaveChatDto } from '../chat-member/dto/ws/ws-join-leave-chat.dto';
+import { WsUpdateChatRoleDto } from '../chat-member/dto/ws/ws-update-chat-role.dto';
 import { ChatGatewayDocs } from './docs/chat-gateway-docs';
 
 @WebSocketGateway({
@@ -50,6 +54,7 @@ export class ChatGateway
   constructor(
     private readonly chatValidator: ChatValidationService,
     private readonly messageService: MessageService,
+    private readonly chatMember: ChatMemberService,
     private readonly reactionService: ReactionService,
     @Inject(appConfig.KEY)
     private readonly appConf: ConfigType<typeof appConfig>,
@@ -81,6 +86,8 @@ export class ChatGateway
     @WsCurrentUser() { userId: id }: AccessTokenPayload,
   ) {
     await this.chatValidator.validateChatParticipation(id, payload.chatId);
+
+    client.join(`user-${client.data.user.userId}`);
     client.join(`chat-${payload.chatId}`);
   }
 
@@ -180,5 +187,89 @@ export class ChatGateway
     const reaction = await this.reactionService.removeReaction(id, messageId);
 
     this.server.to(`chat-${chatId}`).emit('chatDeletedReaction', reaction);
+  }
+
+  @ChatGatewayDocs.AddUserToChat()
+  @SubscribeMessage('addUserToChat')
+  async handleAddingUser(
+    @WsCurrentUser() user: AccessTokenPayload,
+    @MessageBody() { chatId, userId }: CommonChatMemberDto,
+  ) {
+    const chatToUser = await this.chatMember.addUserToChat(
+      user,
+      chatId,
+      userId,
+    );
+
+    const sockets = await this.server.in(`user-${userId}`).fetchSockets();
+
+    for (const socket of sockets) {
+      socket.join(`chat-${chatId}`);
+    }
+
+    this.server.to(`chat-${chatId}`).emit('chatAddedUser', chatToUser);
+  }
+
+  @ChatGatewayDocs.DeleteUserFromChat()
+  @SubscribeMessage('deleteUserFromChat')
+  async handleDeletingUser(
+    @WsCurrentUser() user: AccessTokenPayload,
+    @MessageBody() { chatId, userId }: CommonChatMemberDto,
+  ) {
+    const chatToUser = await this.chatMember.deleteUserFromChat(
+      chatId,
+      userId,
+      user,
+    );
+
+    const sockets = await this.server.in(`user-${userId}`).fetchSockets();
+
+    for (const socket of sockets) {
+      socket.leave(`chat-${chatId}`);
+    }
+
+    this.server.to(`chat-${chatId}`).emit('chatRemovedUser', chatToUser);
+  }
+
+  @ChatGatewayDocs.UpdateChatRole()
+  @SubscribeMessage('updateChatRole')
+  async handleUpdatingChatRole(
+    @WsCurrentUser() user: AccessTokenPayload,
+    @MessageBody() { chatId, userId, dto }: WsUpdateChatRoleDto,
+  ) {
+    const userToChat = await this.chatMember.updateUserChatRole(
+      user,
+      chatId,
+      userId,
+      dto,
+    );
+
+    this.server.to(`chat-${chatId}`).emit('chatUpdatedChatRole', userToChat);
+  }
+
+  @ChatGatewayDocs.LeaveChat()
+  @SubscribeMessage('leaveChat')
+  async leaveChat(
+    @WsCurrentUser() { userId }: AccessTokenPayload,
+    @ConnectedSocket() client: Socket,
+    @MessageBody() { chatId }: WsJoinLeaveChatDto,
+  ) {
+    const chatToUser = await this.chatMember.leaveChat(chatId, userId);
+
+    client.leave(`chat-${chatId}`);
+    this.server.to(`chat-${chatId}`).emit('chatLeavedUser', chatToUser);
+  }
+
+  @ChatGatewayDocs.JoinToChat()
+  @SubscribeMessage('joinToChat')
+  async handleJoinToChat(
+    @WsCurrentUser() { userId }: AccessTokenPayload,
+    @ConnectedSocket() client: Socket,
+    @MessageBody() { chatId }: WsJoinLeaveChatDto,
+  ) {
+    const chatToUser = await this.chatMember.joinToChat(chatId, userId);
+
+    client.join(`chat-${chatId}`);
+    this.server.to(`chat-${chatId}`).emit('chatJoinedUser', chatToUser);
   }
 }

@@ -401,32 +401,6 @@ export class ChatService {
     return result;
   }
 
-  async joinToChat(chatId: number, userId: number) {
-    await this.chatValidator.validateChatType(
-      chatId,
-      ChatType.GROUP,
-      ChatType.CHANNEL,
-    );
-
-    await this.chatValidator.validateChatVisibility(chatId, Visibility.PUBLIC);
-
-    const isParticipant = await this.chatValidator.checkChatParticipation(
-      userId,
-      chatId,
-    );
-
-    if (isParticipant) {
-      this.logger.warn({ chatId, userId }, 'User already in chat');
-      throw new ConflictException('User already is a participant of the chat');
-    }
-
-    const chatToUser = await this.chatUserRepo.addUserToChat(chatId, userId);
-
-    this.logger.info({ chatId, userId }, 'User joined to public chat');
-
-    return chatToUser;
-  }
-
   async pinChat(userId: number, chatId: number) {
     await this.chatValidator.validateChatParticipation(userId, chatId);
     return this.chatRepo.pinChat(userId, chatId);

@@ -5,9 +5,16 @@ import { WsDeleteMessageDto } from '../../../message/dto/ws/ws-delete-message.dt
 import { WsMessageFileResponseDto } from '../../../message/dto/ws/ws-message-file-response.dto';
 import { WsUpdateMessageDto } from '../../../message/dto/ws/ws-update-message.dto';
 import { WsAddReactionDto } from '../../../reaction/dto/ws/ws-add-reaction.dto';
-import { WsRemoveReactionDto } from '../../../reaction/dto/ws/ws-remove-reaction.dto';
 import { WsReactionResponseDto } from '../../../reaction/dto/ws/ws-reaction-response.dto';
+import { WsRemoveReactionDto } from '../../../reaction/dto/ws/ws-remove-reaction.dto';
 import { WsUpdateReactionDto } from '../../../reaction/dto/ws/ws-update-reaction.dto';
+import { CommonChatMemberDto } from '../../chat-member/dto/ws/common-chat-member.dto';
+import { WsJoinLeaveChatDto } from '../../chat-member/dto/ws/ws-join-leave-chat.dto';
+import {
+  WsChatMemberChangeResponseDto,
+  WsChatMemberResponseDto,
+} from '../../chat-member/dto/ws/ws-chat-member-response.dto';
+import { WsUpdateChatRoleDto } from '../../chat-member/dto/ws/ws-update-chat-role.dto';
 import { WsRoomDto } from '../dto/ws-room.dto';
 
 export class ChatGatewayDocs {
@@ -173,6 +180,111 @@ export class ChatGatewayDocs {
         description:
           'Broadcasts the removed reaction to sockets in the message chat room.',
         message: { payload: WsReactionResponseDto },
+      }),
+    );
+  }
+
+  static AddUserToChat() {
+    return applyDecorators(
+      AsyncApiReceive({
+        channel: 'addUserToChat',
+        title: 'Add a chat member',
+        summary: 'Add a user to a group or channel',
+        description:
+          'Only the chat owner can add a user. The server broadcasts the member and updated member count to the chat room.',
+        message: { payload: CommonChatMemberDto },
+      }),
+      AsyncApiSend({
+        channel: 'chatAddedUser',
+        title: 'Chat member added',
+        summary: 'Broadcast an added chat member',
+        description:
+          'The server broadcasts the added member and the updated member count to the chat room.',
+        message: { payload: WsChatMemberChangeResponseDto },
+      }),
+    );
+  }
+
+  static DeleteUserFromChat() {
+    return applyDecorators(
+      AsyncApiReceive({
+        channel: 'deleteUserFromChat',
+        title: 'Remove a chat member',
+        summary: 'Remove a user from a group or channel',
+        description:
+          'Only the chat owner can remove another user. The removed user’s connected sockets leave the chat room before the change is broadcast.',
+        message: { payload: CommonChatMemberDto },
+      }),
+      AsyncApiSend({
+        channel: 'chatRemovedUser',
+        title: 'Chat member removed',
+        summary: 'Broadcast a removed chat member',
+        description:
+          'The server broadcasts the removed member and the updated member count to the remaining chat participants.',
+        message: { payload: WsChatMemberChangeResponseDto },
+      }),
+    );
+  }
+
+  static UpdateChatRole() {
+    return applyDecorators(
+      AsyncApiReceive({
+        channel: 'updateChatRole',
+        title: 'Update chat member role',
+        summary: 'Change a member’s role',
+        description:
+          'Only the chat owner can change a participant’s role in a group or channel.',
+        message: { payload: WsUpdateChatRoleDto },
+      }),
+      AsyncApiSend({
+        channel: 'chatUpdatedChatRole',
+        title: 'Chat member role updated',
+        summary: 'Broadcast an updated member role',
+        description:
+          'The server broadcasts the updated chat membership record to the chat room.',
+        message: { payload: WsChatMemberResponseDto },
+      }),
+    );
+  }
+
+  static LeaveChat() {
+    return applyDecorators(
+      AsyncApiReceive({
+        channel: 'leaveChat',
+        title: 'Leave a chat',
+        summary: 'Leave a group or channel',
+        description:
+          'The authenticated user leaves a group or channel, exits its room, and triggers a membership update for the remaining participants.',
+        message: { payload: WsJoinLeaveChatDto },
+      }),
+      AsyncApiSend({
+        channel: 'chatLeavedUser',
+        title: 'Chat member left',
+        summary: 'Broadcast a member leaving a chat',
+        description:
+          'The server broadcasts the departed member and the updated member count to the remaining chat participants.',
+        message: { payload: WsChatMemberChangeResponseDto },
+      }),
+    );
+  }
+
+  static JoinToChat() {
+    return applyDecorators(
+      AsyncApiReceive({
+        channel: 'joinToChat',
+        title: 'Join a public chat',
+        summary: 'Join a public group or channel',
+        description:
+          'The authenticated user joins a public group or channel, enters its room, and triggers a membership update.',
+        message: { payload: WsJoinLeaveChatDto },
+      }),
+      AsyncApiSend({
+        channel: 'chatJoinedUser',
+        title: 'Chat member joined',
+        summary: 'Broadcast a member joining a chat',
+        description:
+          'The server broadcasts the joined member and the updated member count to participants in the chat room.',
+        message: { payload: WsChatMemberChangeResponseDto },
       }),
     );
   }

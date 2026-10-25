@@ -5,11 +5,15 @@ import {
 } from '@nestjs/common';
 import { PrismaClientKnownRequestError } from '@prisma/client/runtime/client';
 import { PinoLogger } from 'nestjs-pino';
-import { ChatRole, ChatType } from '../../../../generated/prisma/enums';
+import {
+  ChatRole,
+  ChatType,
+  Visibility,
+} from '../../../../generated/prisma/enums';
 import { PaginationDto } from '../../../common/dto/pagination.dto';
 import { AccessTokenPayload } from '../../../common/types';
-import { UpdateRoleDto } from '../dto/role/update-role.dto';
 import { ChatValidationService } from '../validation/chat-validation.service';
+import { UpdateRoleDto } from './dto/update-role.dto';
 import { ChatMemberRepository } from './repository/chat-member.repository';
 import {
   ChatMemberWithRole,
@@ -167,5 +171,31 @@ export class ChatMemberService {
     this.logger.info({ chatId, userId }, 'User leaved chat');
 
     return user;
+  }
+
+  async joinToChat(chatId: number, userId: number) {
+    await this.chatValidator.validateChatType(
+      chatId,
+      ChatType.GROUP,
+      ChatType.CHANNEL,
+    );
+
+    await this.chatValidator.validateChatVisibility(chatId, Visibility.PUBLIC);
+
+    const isParticipant = await this.chatValidator.checkChatParticipation(
+      userId,
+      chatId,
+    );
+
+    if (isParticipant) {
+      this.logger.warn({ chatId, userId }, 'User already in chat');
+      throw new ConflictException('User already is a participant of the chat');
+    }
+
+    const chatToUser = await this.chatRepo.addUserToChat(chatId, userId);
+
+    this.logger.info({ chatId, userId }, 'User joined to public chat');
+
+    return chatToUser;
   }
 }

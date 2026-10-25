@@ -14,9 +14,9 @@ import { PaginationDto } from '../../../common/dto/pagination.dto';
 import { AccessTokenPayload } from '../../../common/types';
 import { CurrentUser } from '../../auth/decorator/current-user.decorator';
 import { VerifiedUserGuard } from '../../auth/guards/verified-user.guard';
-import { UpdateRoleDto } from '../dto/role/update-role.dto';
 import { ChatMemberService } from './chat-member.service';
 import { ChatMemberControllerDocs, ChatMemberRoutesDocs } from './docs';
+import { UpdateRoleDto } from './dto/update-role.dto';
 import { PaginatedChatMembers } from './types/chat-member.types';
 
 @ChatMemberControllerDocs()
@@ -33,6 +33,15 @@ export class ChatMemberController {
     @Query() paginationDto: PaginationDto,
   ): Promise<PaginatedChatMembers> {
     return this.chatMemberService.getUsersInChat(id, chatId, paginationDto);
+  }
+
+  @ChatMemberRoutesDocs.JoinToChat()
+  @Post('me')
+  async join(
+    @Param('chatId', ParseIntPipe) chatId: number,
+    @CurrentUser() { userId }: AccessTokenPayload,
+  ) {
+    return this.chatMemberService.joinToChat(chatId, userId);
   }
 
   @ChatMemberRoutesDocs.AddUserToChat()
