@@ -5,6 +5,9 @@ const nextConfig: NextConfig = {
 	cacheComponents: true,
 	partialPrefetching: true,
 	allowedDevOrigins: ['192.168.0.106'],
+	experimental: {
+		agentUpgrade: 'security',
+	},
 	async redirects() {
 		return [
 			{
