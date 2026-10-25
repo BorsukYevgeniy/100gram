@@ -15,6 +15,7 @@ import {
 import { fileProxyUrl, getChatAvatarName } from './chat-utils';
 import ChatMessageList from './chat-message-list';
 import ChatSettingsDialog from './chat-settings-dialog';
+import ChatAttachmentPreview from './chat-attachment-preview';
 
 type ChatConversationProps = {
 	chat: ChatSummary | undefined;
@@ -281,45 +282,16 @@ export default function ChatConversation({
 				onToggleReaction={onToggleReaction}
 			/>
 			<form className='messenger-compose' onSubmit={onSendMessage}>
-				<label
-					className='messenger-attach'
-					title='Додати до 5 файлів'
-					aria-label='Додати до 5 файлів'
-				>
-					📎
-					<input
-						type='file'
-						multiple
-						aria-label='Вибрати вкладення'
-						disabled={connection !== 'connected' || sendingMessage}
-						onChange={(event) => {
-							onMessageFilesChange(
-								Array.from(event.currentTarget.files ?? []),
-							);
-							event.currentTarget.value = '';
-						}}
-					/>
-				</label>
-				<input
-					aria-label='Нове повідомлення'
-					placeholder={
-						connection === 'connected'
-							? 'Повідомлення'
-							: 'Підключення до чату…'
-					}
-					value={messageText}
-					maxLength={3000}
-					onChange={(event) => onMessageTextChange(event.target.value)}
-					disabled={connection !== 'connected' || sendingMessage}
-					required
-				/>
 				{messageFiles.length > 0 && (
 					<div className='messenger-attachments'>
-						<span>
-							{messageFiles.length === 1
-								? messageFiles[0].name
-								: `${messageFiles.length} файлів`}
-						</span>
+						<div className='messenger-attachment-list'>
+							{messageFiles.map((file) => (
+								<ChatAttachmentPreview
+									key={`${file.name}-${file.lastModified}-${file.size}`}
+									file={file}
+								/>
+							))}
+						</div>
 						<button
 							className='text-button'
 							type='button'
@@ -330,18 +302,52 @@ export default function ChatConversation({
 						</button>
 					</div>
 				)}
-				<button
-					className='messenger-send'
-					type='submit'
-					aria-label='Надіслати повідомлення'
-					disabled={
-						connection !== 'connected' ||
-						!messageText.trim() ||
-						sendingMessage
-					}
-				>
-					{sendingMessage ? '…' : '↑'}
-				</button>
+				<div className='messenger-compose-main'>
+					<label
+						className='messenger-attach'
+						title='Додати до 5 файлів'
+						aria-label='Додати до 5 файлів'
+					>
+						📎
+						<input
+							type='file'
+							multiple
+							aria-label='Вибрати вкладення'
+							disabled={connection !== 'connected' || sendingMessage}
+							onChange={(event) => {
+								onMessageFilesChange(
+									Array.from(event.currentTarget.files ?? []),
+								);
+								event.currentTarget.value = '';
+							}}
+						/>
+					</label>
+					<input
+						aria-label='Нове повідомлення'
+						placeholder={
+							connection === 'connected'
+								? 'Повідомлення'
+								: 'Підключення до чату…'
+						}
+						value={messageText}
+						maxLength={3000}
+						onChange={(event) => onMessageTextChange(event.target.value)}
+						disabled={connection !== 'connected' || sendingMessage}
+						required
+					/>
+					<button
+						className='messenger-send'
+						type='submit'
+						aria-label='Надіслати повідомлення'
+						disabled={
+							connection !== 'connected' ||
+							!messageText.trim() ||
+							sendingMessage
+						}
+					>
+						{sendingMessage ? '…' : '↑'}
+					</button>
+				</div>
 			</form>
 		</section>
 	);

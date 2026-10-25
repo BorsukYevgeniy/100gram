@@ -3,6 +3,7 @@
 import { FormEvent, useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { isUnauthenticatedStatus } from "../auth-session";
 
 type Notice = {
   kind: "success" | "error";
@@ -49,7 +50,7 @@ export default function AuthPage() {
           router.replace("/");
           return;
         }
-        if (!response.ok && response.status !== 401 && response.status !== 403) {
+        if (!response.ok && !isUnauthenticatedStatus(response.status)) {
           setNotice({
             kind: "error",
             text: `Не вдалося перевірити сесію (${response.status}).`,

@@ -7,7 +7,8 @@ import {
 	Reaction,
 	ReactionOption,
 } from './chat-types';
-import { fileProxyUrl, getReactionSummary } from './chat-utils';
+import { getReactionSummary } from './chat-utils';
+import ChatMessageAttachment from './chat-message-attachment';
 
 type ChatMessageListProps = {
 	messages: ChatMessage[];
@@ -58,7 +59,7 @@ export default function ChatMessageList({
 				const isOwnMessage = message.userId === currentUserId;
 				return (
 					<article
-						className={`messenger-message${isOwnMessage ? ' own' : ''}`}
+						className={`messenger-message${isOwnMessage ? ' own' : ''}${message.fileNames.length > 0 ? ' has-attachments' : ''}`}
 						key={message.id}
 					>
 						<div className="messenger-message-bubble">
@@ -91,18 +92,14 @@ export default function ChatMessageList({
 								<p className="messenger-message-text">{message.text}</p>
 							)}
 							{message.fileNames.length > 0 && (
-								<ul className="chat-muted">
+								<div className="messenger-message-attachments">
 									{message.fileNames.map((fileName) => (
-										<li key={fileName}>
-											<a
-												href={fileProxyUrl(fileName, 'attachments')}
-												download={fileName}
-											>
-												{fileName}
-											</a>
-										</li>
+										<ChatMessageAttachment
+											key={fileName}
+											fileName={fileName}
+										/>
 									))}
-								</ul>
+								</div>
 							)}
 							<div className="messenger-message-footer">
 								<div className="chat-message-actions">

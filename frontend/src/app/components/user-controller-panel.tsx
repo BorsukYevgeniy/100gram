@@ -11,6 +11,7 @@ import type {
 } from "./user-controller/types";
 import { errorMessage, isUserProfile } from "./user-controller/utils";
 import UserSearchCard from "./user-controller/user-search-card";
+import { isUnauthenticatedStatus } from "../auth-session";
 
 export default function UserControllerPanel() {
   const [busy, setBusy] = useState<string | null>(null);
@@ -44,11 +45,11 @@ export default function UserControllerPanel() {
         if (!response.ok) {
           if (active) {
             setProfileStatus(
-              response.status === 401 || response.status === 403
+              isUnauthenticatedStatus(response.status)
                 ? "unauthenticated"
                 : "error",
             );
-            if (response.status !== 401 && response.status !== 403) {
+            if (!isUnauthenticatedStatus(response.status)) {
               setNotice({
                 kind: "error",
                 text: errorMessage(

@@ -30,6 +30,11 @@ register that exact URL in Google OAuth settings. Browser API and Socket.IO
 traffic then share the ngrok origin, while `BACKEND_URL` remains the internal
 Docker address (for example, `http://backend:3000`).
 
+Docker Compose sets the frontend backend URL to `http://backend:3000` and waits
+for the backend API to become healthy before starting the frontend. After
+changing this Compose configuration, recreate the containers with
+`docker compose up -d --build`.
+
 Set the backend's `FRONTEND_URL` to the public frontend URL so verification
 emails open the verification page.
 

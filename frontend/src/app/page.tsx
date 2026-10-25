@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import ChatPanel from "./components/chat-panel";
+import { isUnauthenticatedStatus } from "./auth-session";
 
 export default function Home() {
   const router = useRouter();
@@ -17,7 +18,7 @@ export default function Home() {
         const response = await fetch("/api/users/me", { cache: "no-store" });
         if (!active) return;
 
-        if (response.status === 401 || response.status === 403) {
+        if (isUnauthenticatedStatus(response.status)) {
           router.replace("/login");
           return;
         }
