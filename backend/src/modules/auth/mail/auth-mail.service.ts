@@ -16,11 +16,14 @@ export class AuthMailService {
   }
 
   async sendVerificationMail(to: string, verificationCode: string) {
-    const link = this.appConf.appUrl.concat('/auth/verify/', verificationCode);
+    const link = this.appConf.frontendUrl.concat(
+      '/auth/verify/',
+      verificationCode,
+    );
 
     await this.mailService.sendMail(
       to,
-      'Verification mail on' + this.appConf.appUrl,
+      'Verification mail on' + this.appConf.frontendUrl,
       `
       <div>
         <h1>For verification go to</h1>
@@ -35,7 +38,7 @@ export class AuthMailService {
   async sendOtpMail(to: string, otp: number) {
     await this.mailService.sendMail(
       to,
-      'Password reseting on' + this.appConf.appUrl,
+      'Password reseting on' + this.appConf.frontendUrl,
       `
       <div>
         <h1>Your OTP code for password reseting</h1>
