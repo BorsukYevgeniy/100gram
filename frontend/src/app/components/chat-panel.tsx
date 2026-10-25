@@ -40,6 +40,8 @@ export default function ChatPanel() {
 	const [connection, setConnection] = useState<ConnectionState>('loading');
 	const [error, setError] = useState<string | null>(null);
 	const [messageText, setMessageText] = useState('');
+	const [messageFiles, setMessageFiles] = useState<File[]>([]);
+	const [sendingMessage, setSendingMessage] = useState(false);
 	const [editingMessageId, setEditingMessageId] = useState<number | null>(null);
 	const [editText, setEditText] = useState('');
 	const [showCreateForm, setShowCreateForm] = useState(false);
@@ -439,6 +441,7 @@ export default function ChatPanel() {
 
 	function selectChat(chatId: number) {
 		setMessages([]);
+		setMessageFiles([]);
 		setEditingMessageId(null);
 		setShowChatSettings(false);
 		setError(null);
@@ -481,13 +484,88 @@ export default function ChatPanel() {
 		}
 	}
 
-	function handleSendMessage(event: FormEvent<HTMLFormElement>) {
+	async function handleSendMessage(event: FormEvent<HTMLFormElement>) {
 		event.preventDefault();
 		const text = messageText.trim();
-		if (!socket?.connected || selectedChatId === null || !text) return;
+		if (
+			!socket?.connected ||
+			selectedChatId === null ||
+			!text ||
+			sendingMessage
+		) {
+			return;
+		}
+
+		const chatId = selectedChatId;
 		setError(null);
-		socket.emit('createMessage', { chatId: selectedChatId, text });
-		setMessageText('');
+		setSendingMessage(true);
+		try {
+			let filenames: string[] = [];
+			if (messageFiles.length > 0) {
+				const formData = new FormData();
+				for (const file of messageFiles) {
+					formData.append('files', file);
+				}
+
+				const uploadFiles = () =>
+					fetch('/api/controller-api/files/upload', {
+						method: 'POST',
+						body: formData,
+						cache: 'no-store',
+					});
+				let response = await uploadFiles();
+				if (response.status === 401) {
+					const refreshResponse = await fetch('/api/auth/refresh', {
+						method: 'POST',
+						cache: 'no-store',
+					});
+					if (refreshResponse.ok) response = await uploadFiles();
+				}
+				const payload: unknown = await response.json().catch(() => null);
+				if (!response.ok) {
+					throw new Error(
+						getErrorMessage(
+							payload,
+							`Не вдалося завантажити вкладення (${response.status}).`,
+						),
+					);
+				}
+				if (
+					!Array.isArray(payload) ||
+					!payload.every(
+						(file) =>
+							!!file &&
+							typeof file === 'object' &&
+							'name' in file &&
+							typeof file.name === 'string',
+					)
+				) {
+					throw new Error('Сервер повернув некоректні дані вкладень.');
+				}
+				filenames = payload.map((file) => file.name);
+			}
+
+			if (!socket.connected || selectedChatId !== chatId) {
+				throw new Error(
+					'Чат змінився або з’єднання перервано. Повідомлення не надіслано.',
+				);
+			}
+			socket.emit('createMessage', {
+				chatId,
+				text,
+				...(filenames.length > 0 ? { filenames } : {}),
+			});
+			setMessageText('');
+			setMessageFiles([]);
+		} catch (sendError) {
+			setError(
+				sendError instanceof Error
+					? sendError.message
+					: 'Не вдалося надіслати повідомлення.',
+			);
+		} finally {
+			setSendingMessage(false);
+		}
 	}
 
 	function handleUpdateMessage(event: FormEvent<HTMLFormElement>) {
@@ -692,6 +770,17 @@ export default function ChatPanel() {
 					pendingReactionMessageIds={pendingReactionMessageIds}
 					availableReactionOptions={availableReactionOptions}
 					messageText={messageText}
+					messageFiles={messageFiles}
+					sendingMessage={sendingMessage}
+					onMessageFilesChange={(files) => {
+						if (files.length > 5) {
+							setError('До одного повідомлення можна додати не більше 5 файлів.');
+							return;
+						}
+						setError(null);
+						setMessageFiles(files);
+					}}
+					onClearMessageFiles={() => setMessageFiles([])}
 					onBack={() => setSelectedChatId(null)}
 					onOpenSettings={() => void chatSettings.openChatSettings()}
 					onCloseSettings={() => setShowChatSettings(false)}

@@ -62,22 +62,27 @@ available at `/user`,
 and `/chats` remains an alias for the chat interface. Private chat names are
 resolved from the other participant's nickname using the existing
 chat-members endpoint.
+The chat composer uploads up to five attachments through `POST /files/upload`,
+then sends their returned names through the existing Socket.IO `createMessage`
+event. Message attachments are downloaded through the authenticated
+`GET /files?key=attachments/<name>` route; the browser accesses both endpoints
+through the same origin. Nginx forwards the upload route directly to NestJS so
+large multipart bodies do not have to be buffered by the Next.js proxy. If the
+access cookie has expired, the chat renews it through `/api/auth/refresh` and
+retries the upload.
 
 ## Recommended backend additions
 
-The current frontend uses existing routes and does not require backend changes
-for the controller tools. To support a more complete self-service product,
-consider adding:
+The current frontend uses the existing authentication, user, chat, message,
+reaction, and file APIs. Attachment upload/download and all listed controller
+operations are already supported by the backend. The following API additions
+would close the remaining gaps for a more complete self-service product:
 
 - A paginated `GET /chats/public` endpoint so users can discover public groups
-  and channels before joining them.
-- A file download or signed-URL endpoint for attachment records returned with
-  messages; upload currently returns file metadata but the UI has no supported
-  way to retrieve file contents.
-- A chat details/list response that includes participant display names and
-  chat type, avoiding separate participant lookups to identify private chats.
-- Explicit owner/moderator authorization on `POST /chats/:chatId/users/:userId`;
-  the current controller does not pass the requesting user's identity to the
-  service for this operation.
-- A stable structured error response format and explicit authorization
-  requirements in the OpenAPI schemas for every controller route.
+  and channels before joining them. Include filtering, pagination, member
+  counts, and only chats the authenticated user is allowed to discover.
+- Include the sender's nickname (and optionally avatar) in REST and WebSocket
+  message responses so group messages can show a name instead of a numeric user
+  ID.
+- Keep the REST/OpenAPI and AsyncAPI contracts aligned with actual response
+  payloads, including message attachments and reaction summaries.

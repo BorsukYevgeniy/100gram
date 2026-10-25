@@ -46,6 +46,10 @@ type ChatConversationProps = {
 	pendingReactionMessageIds: Set<number>;
 	availableReactionOptions: ReactionOption[];
 	messageText: string;
+	messageFiles: File[];
+	sendingMessage: boolean;
+	onMessageFilesChange: (files: File[]) => void;
+	onClearMessageFiles: () => void;
 	onBack: () => void;
 	onOpenSettings: () => void;
 	onCloseSettings: () => void;
@@ -109,6 +113,10 @@ export default function ChatConversation({
 	pendingReactionMessageIds,
 	availableReactionOptions,
 	messageText,
+	messageFiles,
+	sendingMessage,
+	onMessageFilesChange,
+	onClearMessageFiles,
 	onBack,
 	onOpenSettings,
 	onCloseSettings,
@@ -267,6 +275,25 @@ export default function ChatConversation({
 				onToggleReaction={onToggleReaction}
 			/>
 			<form className='messenger-compose' onSubmit={onSendMessage}>
+				<label
+					className='messenger-attach'
+					title='Додати до 5 файлів'
+					aria-label='Додати до 5 файлів'
+				>
+					📎
+					<input
+						type='file'
+						multiple
+						aria-label='Вибрати вкладення'
+						disabled={connection !== 'connected' || sendingMessage}
+						onChange={(event) => {
+							onMessageFilesChange(
+								Array.from(event.currentTarget.files ?? []),
+							);
+							event.currentTarget.value = '';
+						}}
+					/>
+				</label>
 				<input
 					aria-label='Нове повідомлення'
 					placeholder={
@@ -277,16 +304,37 @@ export default function ChatConversation({
 					value={messageText}
 					maxLength={3000}
 					onChange={(event) => onMessageTextChange(event.target.value)}
-					disabled={connection !== 'connected'}
+					disabled={connection !== 'connected' || sendingMessage}
 					required
 				/>
+				{messageFiles.length > 0 && (
+					<div className='messenger-attachments'>
+						<span>
+							{messageFiles.length === 1
+								? messageFiles[0].name
+								: `${messageFiles.length} файлів`}
+						</span>
+						<button
+							className='text-button'
+							type='button'
+							onClick={onClearMessageFiles}
+							disabled={sendingMessage}
+						>
+							Очистити
+						</button>
+					</div>
+				)}
 				<button
 					className='messenger-send'
 					type='submit'
 					aria-label='Надіслати повідомлення'
-					disabled={connection !== 'connected' || !messageText.trim()}
+					disabled={
+						connection !== 'connected' ||
+						!messageText.trim() ||
+						sendingMessage
+					}
 				>
-					↑
+					{sendingMessage ? '…' : '↑'}
 				</button>
 			</form>
 		</section>

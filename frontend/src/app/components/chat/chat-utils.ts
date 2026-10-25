@@ -70,11 +70,14 @@ export function getMyReaction(
 
 export function fileProxyUrl(
   fileName: string,
-  kind: "users" | "chats" = "chats",
+  kind: "users" | "chats" | "attachments" = "chats",
 ) {
-  const fileKey = fileName.startsWith("avatars/")
-    ? fileName
-    : `avatars/${kind}/${fileName}`;
+  const fileKey =
+    fileName.startsWith("avatars/") || fileName.startsWith("attachments/")
+      ? fileName
+      : kind === "attachments"
+        ? `attachments/${fileName}`
+        : `avatars/${kind}/${fileName}`;
   return `/api/files?key=${encodeURIComponent(fileKey)}`;
 }
 

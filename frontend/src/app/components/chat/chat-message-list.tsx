@@ -7,7 +7,7 @@ import {
 	Reaction,
 	ReactionOption,
 } from './chat-types';
-import { getReactionSummary } from './chat-utils';
+import { fileProxyUrl, getReactionSummary } from './chat-utils';
 
 type ChatMessageListProps = {
 	messages: ChatMessage[];
@@ -91,9 +91,18 @@ export default function ChatMessageList({
 								<p className="messenger-message-text">{message.text}</p>
 							)}
 							{message.fileNames.length > 0 && (
-								<p className="chat-muted">
-									Вкладення: {message.fileNames.join(', ')}
-								</p>
+								<ul className="chat-muted">
+									{message.fileNames.map((fileName) => (
+										<li key={fileName}>
+											<a
+												href={fileProxyUrl(fileName, 'attachments')}
+												download={fileName}
+											>
+												{fileName}
+											</a>
+										</li>
+									))}
+								</ul>
 							)}
 							<div className="messenger-message-footer">
 								<div className="chat-message-actions">

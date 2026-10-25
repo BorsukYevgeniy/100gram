@@ -1750,11 +1750,29 @@ p {
 .messenger-compose {
   min-height: 72px;
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   gap: 12px;
   padding: 12px clamp(14px, 5vw, 66px);
   border-top: 1px solid #252b34;
   background: #11161e;
+}
+
+.messenger-attach {
+  position: relative;
+  flex: 0 0 auto;
+  cursor: pointer;
+}
+
+.messenger-attachments {
+  display: flex;
+  flex: 1 0 100%;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  min-width: 0;
+  color: #8e94a2;
+  font-size: 11px;
 }
 
 .messenger-compose input {
@@ -1767,6 +1785,24 @@ p {
   background: #1a212a;
   color: var(--text);
   font-size: 13px;
+}
+
+.messenger-attach input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
+.messenger-attach:focus-within {
+  outline: 2px solid #a9d574;
+  outline-offset: 3px;
+  border-radius: 4px;
 }
 
 .messenger-send {
