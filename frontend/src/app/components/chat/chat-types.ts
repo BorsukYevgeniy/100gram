@@ -38,7 +38,7 @@ export type ChatMessage = {
   text: string;
   createdAt: string;
   replyId: number | null;
-  userId: number;
+  user: { id: number; nickname: string };
   isPinned: boolean;
   fileNames: string[];
   reactions: MessageReactionSummary;

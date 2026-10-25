@@ -231,7 +231,7 @@ describe('ChatMessageController (e2e)', () => {
           text: 'First message',
           createdAt: expect.any(String),
           replyId: null,
-          userId: expect.any(Number),
+          user: { id: expect.any(Number), nickname: 'chatmessageowner' },
           chatId: groupChatId,
           fileNames: [],
         }),
@@ -259,7 +259,7 @@ describe('ChatMessageController (e2e)', () => {
           id: expect.any(Number),
           text: 'A reply',
           replyId: firstMessageId,
-          userId: expect.any(Number),
+          user: { id: expect.any(Number), nickname: 'chatmessagemember' },
           chatId: groupChatId,
           fileNames: [],
         }),
@@ -349,6 +349,7 @@ describe('ChatMessageController (e2e)', () => {
             id: replyMessageId,
             text: 'A reply',
             replyId: firstMessageId,
+            user: { id: expect.any(Number), nickname: 'chatmessagemember' },
             fileNames: [],
             reactions: {
               like: { count: 1, isReactedByMe: false },
@@ -383,6 +384,7 @@ describe('ChatMessageController (e2e)', () => {
         expect.objectContaining({
           id: firstMessageId,
           text: 'First message',
+          user: { id: expect.any(Number), nickname: 'chatmessageowner' },
           fileNames: [],
           reactions: {
             like: { count: 0, isReactedByMe: false },

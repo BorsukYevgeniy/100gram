@@ -15,6 +15,14 @@ class WsMessageFileDto {
   messageId: number | null;
 }
 
+class WsMessageUserDto {
+  @ApiProperty()
+  id: number;
+
+  @ApiProperty()
+  nickname: string;
+}
+
 export class WsMessageFileResponseDto {
   @ApiProperty()
   id: number;
@@ -31,8 +39,8 @@ export class WsMessageFileResponseDto {
   @ApiProperty({ type: Number, nullable: true })
   replyId: number | null;
 
-  @ApiProperty()
-  userId: number;
+  @ApiProperty({ type: WsMessageUserDto })
+  user: WsMessageUserDto;
 
   @ApiProperty()
   isPinned: boolean;

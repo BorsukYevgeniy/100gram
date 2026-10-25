@@ -24,9 +24,13 @@ export class MessageRepository {
       orderBy: {
         id: 'desc',
       },
+      omit: { userId: true },
       include: {
         files: {
           select: { name: true },
+        },
+        user: {
+          select: { id: true, nickname: true },
         },
       },
     });
@@ -85,7 +89,7 @@ export class MessageRepository {
         isPinned: m.isPinned,
         replyId: m.replyId,
         text: m.text,
-        userId: m.userId,
+        user: m.user,
         reactions: {
           like: {
             count: counts[Reaction.LIKE] ?? 0,
@@ -131,7 +135,10 @@ export class MessageRepository {
             connect: filenames.map((name) => ({ name })),
           },
         },
-        include: { files: { select: { name: true } } },
+        include: {
+          files: { select: { name: true } },
+          user: { select: { nickname: true } },
+        },
       });
 
       await p.chat.update({
@@ -146,7 +153,10 @@ export class MessageRepository {
   async findById(id: number) {
     return this.prisma.message.findUnique({
       where: { id },
-      include: { files: true },
+      include: {
+        files: true,
+        user: { select: { nickname: true } },
+      },
     });
   }
 
@@ -159,14 +169,20 @@ export class MessageRepository {
           files: { connect: filenames.map((name) => ({ name })) },
         }),
       },
-      include: { files: true },
+      include: {
+        files: true,
+        user: { select: { nickname: true } },
+      },
     });
   }
 
   async delete(id: number) {
     return this.prisma.message.delete({
       where: { id },
-      include: { files: true },
+      include: {
+        files: true,
+        user: { select: { nickname: true } },
+      },
     });
   }
 

@@ -56,7 +56,7 @@ export default function ChatMessageList({
 	return (
 		<div className="messenger-messages" aria-live="polite">
 			{messages.map((message) => {
-				const isOwnMessage = message.userId === currentUserId;
+				const isOwnMessage = message.user.id === currentUserId;
 				return (
 					<article
 						className={`messenger-message${isOwnMessage ? ' own' : ''}${message.fileNames.length > 0 ? ' has-attachments' : ''}`}
@@ -65,7 +65,7 @@ export default function ChatMessageList({
 						<div className="messenger-message-bubble">
 							{!isOwnMessage && (
 								<strong className="messenger-sender">
-									Користувач #{message.userId}
+									{message.user.nickname}
 								</strong>
 							)}
 							{editingMessageId === message.id ? (

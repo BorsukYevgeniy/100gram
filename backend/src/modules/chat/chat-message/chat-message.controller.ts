@@ -13,14 +13,16 @@ import {
   UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
-import { Message } from '../../../../generated/prisma/client';
 import { PaginationDto } from '../../../common/dto/pagination.dto';
 import { MessageFilesInterceptor } from '../../../common/interceptor/message-files.interceptor';
 import { AccessTokenPayload } from '../../../common/types';
 import { CurrentUser } from '../../auth/decorator/current-user.decorator';
 import { VerifiedUserGuard } from '../../auth/guards/verified-user.guard';
 import { CreateMessageDto } from '../../message/dto/create-message.dto';
-import { PaginatedMessageFilesReactionCount } from '../../message/types/message.types';
+import {
+  MessageFiles,
+  PaginatedMessageFilesReactionCount,
+} from '../../message/types/message.types';
 import { ChatMessageService } from './chat-message.service';
 import { ChatMessageControllerDocs, ChatMessageRoutes } from './docs';
 
@@ -52,7 +54,7 @@ export class ChatMessageController {
     @Param('chatId', ParseIntPipe) chatId: number,
     @Body() createMessageDto: CreateMessageDto,
     @UploadedFiles() files: Express.Multer.File[],
-  ): Promise<Message> {
+  ): Promise<MessageFiles> {
     return this.chatMessageService.createMessageInChat(
       chatId,
       user,

@@ -231,7 +231,10 @@ export function isChatMessage(payload: unknown): payload is ChatMessage {
     typeof message.chatId === "number" &&
     typeof message.text === "string" &&
     typeof message.createdAt === "string" &&
-    typeof message.userId === "number" &&
+    !!message.user &&
+    typeof message.user === "object" &&
+    typeof message.user.id === "number" &&
+    typeof message.user.nickname === "string" &&
     Array.isArray(message.fileNames) &&
     message.fileNames.every((fileName) => typeof fileName === "string") &&
     (message.reactions === undefined ||

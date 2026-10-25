@@ -211,7 +211,7 @@ describe('MessageController (e2e)', () => {
         expect.objectContaining({
           id: messageId,
           text: 'Original message',
-          userId: ownerId,
+          user: { id: ownerId, nickname: 'messagecontrollerowner' },
           chatId: groupChatId,
           fileNames: [],
         }),
@@ -264,7 +264,7 @@ describe('MessageController (e2e)', () => {
         expect.objectContaining({
           id: messageId,
           text: 'Updated message',
-          userId: ownerId,
+          user: { id: ownerId, nickname: 'messagecontrollerowner' },
           chatId: groupChatId,
           fileNames: [],
         }),
@@ -430,7 +430,7 @@ describe('MessageController (e2e)', () => {
         expect.objectContaining({
           id: messageId,
           text: 'Updated message',
-          userId: ownerId,
+          user: { id: ownerId, nickname: 'messagecontrollerowner' },
           chatId: groupChatId,
           fileNames: [],
         }),

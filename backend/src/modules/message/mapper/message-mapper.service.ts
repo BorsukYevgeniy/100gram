@@ -1,27 +1,21 @@
 import { Injectable } from '@nestjs/common';
+import { Message } from '../../../../generated/prisma/client';
 import { MessageFiles } from '../types/message.types';
 
 @Injectable()
 export class MessageMapperService {
   toMessageFile(
-    obj: {
-      files: {
-        name: string;
-      }[];
-    } & {
-      id: number;
-      text: string;
-      createdAt: Date;
-      replyId: number;
+    obj: Omit<Message, 'userId'> & {
       userId: number;
-      chatId: number;
-      isPinned: boolean;
+      user: { nickname: string };
+      files: { name: string }[];
     },
   ): MessageFiles {
-    const { files, ...msg } = obj;
+    const { files, user, userId, ...msg } = obj;
 
     return {
       ...msg,
+      user: { id: userId, nickname: user.nickname },
       fileNames: files.map(({ name }) => name),
     };
   }

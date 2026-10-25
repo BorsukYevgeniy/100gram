@@ -10,7 +10,6 @@ import {
   UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
-import { Message } from '../../../generated/prisma/client';
 import { MessageFilesInterceptor } from '../../common/interceptor/message-files.interceptor';
 import { AccessTokenPayload } from '../../common/types';
 import { CurrentUser } from '../auth/decorator/current-user.decorator';
@@ -19,6 +18,7 @@ import { MessageControllerDocs } from './docs/message-controller-docs.decorator'
 import { MessageRoutesDocs } from './docs/message-routes-docs';
 import { UpdateMessageDto } from './dto/update-message.dto';
 import { MessageService } from './message.service';
+import { MessageFiles } from './types/message.types';
 
 @MessageControllerDocs()
 @Controller('messages')
@@ -31,7 +31,7 @@ export class MessageController {
   async findOne(
     @CurrentUser() { userId: id }: AccessTokenPayload,
     @Param('messageId', ParseIntPipe) messageId: number,
-  ): Promise<Message> {
+  ): Promise<MessageFiles> {
     return this.messageService.findById(id, messageId);
   }
 
@@ -43,7 +43,7 @@ export class MessageController {
     @Param('messageId', ParseIntPipe) messageId: number,
     @Body() updateMessageDto: UpdateMessageDto,
     @UploadedFiles() files: Express.Multer.File[],
-  ): Promise<Message> {
+  ): Promise<MessageFiles> {
     return this.messageService.update(user, messageId, updateMessageDto, files);
   }
 
@@ -52,7 +52,7 @@ export class MessageController {
   async delete(
     @CurrentUser() user: AccessTokenPayload,
     @Param('messageId', ParseIntPipe) messageId: number,
-  ): Promise<Message> {
+  ): Promise<MessageFiles> {
     return this.messageService.delete(user, messageId);
   }
 
