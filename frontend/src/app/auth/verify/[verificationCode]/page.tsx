@@ -32,6 +32,7 @@ function VerifyEmailForm({
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState(false);
+  const [nextPath, setNextPath] = useState("/");
 
   async function verify(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -39,6 +40,7 @@ function VerifyEmailForm({
     setBusy(true);
     setMessage(null);
     setError(false);
+    let verified = false;
     try {
       const response = await fetch(
         `/api/auth/verify/${encodeURIComponent(code)}`,
@@ -54,13 +56,34 @@ function VerifyEmailForm({
             : `Помилка сервера (${response.status}).`;
         throw new Error(serverMessage);
       }
-      router.replace("/");
-    } catch (verificationError) {
-      setError(true);
+      verified = true;
+
+      const refreshResponse = await fetch("/api/auth/refresh", {
+        method: "POST",
+      });
+      if (refreshResponse.ok) {
+        router.replace("/");
+        return;
+      }
+      if (refreshResponse.status === 401 || refreshResponse.status === 403) {
+        router.replace("/login");
+        return;
+      }
+
+      setNextPath("/login");
       setMessage(
-        verificationError instanceof Error
-          ? verificationError.message
-          : "Не вдалося підтвердити пошту.",
+        "Пошту підтверджено, але не вдалося оновити сесію. Увійдіть в акаунт.",
+      );
+      return;
+    } catch (verificationError) {
+      setError(!verified);
+      setNextPath(verified ? "/login" : "/");
+      setMessage(
+        verified
+          ? "Пошту підтверджено, але не вдалося оновити сесію. Увійдіть в акаунт."
+          : verificationError instanceof Error
+            ? verificationError.message
+            : "Не вдалося підтвердити пошту.",
       );
     } finally {
       setBusy(false);
@@ -97,8 +120,12 @@ function VerifyEmailForm({
           </form>
         ) : null}
         {message && !error && (
-          <Link className="button button-primary full-width verify-link" href="/">
-            Перейти до входу <span aria-hidden="true">→</span>
+          <Link
+            className="button button-primary full-width verify-link"
+            href={nextPath}
+          >
+            {nextPath === "/login" ? "Увійти в акаунт" : "Перейти до входу"}{" "}
+            <span aria-hidden="true">→</span>
           </Link>
         )}
         <Link className="back-link" href="/">
