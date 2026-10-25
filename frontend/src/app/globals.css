@@ -1640,14 +1640,18 @@ p {
 }
 
 .messenger-chat-info {
+  min-width: 0;
   display: grid;
   gap: 4px;
 }
 
 .messenger-chat-info h2 {
+  overflow: hidden;
   margin: 0;
   color: #edf0f4;
   font-size: 14px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .messenger-chat-info > span {
@@ -1757,6 +1761,7 @@ p {
 
 .messenger-message-footer {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   justify-content: flex-end;
   gap: 8px;
@@ -2528,7 +2533,7 @@ p {
   }
 
   .messenger-shell {
-    min-height: 420px;
+    min-height: 0;
   }
 
   .messenger-topbar {
@@ -2569,8 +2574,8 @@ p {
     height: 100%;
   }
 
-  .messenger-layout.has-selection .messenger-sidebar,
-  .messenger-layout:not(.has-selection) .messenger-conversation {
+  .messenger-shell.has-selection .messenger-sidebar,
+  .messenger-shell:not(.has-selection) .messenger-conversation {
     display: none;
   }
 
