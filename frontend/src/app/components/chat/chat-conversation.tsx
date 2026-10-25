@@ -82,6 +82,7 @@ type ChatConversationProps = {
 	onCancelEdit: () => void;
 	onStartEdit: (message: ChatMessage) => void;
 	onDeleteMessage: (messageId: number) => void;
+	onDeleteForMe: (messageId: number) => void;
 	onToggleReaction: (message: ChatMessage, reaction: Reaction) => void;
 	onOpenUserProfile: (userId: number) => void;
 	onMessageTextChange: (value: string) => void;
@@ -149,6 +150,7 @@ export default function ChatConversation({
 	onCancelEdit,
 	onStartEdit,
 	onDeleteMessage,
+	onDeleteForMe,
 	onToggleReaction,
 	onOpenUserProfile,
 	onMessageTextChange,
@@ -284,6 +286,7 @@ export default function ChatConversation({
 				onCancelEdit={onCancelEdit}
 				onStartEdit={onStartEdit}
 				onDelete={onDeleteMessage}
+				onDeleteForMe={onDeleteForMe}
 				onToggleReaction={onToggleReaction}
 				onOpenUserProfile={onOpenUserProfile}
 			/>

@@ -73,4 +73,13 @@ export class MessageController {
   ) {
     return this.messageService.unpinMessage(id, messageId);
   }
+
+  @MessageRoutesDocs.AddToDeletedForMe()
+  @Patch(':messageId/deleted-for-me')
+  async addMessageToDeletedForMe(
+    @Param('messageId', ParseIntPipe) messageId: number,
+    @CurrentUser() { userId }: AccessTokenPayload,
+  ) {
+    return this.messageService.addMessageToDeletedForMe(messageId, userId);
+  }
 }

@@ -81,4 +81,18 @@ export class MessageRoutesDocs {
       ApiYouMustBeChatParticipantResponse(),
     );
   }
+
+  static AddToDeletedForMe() {
+    return applyDecorators(
+      ApiOperation({
+        summary: 'Add message to deleted for me',
+        description:
+          'Adds a message to the list of deleted messages for the current user',
+      }),
+      ApiOkResponse({
+        description: 'Message added to deleted for me list successfully',
+      }),
+      ApiYouMustBeChatParticipantResponse(),
+    );
+  }
 }

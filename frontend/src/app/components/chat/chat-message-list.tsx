@@ -25,6 +25,7 @@ type ChatMessageListProps = {
 	onCancelEdit: () => void;
 	onStartEdit: (message: ChatMessage) => void;
 	onDelete: (messageId: number) => void;
+	onDeleteForMe: (messageId: number) => void;
 	onToggleReaction: (message: ChatMessage, reaction: Reaction) => void;
 	onOpenUserProfile: (userId: number) => void;
 };
@@ -78,6 +79,7 @@ export default function ChatMessageList({
 	onCancelEdit,
 	onStartEdit,
 	onDelete,
+	onDeleteForMe,
 	onToggleReaction,
 	onOpenUserProfile,
 }: ChatMessageListProps) {
@@ -93,7 +95,9 @@ export default function ChatMessageList({
 		});
 	}, [messageScrollTrigger]);
 
-	if (messages.length === 0) {
+	const visibleMessages = messages.filter((message) => !message.isDeletedForMe);
+
+	if (visibleMessages.length === 0) {
 		return (
 			<div
 				className="messenger-messages"
@@ -102,8 +106,12 @@ export default function ChatMessageList({
 			>
 				<div className="messenger-no-messages">
 					<span aria-hidden="true">✉</span>
-					<p>Повідомлень поки немає</p>
-					<span>Напишіть першим</span>
+					<p>
+						{messages.length > 0
+							? 'Усі повідомлення приховані для вас'
+							: 'Повідомлень поки немає'}
+					</p>
+					{messages.length === 0 && <span>Напишіть першим</span>}
 				</div>
 			</div>
 		);
@@ -115,7 +123,7 @@ export default function ChatMessageList({
 			aria-live="polite"
 			ref={messagesContainerRef}
 		>
-			{messages.map((message) => {
+			{visibleMessages.map((message) => {
 				const isOwnMessage = message.user.id === currentUserId;
 				return (
 					<article
@@ -263,6 +271,14 @@ export default function ChatMessageList({
 										</button>
 									</div>
 								)}
+								<button
+									className="text-button"
+									type="button"
+									disabled={connection !== 'connected'}
+									onClick={() => onDeleteForMe(message.id)}
+								>
+									Видалити для мене
+								</button>
 							</div>
 						</div>
 					</article>

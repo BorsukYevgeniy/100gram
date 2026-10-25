@@ -254,6 +254,8 @@ export function isChatMessage(payload: unknown): payload is ChatMessage {
     typeof message.user.nickname === "string" &&
     (message.user.avatarName === null ||
       typeof message.user.avatarName === "string") &&
+    (message.isDeletedForMe === undefined ||
+      typeof message.isDeletedForMe === "boolean") &&
     Array.isArray(message.fileNames) &&
     message.fileNames.every((fileName) => typeof fileName === "string") &&
     (message.reactions === undefined ||

@@ -670,6 +670,33 @@ export default function ChatPanel() {
 		socket.emit('deleteMessage', { chatId: selectedChatId, messageId });
 	}
 
+	async function deleteMessageForMe(messageId: number) {
+		try {
+			const response = await fetch(
+				`/api/controller-api/messages/${messageId}/deleted-for-me`,
+				{ method: 'PATCH' },
+			);
+			const payload: unknown = await response.json().catch(() => null);
+			if (!response.ok) {
+				throw new Error(
+					getErrorMessage(
+						payload,
+						`Не вдалося прибрати повідомлення (${response.status}).`,
+					),
+				);
+			}
+			setMessages((current) =>
+				current.filter((message) => message.id !== messageId),
+			);
+		} catch (deleteError) {
+			setError(
+				deleteError instanceof Error
+					? deleteError.message
+					: 'Не вдалося прибрати повідомлення для себе.',
+			);
+		}
+	}
+
 	function toggleReaction(message: ChatMessage, reaction: Reaction) {
 		if (
 			!socket?.connected ||
@@ -895,6 +922,7 @@ export default function ChatPanel() {
 						setEditText(message.text);
 					}}
 					onDeleteMessage={deleteMessage}
+					onDeleteForMe={(messageId) => void deleteMessageForMe(messageId)}
 					onToggleReaction={(message, reaction) =>
 						void toggleReaction(message, reaction)
 					}

@@ -18,6 +18,8 @@ model User {
   verifiedAt       DateTime? @db.Timestamptz
   verificationCode String    @unique @default(uuid())
 
+  deletedMessage Message[] @relation("DeletedMessage")
+
   messages    Message[]
   chatToUsers ChatToUser[]
   tokens      Token[]

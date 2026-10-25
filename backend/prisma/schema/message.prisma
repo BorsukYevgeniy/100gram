@@ -20,4 +20,6 @@ model Message {
   isPinned Boolean @default(false)
 
   lastOfChat Chat? @relation("LastMessage")
+
+  deletedFor User[] @relation("DeletedMessage")
 }

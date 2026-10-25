@@ -303,4 +303,28 @@ export class MessageService {
 
     return messages;
   }
+
+  async addMessageToDeletedForMe(messageId: number, userId: number) {
+    const message = await this.messageRepository.findById(messageId);
+
+    if (!message) {
+      this.logger.warn({ messageId }, 'Message not found');
+      throw new NotFoundException('Message not found');
+    }
+
+    await this.chatValidator.validateChatParticipation(userId, message.chatId);
+
+    const msg = await this.messageRepository.addMessageToDeletedForMe(
+      messageId,
+      userId,
+    );
+    await this.cache.incrChatMessageVersion(message.chatId);
+
+    this.logger.info(
+      { messageId, userId },
+      'Message added to deleted for me list',
+    );
+
+    return msg;
+  }
 }

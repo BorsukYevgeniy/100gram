@@ -49,6 +49,7 @@ export type ChatMessage = {
   replyId: number | null;
   user: { id: number; nickname: string; avatarName: string | null };
   isPinned: boolean;
+  isDeletedForMe?: boolean;
   fileNames: string[];
   reactions: MessageReactionSummary;
 };

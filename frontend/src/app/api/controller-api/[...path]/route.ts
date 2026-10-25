@@ -25,7 +25,7 @@ function getAllowedMethods(path: string[]) {
     path.length === 3 &&
     path[0] === "messages" &&
     isPositiveInteger(path[1]) &&
-    ["pin", "unpin"].includes(path[2])
+    ["pin", "unpin", "deleted-for-me"].includes(path[2])
   ) {
     return ["PATCH"];
   }

@@ -78,6 +78,11 @@ export class MessageRepository {
       myReactions.map((r) => `${r.messageId}:${r.reaction}`),
     );
 
+    const { deletedMessage } = await this.prisma.user.findUnique({
+      where: { id: currentUserId },
+      select: { deletedMessage: { select: { id: true } } },
+    });
+
     return msg.map((m) => {
       const counts = reactionCounts.get(m.id) ?? {};
 
@@ -90,6 +95,7 @@ export class MessageRepository {
         replyId: m.replyId,
         text: m.text,
         user: m.user,
+        isDeletedForMe: deletedMessage.some((dm) => dm.id === m.id),
         reactions: {
           like: {
             count: counts[Reaction.LIKE] ?? 0,
@@ -204,6 +210,17 @@ export class MessageRepository {
     return this.prisma.message.deleteMany({
       where: {
         chatId,
+      },
+    });
+  }
+
+  async addMessageToDeletedForMe(messageId: number, userId: number) {
+    return this.prisma.message.update({
+      where: { id: messageId },
+      data: {
+        deletedFor: {
+          connect: { id: userId },
+        },
       },
     });
   }

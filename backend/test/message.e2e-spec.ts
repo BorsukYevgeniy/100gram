@@ -29,8 +29,10 @@ describe('MessageController (e2e)', () => {
   let unverifiedAccessToken: string;
 
   let ownerId: number;
+  let memberId: number;
   let groupChatId: number;
   let messageId: number;
+  let deletedForMeMessageId: number;
 
   beforeAll(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
@@ -111,6 +113,7 @@ describe('MessageController (e2e)', () => {
     ]);
 
     ownerId = owner.id;
+    memberId = member.id;
 
     const [ownerLogin, memberLogin, outsiderLogin, unverifiedLogin] =
       await Promise.all(
@@ -155,6 +158,15 @@ describe('MessageController (e2e)', () => {
       },
     });
     messageId = message.id;
+
+    const deletedForMeMessage = await prisma.message.create({
+      data: {
+        text: 'Message to remove for me',
+        userId: owner.id,
+        chatId: groupChatId,
+      },
+    });
+    deletedForMeMessageId = deletedForMeMessage.id;
 
     await prisma.chat.update({
       where: { id: groupChatId },
@@ -392,6 +404,128 @@ describe('MessageController (e2e)', () => {
         expect.objectContaining({
           id: messageId,
           isPinned: false,
+        }),
+      );
+    });
+  });
+
+  describe('PATCH /messages/:id/deleted-for-me - Should add a message to deleted for me', () => {
+    it('PATCH /messages/:id/deleted-for-me - 401 UNAUTHORIZED - Should return 401 because user is unauthorized', async () => {
+      const { body } = await request(app.getHttpServer())
+        .patch(`/messages/${deletedForMeMessageId}/deleted-for-me`)
+        .expect(401);
+
+      expect(body).toEqual(unauthorizedResponse);
+    });
+
+    it('PATCH /messages/:id/deleted-for-me - 400 BAD REQUEST - Should return 400 because message id is invalid', async () => {
+      await request(app.getHttpServer())
+        .patch('/messages/invalid/deleted-for-me')
+        .set('Cookie', [`access_token=${memberAccessToken}`])
+        .expect(400);
+    });
+
+    it('PATCH /messages/:id/deleted-for-me - 404 NOT FOUND - Should return 404 if message does not exist', async () => {
+      await request(app.getHttpServer())
+        .patch('/messages/999999999/deleted-for-me')
+        .set('Cookie', [`access_token=${memberAccessToken}`])
+        .expect(404);
+    });
+
+    it('PATCH /messages/:id/deleted-for-me - 403 FORBIDDEN - Should return 403 because user is unverified', async () => {
+      const { body } = await request(app.getHttpServer())
+        .patch(`/messages/${deletedForMeMessageId}/deleted-for-me`)
+        .set('Cookie', [`access_token=${unverifiedAccessToken}`])
+        .expect(403);
+
+      expect(body).toEqual(verifiedForbiddenResponse);
+    });
+
+    it('PATCH /messages/:id/deleted-for-me - 403 FORBIDDEN - Should return 403 because user is not a participant', async () => {
+      const { body } = await request(app.getHttpServer())
+        .patch(`/messages/${deletedForMeMessageId}/deleted-for-me`)
+        .set('Cookie', [`access_token=${outsiderAccessToken}`])
+        .expect(403);
+
+      expect(body).toEqual({
+        statusCode: 403,
+        message: 'User is not a participant of the chat',
+        error: 'Forbidden',
+      });
+    });
+
+    it('PATCH /messages/:id/deleted-for-me - 200 OK - Should add the message only to the requesting user deleted list', async () => {
+      const { body } = await request(app.getHttpServer())
+        .patch(`/messages/${deletedForMeMessageId}/deleted-for-me`)
+        .set('Cookie', [`access_token=${memberAccessToken}`])
+        .expect(200);
+
+      expect(body).toEqual(
+        expect.objectContaining({
+          id: deletedForMeMessageId,
+          text: 'Message to remove for me',
+        }),
+      );
+
+      const [memberDeletedMessages, ownerDeletedMessages] = await Promise.all([
+        prisma.user.findUnique({
+          where: { id: memberId },
+          select: { deletedMessage: { select: { id: true } } },
+        }),
+        prisma.user.findUnique({
+          where: { id: ownerId },
+          select: { deletedMessage: { select: { id: true } } },
+        }),
+      ]);
+
+      expect(memberDeletedMessages.deletedMessage).toContainEqual({
+        id: deletedForMeMessageId,
+      });
+      expect(ownerDeletedMessages.deletedMessage).not.toContainEqual({
+        id: deletedForMeMessageId,
+      });
+    });
+
+    it('PATCH /messages/:id/deleted-for-me - 200 OK - Should not add the message twice', async () => {
+      await request(app.getHttpServer())
+        .patch(`/messages/${deletedForMeMessageId}/deleted-for-me`)
+        .set('Cookie', [`access_token=${memberAccessToken}`])
+        .expect(200);
+
+      const memberDeletedMessages = await prisma.user.findUnique({
+        where: { id: memberId },
+        select: { deletedMessage: { select: { id: true } } },
+      });
+
+      expect(
+        memberDeletedMessages.deletedMessage.filter(
+          ({ id }) => id === deletedForMeMessageId,
+        ),
+      ).toHaveLength(1);
+    });
+
+    it('GET /chats/:chatId/messages - Should mark the message as deleted only for the requesting user', async () => {
+      const [memberMessages, ownerMessages] = await Promise.all([
+        request(app.getHttpServer())
+          .get(`/chats/${groupChatId}/messages?limit=50`)
+          .set('Cookie', [`access_token=${memberAccessToken}`])
+          .expect(200),
+        request(app.getHttpServer())
+          .get(`/chats/${groupChatId}/messages?limit=50`)
+          .set('Cookie', [`access_token=${ownerAccessToken}`])
+          .expect(200),
+      ]);
+
+      expect(memberMessages.body.messages).toContainEqual(
+        expect.objectContaining({
+          id: deletedForMeMessageId,
+          isDeletedForMe: true,
+        }),
+      );
+      expect(ownerMessages.body.messages).toContainEqual(
+        expect.objectContaining({
+          id: deletedForMeMessageId,
+          isDeletedForMe: false,
         }),
       );
     });

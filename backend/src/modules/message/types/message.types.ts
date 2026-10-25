@@ -7,6 +7,7 @@ export type MessageFiles = Omit<Message, 'userId'> & {
 };
 
 export type MessageFilesReactionCount = MessageFiles & {
+  isDeletedForMe: boolean;
   reactions: {
     like: { count: number; isReactedByMe: boolean };
     dislike: { count: number; isReactedByMe: boolean };
