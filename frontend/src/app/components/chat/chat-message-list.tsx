@@ -1,6 +1,6 @@
 'use client';
 
-import { FormEvent, useEffect, useRef, useState } from 'react';
+import { FormEvent, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import Image from 'next/image';
 import {
 	ChatMessage,
@@ -88,8 +88,40 @@ export default function ChatMessageList({
 	onOpenUserProfile,
 }: ChatMessageListProps) {
 	const messagesContainerRef = useRef<HTMLDivElement>(null);
+	const openMessageMenuRef = useRef<HTMLDivElement>(null);
 	const previousScrollTrigger = useRef(messageScrollTrigger);
 	const [openDeleteMenuId, setOpenDeleteMenuId] = useState<number | null>(null);
+	const [menuOpensDown, setMenuOpensDown] = useState(false);
+
+	useLayoutEffect(() => {
+		if (openDeleteMenuId === null) return;
+
+		const menu = openMessageMenuRef.current?.querySelector<HTMLElement>(
+			'.messenger-message-menu-options',
+		);
+		const messagesBounds = messagesContainerRef.current?.getBoundingClientRect();
+		if (!menu || !messagesBounds) return;
+
+		setMenuOpensDown(menu.getBoundingClientRect().top < messagesBounds.top);
+	}, [openDeleteMenuId]);
+
+	useEffect(() => {
+		if (openDeleteMenuId === null) return;
+
+		const closeMenuOnOutsidePointerDown = (event: PointerEvent) => {
+			if (
+				event.target instanceof Node &&
+				openMessageMenuRef.current?.contains(event.target)
+			) {
+				return;
+			}
+			setOpenDeleteMenuId(null);
+		};
+
+		document.addEventListener('pointerdown', closeMenuOnOutsidePointerDown);
+		return () =>
+			document.removeEventListener('pointerdown', closeMenuOnOutsidePointerDown);
+	}, [openDeleteMenuId]);
 
 	useEffect(() => {
 		if (previousScrollTrigger.current === messageScrollTrigger) return;
@@ -164,7 +196,7 @@ export default function ChatMessageList({
 					const isOwnMessage = message.user.id === currentUserId;
 					return (
 						<article
-							className={`messenger-message${isOwnMessage ? ' own' : ''}${message.fileNames.length > 0 ? ' has-attachments' : ''}`}
+							className={`messenger-message${isOwnMessage ? ' own' : ''}${message.fileNames.length > 0 ? ' has-attachments' : ''}${openDeleteMenuId === message.id ? ' menu-open' : ''}${openDeleteMenuId === message.id && menuOpensDown ? ' menu-open-down' : ''}`}
 							key={message.id}
 							data-message-id={message.id}
 						>
@@ -202,7 +234,14 @@ export default function ChatMessageList({
 							) : (
 								<div className="messenger-message-content">
 									<p className="messenger-message-text">{message.text}</p>
-									<div className="messenger-message-menu">
+									<div
+										className="messenger-message-menu"
+										ref={
+											openDeleteMenuId === message.id
+												? openMessageMenuRef
+												: null
+										}
+									>
 										<button
 											className="messenger-message-menu-trigger"
 											type="button"
@@ -214,11 +253,12 @@ export default function ChatMessageList({
 												(!!message.isPinned &&
 													pendingPinnedMessageIds.has(message.id))
 											}
-											onClick={() =>
+											onClick={() => {
+												setMenuOpensDown(false);
 												setOpenDeleteMenuId((current) =>
 													current === message.id ? null : message.id,
-												)
-											}
+												);
+											}}
 										>
 											⋮
 										</button>
