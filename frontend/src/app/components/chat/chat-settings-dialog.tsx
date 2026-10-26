@@ -31,6 +31,7 @@ type ChatSettingsDialogProps = {
   savingAvatar: boolean;
   managingChat: boolean;
   canLeaveChat: boolean;
+  isChatOwner: boolean;
   inviteToken: string | null;
   reactionOptions: ReactionOption[];
   onClose: () => void;
@@ -76,6 +77,7 @@ export default function ChatSettingsDialog({
   savingAvatar,
   managingChat,
   canLeaveChat,
+  isChatOwner,
   inviteToken,
   reactionOptions,
   onClose,
@@ -113,7 +115,19 @@ export default function ChatSettingsDialog({
         aria-labelledby="chat-settings-title"
       >
         <div className="chat-settings-heading">
-          <h2 id="chat-settings-title">Керування чатом</h2>
+          <h2 id="chat-settings-title">
+            {isChatOwner ? "Керування чатом" : "Інформація про чат"}
+          </h2>
+          {canLeaveChat && (
+            <button
+              className="button button-quiet"
+              type="button"
+              onClick={onLeaveChat}
+              disabled={managingChat}
+            >
+              Вийти з чату
+            </button>
+          )}
           <button
             className="notice-close"
             type="button"
@@ -123,149 +137,155 @@ export default function ChatSettingsDialog({
             ×
           </button>
         </div>
-        <form className="chat-settings-form" onSubmit={onUpdateChat}>
-          <label>
-            Назва
-            <input
-              value={titleDraft}
-              minLength={3}
-              maxLength={20}
-              onChange={(event) => onTitleChange(event.target.value)}
-              required
-            />
-          </label>
-          <label>
-            Опис
-            <textarea
-              value={descriptionDraft}
-              minLength={2}
-              maxLength={500}
-              onChange={(event) => onDescriptionChange(event.target.value)}
-              placeholder="Необов’язковий опис"
-              rows={4}
-            />
-          </label>
-          <label>
-            Видимість
-            <select
-              value={visibilityDraft}
-              onChange={(event) => {
-                if (
-                  event.target.value === "PUBLIC" ||
-                  event.target.value === "PRIVATE"
-                ) {
-                  onVisibilityChange(event.target.value);
-                }
-              }}
-            >
-              <option value="PRIVATE">Приватний</option>
-              <option value="PUBLIC">Публічний</option>
-            </select>
-          </label>
-          <div className="chat-settings-actions">
-            <button
-              className="button button-quiet"
-              type="button"
-              onClick={onClose}
-              disabled={savingChat}
-            >
-              Скасувати
-            </button>
-            <button
-              className="button button-primary"
-              type="submit"
-              disabled={savingChat}
-            >
-              {savingChat ? "Збереження…" : "Зберегти зміни"}
-            </button>
-          </div>
-        </form>
-        <section
-          className="chat-settings-section"
-          aria-labelledby="chat-avatar-title"
-        >
-          <h3 id="chat-avatar-title">Аватар чату</h3>
-          <div className="chat-avatar-settings-preview">
-            <span className="messenger-avatar">
-              {avatarPreview || chat.avatarPreview || chat.avatarName ? (
-                <Image
-                  src={
-                    avatarPreview ??
-                    chat.avatarPreview ??
-                    fileProxyUrl(chat.avatarName ?? "")
-                  }
-                  alt=""
-                  width={64}
-                  height={64}
-                  unoptimized
-                />
-              ) : (
-                chatTitle.slice(0, 1).toLocaleUpperCase("uk-UA")
-              )}
-            </span>
-            <label className="chat-avatar-file">
-              Оберіть нове зображення
+        {isChatOwner && (
+          <form className="chat-settings-form" onSubmit={onUpdateChat}>
+            <label>
+              Назва
               <input
-                type="file"
-                accept="image/*"
-                onChange={(event) =>
-                  onSelectAvatar(event.target.files?.[0] ?? null)
-                }
+                value={titleDraft}
+                minLength={3}
+                maxLength={20}
+                onChange={(event) => onTitleChange(event.target.value)}
+                required
               />
             </label>
-          </div>
-          <div className="chat-settings-actions">
-            {chat.avatarName && (
+            <label>
+              Опис
+              <textarea
+                value={descriptionDraft}
+                minLength={2}
+                maxLength={500}
+                onChange={(event) => onDescriptionChange(event.target.value)}
+                placeholder="Необов’язковий опис"
+                rows={4}
+              />
+            </label>
+            <label>
+              Видимість
+              <select
+                value={visibilityDraft}
+                onChange={(event) => {
+                  if (
+                    event.target.value === "PUBLIC" ||
+                    event.target.value === "PRIVATE"
+                  ) {
+                    onVisibilityChange(event.target.value);
+                  }
+                }}
+              >
+                <option value="PRIVATE">Приватний</option>
+                <option value="PUBLIC">Публічний</option>
+              </select>
+            </label>
+            <div className="chat-settings-actions">
               <button
                 className="button button-quiet"
                 type="button"
-                onClick={onDeleteAvatar}
-                disabled={savingAvatar}
+                onClick={onClose}
+                disabled={savingChat}
               >
-                Видалити аватар
+                Скасувати
               </button>
-            )}
-            <button
-              className="button button-primary"
-              type="button"
-              onClick={onUploadAvatar}
-              disabled={!avatarFile || savingAvatar}
-            >
-              {savingAvatar ? "Завантаження…" : "Зберегти аватар"}
-            </button>
-          </div>
-        </section>
-        <section
-          className="chat-settings-section"
-          aria-labelledby="chat-reactions-title"
-        >
-          <h3 id="chat-reactions-title">Дозволені реакції</h3>
-          <p className="chat-settings-hint">
-            Якщо не вибрати жодної, будуть доступні всі реакції.
-          </p>
-          <div className="chat-allowed-reactions">
-            {reactionOptions.map((option) => (
-              <label key={option.value}>
+              <button
+                className="button button-primary"
+                type="submit"
+                disabled={savingChat}
+              >
+                {savingChat ? "Збереження…" : "Зберегти зміни"}
+              </button>
+            </div>
+          </form>
+        )}
+        {isChatOwner && (
+          <section
+            className="chat-settings-section"
+            aria-labelledby="chat-avatar-title"
+          >
+            <h3 id="chat-avatar-title">Аватар чату</h3>
+            <div className="chat-avatar-settings-preview">
+              <span className="messenger-avatar">
+                {avatarPreview || chat.avatarPreview || chat.avatarName ? (
+                  <Image
+                    src={
+                      avatarPreview ??
+                      chat.avatarPreview ??
+                      fileProxyUrl(chat.avatarName ?? "")
+                    }
+                    alt=""
+                    width={64}
+                    height={64}
+                    unoptimized
+                  />
+                ) : (
+                  chatTitle.slice(0, 1).toLocaleUpperCase("uk-UA")
+                )}
+              </span>
+              <label className="chat-avatar-file">
+                Оберіть нове зображення
                 <input
-                  type="checkbox"
-                  checked={allowedReactions.includes(option.value)}
-                  onChange={() => onToggleReaction(option.value)}
+                  type="file"
+                  accept="image/*"
+                  onChange={(event) =>
+                    onSelectAvatar(event.target.files?.[0] ?? null)
+                  }
                 />
-                <span>{option.label}</span>
               </label>
-            ))}
-          </div>
-          <div className="chat-settings-actions">
-            <button
-              className="button button-primary"
-              type="button"
-              onClick={onSaveReactions}
-              disabled={savingReactions}
-            >
-              {savingReactions ? "Збереження…" : "Зберегти реакції"}
-            </button>
-          </div>
-        </section>
+            </div>
+            <div className="chat-settings-actions">
+              {chat.avatarName && (
+                <button
+                  className="button button-quiet"
+                  type="button"
+                  onClick={onDeleteAvatar}
+                  disabled={savingAvatar}
+                >
+                  Видалити аватар
+                </button>
+              )}
+              <button
+                className="button button-primary"
+                type="button"
+                onClick={onUploadAvatar}
+                disabled={!avatarFile || savingAvatar}
+              >
+                {savingAvatar ? "Завантаження…" : "Зберегти аватар"}
+              </button>
+            </div>
+          </section>
+        )}
+        {isChatOwner && (
+          <section
+            className="chat-settings-section"
+            aria-labelledby="chat-reactions-title"
+          >
+            <h3 id="chat-reactions-title">Дозволені реакції</h3>
+            <p className="chat-settings-hint">
+              Якщо не вибрати жодної, будуть доступні всі реакції.
+            </p>
+            <div className="chat-allowed-reactions">
+              {reactionOptions.map((option) => (
+                <label key={option.value}>
+                  <input
+                    type="checkbox"
+                    checked={allowedReactions.includes(option.value)}
+                    onChange={() => onToggleReaction(option.value)}
+                  />
+                  <span>{option.label}</span>
+                </label>
+              ))}
+            </div>
+            <div className="chat-settings-actions">
+              <button
+                className="button button-primary"
+                type="button"
+                onClick={onSaveReactions}
+                disabled={savingReactions}
+              >
+                {savingReactions ? "Збереження…" : "Зберегти реакції"}
+              </button>
+            </div>
+          </section>
+        )}
         <section
           className="chat-settings-section"
           aria-labelledby="chat-members-title"
@@ -280,100 +300,106 @@ export default function ChatSettingsDialog({
                     #{member.id} · {member.chatRole}
                   </small>
                 </span>
-                <button
-                  className="chat-menu-trigger"
-                  type="button"
-                  aria-label={`Дії для ${member.nickname}`}
-                  aria-expanded={openMemberMenuId === member.id}
-                  onClick={() =>
-                    setOpenMemberMenuId((current) =>
-                      current === member.id ? null : member.id,
-                    )
-                  }
-                  disabled={managingChat}
-                >
-                  ⋯
-                </button>
-                {openMemberMenuId === member.id && (
-                  <div className="chat-item-menu chat-member-menu">
-                    {member.chatRole !== "MEMBER" && (
-                      <button
-                        type="button"
-                        disabled={managingChat}
-                        onClick={() => {
-                          onManageMember("role", member.id, "MEMBER");
-                          setOpenMemberMenuId(null);
-                        }}
-                      >
-                        Зробити учасником
-                      </button>
+                {isChatOwner && (
+                  <>
+                    <button
+                      type="button"
+                      className="chat-menu-trigger"
+                      aria-label={`Дії для ${member.nickname}`}
+                      aria-expanded={openMemberMenuId === member.id}
+                      onClick={() =>
+                        setOpenMemberMenuId((current) =>
+                          current === member.id ? null : member.id,
+                        )
+                      }
+                      disabled={managingChat}
+                    >
+                      ⋯
+                    </button>
+                    {openMemberMenuId === member.id && (
+                      <div className="chat-item-menu chat-member-menu">
+                        {member.chatRole !== "MEMBER" && (
+                          <button
+                            type="button"
+                            disabled={managingChat}
+                            onClick={() => {
+                              onManageMember("role", member.id, "MEMBER");
+                              setOpenMemberMenuId(null);
+                            }}
+                          >
+                            Зробити учасником
+                          </button>
+                        )}
+                        <button
+                          type="button"
+                          disabled={managingChat}
+                          onClick={() => {
+                            onManageMember("role", member.id, "MODERATOR");
+                            setOpenMemberMenuId(null);
+                          }}
+                        >
+                          Зробити модератором
+                        </button>
+                        <button
+                          type="button"
+                          disabled={managingChat}
+                          onClick={() => {
+                            onManageMember("owner", member.id);
+                            setOpenMemberMenuId(null);
+                          }}
+                        >
+                          Зробити власником
+                        </button>
+                        <button
+                          className="chat-menu-danger"
+                          type="button"
+                          disabled={managingChat}
+                          onClick={() => {
+                            onManageMember("remove", member.id);
+                            setOpenMemberMenuId(null);
+                          }}
+                        >
+                          Видалити з чату
+                        </button>
+                      </div>
                     )}
-                    <button
-                      type="button"
-                      disabled={managingChat}
-                      onClick={() => {
-                        onManageMember("role", member.id, "MODERATOR");
-                        setOpenMemberMenuId(null);
-                      }}
-                    >
-                      Зробити модератором
-                    </button>
-                    <button
-                      type="button"
-                      disabled={managingChat}
-                      onClick={() => {
-                        onManageMember("owner", member.id);
-                        setOpenMemberMenuId(null);
-                      }}
-                    >
-                      Зробити власником
-                    </button>
-                    <button
-                      className="chat-menu-danger"
-                      type="button"
-                      disabled={managingChat}
-                      onClick={() => {
-                        onManageMember("remove", member.id);
-                        setOpenMemberMenuId(null);
-                      }}
-                    >
-                      Видалити з чату
-                    </button>
-                  </div>
+                  </>
                 )}
               </li>
             ))}
           </ul>
-          <div className="chat-settings-member-search">
-            <label htmlFor="chat-member-search">
-              Додати учасника за нікнеймом
-            </label>
-            <div className="chat-member-search-controls">
-              <input
-                id="chat-member-search"
-                value={userSearch}
-                minLength={3}
-                maxLength={25}
-                onChange={(event) => onUserSearchChange(event.target.value)}
-                onKeyDown={(event) => {
-                  if (event.key === "Enter") {
-                    event.preventDefault();
-                    onSearchUsers();
-                  }
-                }}
-                placeholder="Введіть нікнейм"
-              />
-              <button
-                className="button button-soft"
-                type="button"
-                onClick={onSearchUsers}
-                disabled={searchingUsers}
-              >
-                {searchingUsers ? "Пошук…" : "Знайти"}
-              </button>
+          {isChatOwner && (
+            <div className="chat-settings-member-search">
+              <label htmlFor="chat-member-search">
+                Додати учасника за нікнеймом
+              </label>
+              <div className="chat-member-search-controls">
+                <input
+                  id="chat-member-search"
+                  value={userSearch}
+                  minLength={3}
+                  maxLength={25}
+                  onChange={(event) => onUserSearchChange(event.target.value)}
+                  onKeyDown={(event) => {
+                    if (event.key === "Enter") {
+                      event.preventDefault();
+                      onSearchUsers();
+                    }
+                  }}
+                  placeholder="Введіть нікнейм"
+                />
+                <button
+                  className="button button-soft"
+                  type="button"
+                  onClick={onSearchUsers}
+                  disabled={searchingUsers}
+                >
+                  {searchingUsers ? "Пошук…" : "Знайти"}
+                </button>
+              </div>
             </div>
-          </div>
-          {userResults.length > 0 && (
+          )}
+          {isChatOwner && userResults.length > 0 && (
             <ul className="chat-settings-user-results">
               {userResults.map((user) => (
                 <li key={user.id}>
@@ -393,55 +419,47 @@ export default function ChatSettingsDialog({
             </ul>
           )}
         </section>
-        <section
-          className="chat-settings-section"
-          aria-labelledby="chat-management-title"
-        >
-          <h3 id="chat-management-title">Керування чатом</h3>
-          <div className="chat-settings-actions">
-            <button
-              className="button button-soft"
-              type="button"
-              onClick={onRefreshInviteToken}
-              disabled={managingChat}
-            >
-              {managingChat ? "Виконується…" : "Оновити токен запрошення"}
-            </button>
-          </div>
-          {inviteToken && (
-            <p className="chat-settings-hint">
-              Новий токен запрошення: <code>{inviteToken}</code>
-            </p>
-          )}
-          <div className="chat-settings-actions">
-            <button
-              className="button button-quiet"
-              type="button"
-              onClick={onClearMessages}
-              disabled={managingChat}
-            >
-              Очистити повідомлення
-            </button>
-            <button
-              className="button button-danger"
-              type="button"
-              onClick={onDeleteChat}
-              disabled={managingChat}
-            >
-              Видалити чат
-            </button>
-            {canLeaveChat && (
+        {isChatOwner && (
+          <section
+            className="chat-settings-section"
+            aria-labelledby="chat-management-title"
+          >
+            <h3 id="chat-management-title">Керування чатом</h3>
+            <div className="chat-settings-actions">
+              <button
+                className="button button-soft"
+                type="button"
+                onClick={onRefreshInviteToken}
+                disabled={managingChat}
+              >
+                {managingChat ? "Виконується…" : "Оновити токен запрошення"}
+              </button>
+            </div>
+            {inviteToken && (
+              <p className="chat-settings-hint">
+                Новий токен запрошення: <code>{inviteToken}</code>
+              </p>
+            )}
+            <div className="chat-settings-actions">
               <button
                 className="button button-quiet"
                 type="button"
-                onClick={onLeaveChat}
+                onClick={onClearMessages}
                 disabled={managingChat}
               >
-                Вийти з чату
+                Очистити повідомлення
               </button>
-            )}
-          </div>
-        </section>
+              <button
+                className="button button-danger"
+                type="button"
+                onClick={onDeleteChat}
+                disabled={managingChat}
+              >
+                Видалити чат
+              </button>
+            </div>
+          </section>
+        )}
       </section>
     </div>
   );

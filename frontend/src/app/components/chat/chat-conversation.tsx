@@ -39,6 +39,7 @@ type ChatConversationProps = {
 	savingAvatar: boolean;
 	managingChat: boolean;
 	canLeaveChat: boolean;
+	isChatOwner: boolean;
 	inviteToken: string | null;
 	reactionOptions: ReactionOption[];
 	messages: ChatMessage[];
@@ -113,6 +114,7 @@ export default function ChatConversation({
 	savingAvatar,
 	managingChat,
 	canLeaveChat,
+	isChatOwner,
 	inviteToken,
 	reactionOptions,
 	messages,
@@ -254,6 +256,7 @@ export default function ChatConversation({
 					savingAvatar={savingAvatar}
 					managingChat={managingChat}
 					canLeaveChat={canLeaveChat}
+					isChatOwner={isChatOwner}
 					inviteToken={inviteToken}
 					reactionOptions={reactionOptions}
 					onClose={onCloseSettings}

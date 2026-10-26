@@ -177,6 +177,7 @@ export class ChatRepository {
           where: { userId },
           select: {
             isPinned: true,
+            role: true,
             userId: true,
           },
         },

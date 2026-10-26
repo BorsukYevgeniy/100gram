@@ -532,10 +532,17 @@
 }
 
 .chat-settings-heading h2 {
+  min-width: 0;
+  flex: 1;
   margin: 0;
   color: #edf1f4;
   font-family: "Manrope", sans-serif;
   font-size: 18px;
+}
+
+.chat-settings-heading .button {
+  flex: 0 0 auto;
+  white-space: nowrap;
 }
 
 .chat-settings-form {
@@ -1180,8 +1187,9 @@
   visibility: hidden;
 }
 
-.messenger-message:hover .chat-reaction-picker,
-.messenger-message:focus-within .chat-reaction-picker {
+.messenger-message:has(.messenger-message-text:hover) .chat-reaction-picker,
+.chat-reaction-picker:hover,
+.chat-reaction-picker:focus-within {
   opacity: 1;
   pointer-events: auto;
   transform: translateY(0);

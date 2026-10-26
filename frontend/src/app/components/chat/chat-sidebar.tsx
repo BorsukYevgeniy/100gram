@@ -40,6 +40,7 @@ type ChatSidebarProps = {
 	onCreationVisibilityChange: (visibility: ChatVisibility) => void;
 	onSelectChat: (chatId: number) => void;
 	onToggleChatPin: (chatId: number) => void;
+	onLeaveChat: (chatId: number) => void;
 };
 
 export default function ChatSidebar({
@@ -71,6 +72,7 @@ export default function ChatSidebar({
 	onCreationVisibilityChange,
 	onSelectChat,
 	onToggleChatPin,
+	onLeaveChat,
 }: ChatSidebarProps) {
 	const search = chatSearch.trim().toLocaleLowerCase('uk-UA');
 	const filteredChats = chats
@@ -140,6 +142,7 @@ export default function ChatSidebar({
 				}
 				onSelectChat={onSelectChat}
 				onTogglePin={onToggleChatPin}
+				onLeaveChat={onLeaveChat}
 			/>
 		</aside>
 	);

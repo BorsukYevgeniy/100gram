@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import Image from 'next/image';
 import { ChatSummary } from './chat-types';
 import { fileProxyUrl, getChatAvatarName, getChatTitle } from './chat-utils';
@@ -11,6 +11,7 @@ type ChatListProps = {
 	emptyMessage: string;
 	onSelectChat: (chatId: number) => void;
 	onTogglePin: (chatId: number) => void;
+	onLeaveChat: (chatId: number) => void;
 };
 
 export default function ChatList({
@@ -19,8 +20,28 @@ export default function ChatList({
 	emptyMessage,
 	onSelectChat,
 	onTogglePin,
+	onLeaveChat,
 }: ChatListProps) {
 	const [openChatMenuId, setOpenChatMenuId] = useState<number | null>(null);
+	const openChatMenuRef = useRef<HTMLDivElement>(null);
+
+	useEffect(() => {
+		if (openChatMenuId === null) return;
+
+		const closeMenuOnOutsidePointerDown = (event: PointerEvent) => {
+			if (
+				event.target instanceof Node &&
+				openChatMenuRef.current?.contains(event.target)
+			) {
+				return;
+			}
+			setOpenChatMenuId(null);
+		};
+
+		document.addEventListener('pointerdown', closeMenuOnOutsidePointerDown);
+		return () =>
+			document.removeEventListener('pointerdown', closeMenuOnOutsidePointerDown);
+	}, [openChatMenuId]);
 
 	if (chats.length === 0) {
 		return (
@@ -80,33 +101,49 @@ export default function ChatList({
 								</time>
 							)}
 						</button>
-						<button
-							type='button'
-							className='chat-menu-trigger'
-							aria-label={`Меню чату ${title}`}
-							title='Меню чату'
-							aria-expanded={openChatMenuId === chat.id}
-							onClick={() =>
-								setOpenChatMenuId((current) =>
-									current === chat.id ? null : chat.id,
-								)
-							}
+						<div
+							ref={openChatMenuId === chat.id ? openChatMenuRef : null}
 						>
-							⋯
-						</button>
-						{openChatMenuId === chat.id && (
-							<div className='chat-item-menu'>
-								<button
-									type='button'
-									onClick={() => {
-										onTogglePin(chat.id);
-										setOpenChatMenuId(null);
-									}}
-								>
-									{chat.isPinned ? 'Відкріпити чат' : 'Закріпити чат'}
-								</button>
-							</div>
-						)}
+							<button
+								type='button'
+								className='chat-menu-trigger'
+								aria-label={`Меню чату ${title}`}
+								title='Меню чату'
+								aria-expanded={openChatMenuId === chat.id}
+								onClick={() =>
+									setOpenChatMenuId((current) =>
+										current === chat.id ? null : chat.id,
+									)
+								}
+							>
+								⋯
+							</button>
+							{openChatMenuId === chat.id && (
+								<div className='chat-item-menu'>
+									<button
+										type='button'
+										onClick={() => {
+											onTogglePin(chat.id);
+											setOpenChatMenuId(null);
+										}}
+									>
+										{chat.isPinned ? 'Відкріпити чат' : 'Закріпити чат'}
+									</button>
+									{chat.chatType !== 'PRIVATE' &&
+										chat.currentUserRole !== 'OWNER' && (
+											<button
+												type='button'
+												onClick={() => {
+													onLeaveChat(chat.id);
+													setOpenChatMenuId(null);
+												}}
+											>
+												Вийти з чату
+											</button>
+										)}
+								</div>
+							)}
+						</div>
 					</div>
 				);
 			})}

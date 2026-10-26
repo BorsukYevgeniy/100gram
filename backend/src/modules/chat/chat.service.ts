@@ -360,14 +360,15 @@ export class ChatService {
 
     const fc: MyChat[] = await Promise.all(
       chats.map(async (c): Promise<MyChat> => {
-        const isPinned = c.chatToUsers.find(
+        const currentMembership = c.chatToUsers.find(
           (ctu) => ctu.userId === userId,
-        ).isPinned;
+        );
 
         const base = {
           id: c.id,
           lastMessage: c.lastMessage,
-          isPinned,
+          isPinned: currentMembership.isPinned,
+          currentUserRole: currentMembership.role,
         };
 
         switch (c.chatType) {

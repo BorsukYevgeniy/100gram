@@ -632,8 +632,8 @@ export function useChatSettings({
     }
   }
 
-  async function leaveChat() {
-    if (!selectedChat || selectedChat.chatType === "PRIVATE" || managingChat) {
+  async function leaveChat(chatId = selectedChat?.id) {
+    if (!chatId || !Number.isSafeInteger(chatId) || managingChat) {
       return;
     }
     if (!socket?.connected) {
@@ -645,14 +645,16 @@ export function useChatSettings({
     setManagingChat(true);
     setError(null);
     try {
-      await emitChatCommand(socket, "leaveChat", { chatId: selectedChat.id });
+      await emitChatCommand(socket, "leaveChat", { chatId });
       setChats((current) =>
-        current.filter((chat) => chat.id !== selectedChat.id),
+        current.filter((chat) => chat.id !== chatId),
       );
-      setSelectedChatId(null);
-      setMessages([]);
-      setShowChatSettings(false);
-      setReactionSettings(null);
+      if (selectedChat?.id === chatId) {
+        setSelectedChatId(null);
+        setMessages([]);
+        setShowChatSettings(false);
+        setReactionSettings(null);
+      }
     } catch (leaveError) {
       setError(
         leaveError instanceof Error

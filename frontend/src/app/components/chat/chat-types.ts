@@ -2,6 +2,7 @@ type BaseChatSummary = {
   id: number;
   lastMessage: { text: string; createdAt: string } | null;
   isPinned: boolean;
+  currentUserRole: "OWNER" | "MODERATOR" | "MEMBER";
 };
 
 export type PrivateChatSummary = BaseChatSummary & {

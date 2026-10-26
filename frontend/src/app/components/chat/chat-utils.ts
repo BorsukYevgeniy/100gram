@@ -133,6 +133,9 @@ function isChatSummary(payload: unknown): payload is ChatSummary {
   if (
     typeof chat.id !== "number" ||
     typeof chat.isPinned !== "boolean" ||
+    (chat.currentUserRole !== "OWNER" &&
+      chat.currentUserRole !== "MODERATOR" &&
+      chat.currentUserRole !== "MEMBER") ||
     !hasValidLastMessage
   ) {
     return false;

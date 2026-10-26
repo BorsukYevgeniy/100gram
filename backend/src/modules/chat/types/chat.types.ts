@@ -1,4 +1,8 @@
-import { ChatType, Message } from '../../../../generated/prisma/browser';
+import {
+  ChatRole,
+  ChatType,
+  Message,
+} from '../../../../generated/prisma/browser';
 import { Paginated } from '../../../common/types';
 import { ChannelGroupChatResponseDto } from '../dto/channel-group-chat-response.dto';
 import { PrivateChatResponseDto } from '../dto/private-chat-response.dto';
@@ -9,6 +13,7 @@ type BaseMyChat = {
   id: number;
   lastMessage: LastMessage | null;
   isPinned: boolean;
+  currentUserRole: ChatRole;
   chatType: ChatType;
 };
 

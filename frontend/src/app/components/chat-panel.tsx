@@ -515,6 +515,7 @@ export default function ChatPanel() {
 			},
 			lastMessage: null,
 			isPinned: false,
+			currentUserRole: 'OWNER',
 		};
 		setChats((current) => [
 			newChat,
@@ -884,6 +885,7 @@ export default function ChatPanel() {
 					onCreationVisibilityChange={chatCreation.setCreationVisibility}
 					onSelectChat={selectChat}
 					onToggleChatPin={(chatId) => void toggleChatPin(chatId)}
+					onLeaveChat={(chatId) => void chatSettings.leaveChat(chatId)}
 				/>
 				<ChatConversation
 					chat={selectedChat}
@@ -911,6 +913,13 @@ export default function ChatPanel() {
 						chatSettings.chatMembers.some(
 							(member) =>
 								member.id === currentUserId && member.chatRole !== 'OWNER',
+						)
+					}
+					isChatOwner={
+						currentUserId !== null &&
+						chatSettings.chatMembers.some(
+							(member) =>
+								member.id === currentUserId && member.chatRole === 'OWNER',
 						)
 					}
 					inviteToken={chatSettings.inviteToken}
