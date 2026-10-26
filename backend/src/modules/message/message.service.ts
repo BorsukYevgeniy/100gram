@@ -55,11 +55,20 @@ export class MessageService {
       return cacheData;
     }
 
-    const messages = await this.messageRepository.findMessagesInChat(
-      currentUserId,
+    const msg = await this.messageRepository.getMessagesInChat(
       chatId,
       limit,
       cursor,
+    );
+
+    const messages = this.mapper.toMessageFilesReactionCount(
+      msg,
+      await this.messageRepository.getReactionCounts(msg.map(({ id }) => id)),
+      await this.messageRepository.getMyReactions(
+        msg.map(({ id }) => id),
+        currentUserId,
+      ),
+      await this.messageRepository.getDeletedMessageIdsForUser(currentUserId),
     );
 
     this.logger.debug(

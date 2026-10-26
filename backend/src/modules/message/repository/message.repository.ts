@@ -1,5 +1,4 @@
 import { Injectable } from '@nestjs/common';
-import { Reaction } from '../../../../generated/prisma/enums';
 import { PrismaService } from '../../../infra/prisma/prisma.service';
 import { CreateMessageDto } from '../dto/create-message.dto';
 import { UpdateMessageDto } from '../dto/update-message.dto';
@@ -9,13 +8,8 @@ import { MessageFilesReactionCount } from '../types/message.types';
 export class MessageRepository {
   constructor(private readonly prisma: PrismaService) {}
 
-  async findMessagesInChat(
-    currentUserId: number,
-    chatId: number,
-    take: number,
-    cursor: number,
-  ): Promise<MessageFilesReactionCount[]> {
-    const msg = await this.prisma.message.findMany({
+  async getMessagesInChat(chatId: number, take: number, cursor: number) {
+    const messages = await this.prisma.message.findMany({
       where: {
         chatId,
         ...(cursor && { id: { lt: cursor } }),
@@ -35,101 +29,49 @@ export class MessageRepository {
       },
     });
 
-    if (msg.length === 0) {
+    if (messages.length === 0) {
       return [] as MessageFilesReactionCount[];
     }
 
-    const reactions = await this.prisma.reactionToMessage.groupBy({
+    return messages;
+  }
+
+  async getReactionCounts(messageIds: number[]) {
+    return this.prisma.reactionToMessage.groupBy({
       by: ['messageId', 'reaction'],
       where: {
-        messageId: {
-          in: msg.map((m) => m.id),
-        },
+        messageId: { in: messageIds },
       },
-      _count: {
-        _all: true,
-      },
+      _count: { _all: true },
     });
+  }
 
-    const reactionCounts = new Map<number, Partial<Record<Reaction, number>>>();
-
-    for (const r of reactions) {
-      const counts = reactionCounts.get(r.messageId) ?? {};
-
-      counts[r.reaction] = r._count._all;
-
-      reactionCounts.set(r.messageId, counts);
-    }
-
-    /*
-     *  Map of messageId to a partial record of reaction counts.
-     *  For each reaction, we store the count of that reaction for the corresponding messageId.
-     */
-
-    const myReactions = await this.prisma.reactionToMessage.findMany({
+  async getMyReactions(messageIds: number[], userId: number) {
+    return this.prisma.reactionToMessage.findMany({
       where: {
-        messageId: {
-          in: msg.map((m) => m.id),
-        },
-        userId: currentUserId,
+        messageId: { in: messageIds },
+        userId,
       },
       select: {
         messageId: true,
         reaction: true,
       },
     });
+  }
 
-    const myReactionSet = new Set(
-      myReactions.map((r) => `${r.messageId}:${r.reaction}`),
-    );
-
-    const { deletedMessage } = await this.prisma.user.findUnique({
-      where: { id: currentUserId },
-      select: { deletedMessage: { select: { id: true } } },
-    });
-
-    return msg.map((m) => {
-      const counts = reactionCounts.get(m.id) ?? {};
-
-      return {
-        id: m.id,
-        chatId: m.chatId,
-        createdAt: m.createdAt,
-        files: m.files.map(({ name, originalName }) => ({
-          name,
-          originalName,
-        })),
-        isPinned: m.isPinned,
-        replyId: m.replyId,
-        text: m.text,
-        user: m.user,
-        isDeletedForMe: deletedMessage.some((dm) => dm.id === m.id),
-        reactions: {
-          like: {
-            count: counts[Reaction.LIKE] ?? 0,
-            isReactedByMe: myReactionSet.has(`${m.id}:${Reaction.LIKE}`),
-          },
-          dislike: {
-            count: counts[Reaction.DISLIKE] ?? 0,
-            isReactedByMe: myReactionSet.has(`${m.id}:${Reaction.DISLIKE}`),
-          },
-          heart: {
-            count: counts[Reaction.HEART] ?? 0,
-            isReactedByMe: myReactionSet.has(`${m.id}:${Reaction.HEART}`),
-          },
-          heartWithFire: {
-            count: counts[Reaction.HEART_WITH_FIRE] ?? 0,
-            isReactedByMe: myReactionSet.has(
-              `${m.id}:${Reaction.HEART_WITH_FIRE}`,
-            ),
-          },
-          fire: {
-            count: counts[Reaction.FIRE] ?? 0,
-            isReactedByMe: myReactionSet.has(`${m.id}:${Reaction.FIRE}`),
-          },
+  async getDeletedMessageIdsForUser(userId: number): Promise<number[]> {
+    const messages = await this.prisma.message.findMany({
+      where: {
+        deletedFor: {
+          some: { id: userId },
         },
-      };
+      },
+      select: {
+        id: true,
+      },
     });
+
+    return messages.map(({ id }) => id);
   }
 
   async create(
