@@ -6,7 +6,12 @@ import { hashSync } from 'bcryptjs';
 import cookieParser from 'cookie-parser';
 import { LoggerModule } from 'nestjs-pino';
 import request from 'supertest';
-import { ChatRole, ChatType, Reaction } from '../generated/prisma/enums';
+import {
+  ChatRole,
+  ChatType,
+  FileType,
+  Reaction,
+} from '../generated/prisma/enums';
 import authConfig from '../src/config/auth.config';
 import databaseConfig from '../src/config/database.config';
 import pinoConfig from '../src/config/pino.config';
@@ -64,6 +69,7 @@ describe('ChatMessageController (e2e)', () => {
     app.use(cookieParser());
     app.useLogger(false);
 
+    await prisma.file.deleteMany({});
     await prisma.chat.deleteMany({});
     await prisma.chatToUser.deleteMany({});
     await prisma.token.deleteMany({});
@@ -233,10 +239,18 @@ describe('ChatMessageController (e2e)', () => {
           replyId: null,
           user: { id: expect.any(Number), nickname: 'chatmessageowner' },
           chatId: groupChatId,
-          fileNames: [],
+          files: [],
         }),
       );
       firstMessageId = body.id;
+      await prisma.file.create({
+        data: {
+          name: 'chat-message-attachment',
+          originalName: 'chat-message-attachment.png',
+          fileType: FileType.ATTACHMENT,
+          messageId: firstMessageId,
+        },
+      });
     });
 
     it('POST /chats/:chatId/messages - 404 NOT FOUND - Should return 404 when reply message does not exist', async () => {
@@ -261,7 +275,7 @@ describe('ChatMessageController (e2e)', () => {
           replyId: firstMessageId,
           user: { id: expect.any(Number), nickname: 'chatmessagemember' },
           chatId: groupChatId,
-          fileNames: [],
+          files: [],
         }),
       );
       replyMessageId = body.id;
@@ -286,7 +300,7 @@ describe('ChatMessageController (e2e)', () => {
         expect.objectContaining({
           text: 'Channel message',
           chatId: channelId,
-          fileNames: [],
+          files: [],
         }),
       );
     });
@@ -350,7 +364,7 @@ describe('ChatMessageController (e2e)', () => {
             text: 'A reply',
             replyId: firstMessageId,
             user: { id: expect.any(Number), nickname: 'chatmessagemember' },
-            fileNames: [],
+            files: [],
             reactions: {
               like: { count: 1, isReactedByMe: false },
               dislike: { count: 0, isReactedByMe: false },
@@ -385,7 +399,12 @@ describe('ChatMessageController (e2e)', () => {
           id: firstMessageId,
           text: 'First message',
           user: { id: expect.any(Number), nickname: 'chatmessageowner' },
-          fileNames: [],
+          files: [
+            {
+              name: 'chat-message-attachment',
+              originalName: 'chat-message-attachment.png',
+            },
+          ],
           reactions: {
             like: { count: 0, isReactedByMe: false },
             dislike: { count: 0, isReactedByMe: false },
@@ -455,6 +474,7 @@ describe('ChatMessageController (e2e)', () => {
   afterAll(async () => {
     await prisma.chat.deleteMany({});
     await prisma.chatToUser.deleteMany({});
+    await prisma.file.deleteMany({});
     await prisma.token.deleteMany({});
     await prisma.user.deleteMany({});
 

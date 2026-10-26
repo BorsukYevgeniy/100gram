@@ -38,7 +38,7 @@ export class MessageValidationService {
       throw new NotFoundException('Message not found');
     }
 
-    if (message.userId !== user.userId && user.role !== Role.ADMIN) {
+    if (message.user.id !== user.userId && user.role !== Role.ADMIN) {
       this.logger.warn(
         { userId: user.userId, messageId },
         'User is not message owner',
@@ -48,7 +48,7 @@ export class MessageValidationService {
       );
     }
 
-    return this.mapper.toMessageFile(message);
+    return message;
   }
 
   async canUpdate(
@@ -67,7 +67,7 @@ export class MessageValidationService {
       throw new NotFoundException('Message not found');
     }
 
-    if (message.userId !== user.userId) {
+    if (message.user.id !== user.userId) {
       this.logger.warn(
         { userId: user.userId, messageId },
         'User is not message owner',
@@ -77,7 +77,7 @@ export class MessageValidationService {
       );
     }
 
-    return this.mapper.toMessageFile(message);
+    return message;
   }
 
   async canDelete(user: AccessTokenPayload, messageId: number): Promise<void> {
@@ -99,7 +99,7 @@ export class MessageValidationService {
     );
 
     const canDelete =
-      message.userId === user.userId ||
+      message.user.id === user.userId ||
       user.role === Role.ADMIN ||
       chatRole.role !== ChatRole.MEMBER;
 

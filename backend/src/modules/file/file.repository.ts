@@ -1,16 +1,16 @@
 import { Injectable } from '@nestjs/common';
-import { FileType } from '../../../generated/prisma/enums';
 import { PrismaService } from '../../infra/prisma/prisma.service';
+import { CreateFileDto } from './dto/create-file.dto';
 
 @Injectable()
 export class FileRepository {
   constructor(private readonly prisma: PrismaService) {}
 
-  async createFiles(fileNames: string[], fileType: FileType) {
+  async createFiles(dtos: CreateFileDto[]) {
     return this.prisma.$transaction(
-      fileNames.map((name) =>
+      dtos.map((dto) =>
         this.prisma.file.create({
-          data: { name, fileType },
+          data: dto,
         }),
       ),
     );

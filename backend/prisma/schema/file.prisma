@@ -1,7 +1,8 @@
 model File {
   name String @id
 
-  fileType FileType
+  fileType     FileType
+  originalName String
 
   createdAt DateTime @default(now()) @db.Timestamptz
 

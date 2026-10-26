@@ -27,7 +27,7 @@ export class MessageRepository {
       omit: { userId: true },
       include: {
         files: {
-          select: { name: true },
+          select: { name: true, originalName: true },
         },
         user: {
           select: { id: true, nickname: true, avatarName: true },
@@ -61,6 +61,11 @@ export class MessageRepository {
       reactionCounts.set(r.messageId, counts);
     }
 
+    /*
+     *  Map of messageId to a partial record of reaction counts.
+     *  For each reaction, we store the count of that reaction for the corresponding messageId.
+     */
+
     const myReactions = await this.prisma.reactionToMessage.findMany({
       where: {
         messageId: {
@@ -90,7 +95,10 @@ export class MessageRepository {
         id: m.id,
         chatId: m.chatId,
         createdAt: m.createdAt,
-        fileNames: m.files.map(({ name }) => name),
+        files: m.files.map(({ name, originalName }) => ({
+          name,
+          originalName,
+        })),
         isPinned: m.isPinned,
         replyId: m.replyId,
         text: m.text,
@@ -141,9 +149,10 @@ export class MessageRepository {
             connect: filenames.map((name) => ({ name })),
           },
         },
+        omit: { userId: true },
         include: {
-          files: { select: { name: true } },
-          user: { select: { nickname: true, avatarName: true } },
+          files: { select: { name: true, originalName: true } },
+          user: { select: { id: true, nickname: true, avatarName: true } },
         },
       });
 
@@ -159,9 +168,10 @@ export class MessageRepository {
   async findById(id: number) {
     return this.prisma.message.findUnique({
       where: { id },
+      omit: { userId: true },
       include: {
-        files: true,
-        user: { select: { nickname: true, avatarName: true } },
+        files: { select: { name: true, originalName: true } },
+        user: { select: { id: true, nickname: true, avatarName: true } },
       },
     });
   }
@@ -176,9 +186,10 @@ export class MessageRepository {
         }),
       },
       include: {
-        files: true,
-        user: { select: { nickname: true, avatarName: true } },
+        files: { select: { name: true, originalName: true } },
+        user: { select: { id: true, nickname: true, avatarName: true } },
       },
+      omit: { userId: true },
     });
   }
 
@@ -186,9 +197,10 @@ export class MessageRepository {
     return this.prisma.message.delete({
       where: { id },
       include: {
-        files: true,
-        user: { select: { nickname: true, avatarName: true } },
+        files: { select: { name: true, originalName: true } },
+        user: { select: { id: true, nickname: true, avatarName: true } },
       },
+      omit: { userId: true },
     });
   }
 

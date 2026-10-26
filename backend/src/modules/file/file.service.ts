@@ -8,6 +8,7 @@ import { NoSuchKey } from '@aws-sdk/client-s3';
 import { PinoLogger } from 'nestjs-pino';
 import { extname } from 'path';
 import { MinioService } from '../../infra/minio/minio.service';
+import { CreateFileDto } from './dto/create-file.dto';
 
 @Injectable()
 export class FileService {
@@ -52,11 +53,18 @@ export class FileService {
     if (!files || files.length === 0) return [];
 
     const fileNames: string[] = [];
+    const createFileDtos: CreateFileDto[] = [];
 
     const savePromises = files.map((f) => {
       const fileName = randomUUID().concat(extname(f.originalname));
 
       fileNames.push(fileName);
+
+      createFileDtos.push({
+        name: fileName,
+        fileType: filesType,
+        originalName: f.originalname,
+      });
 
       return this.minio.upload(
         this.getFileUrl(fileName, filesType),
@@ -68,7 +76,7 @@ export class FileService {
     try {
       await Promise.all(savePromises);
 
-      const files = this.fileRepo.createFiles(fileNames, filesType);
+      const files = this.fileRepo.createFiles(createFileDtos);
 
       this.logger.debug(
         { fileNames, fileType: filesType },

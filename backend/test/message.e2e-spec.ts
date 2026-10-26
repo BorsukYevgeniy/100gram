@@ -6,7 +6,7 @@ import { hashSync } from 'bcryptjs';
 import cookieParser from 'cookie-parser';
 import { LoggerModule } from 'nestjs-pino';
 import request from 'supertest';
-import { ChatRole, ChatType } from '../generated/prisma/enums';
+import { ChatRole, ChatType, FileType } from '../generated/prisma/enums';
 import authConfig from '../src/config/auth.config';
 import databaseConfig from '../src/config/database.config';
 import pinoConfig from '../src/config/pino.config';
@@ -66,6 +66,7 @@ describe('MessageController (e2e)', () => {
 
     await prisma.chat.deleteMany({});
     await prisma.chatToUser.deleteMany({});
+    await prisma.file.deleteMany({});
     await prisma.message.deleteMany({});
     await prisma.token.deleteMany({});
     await prisma.user.deleteMany({});
@@ -158,6 +159,14 @@ describe('MessageController (e2e)', () => {
       },
     });
     messageId = message.id;
+    await prisma.file.create({
+      data: {
+        name: 'message-controller-attachment',
+        originalName: 'message-attachment.pdf',
+        fileType: FileType.ATTACHMENT,
+        messageId,
+      },
+    });
 
     const deletedForMeMessage = await prisma.message.create({
       data: {
@@ -219,15 +228,25 @@ describe('MessageController (e2e)', () => {
         .set('Cookie', [`access_token=${ownerAccessToken}`])
         .expect(200);
 
-      expect(body).toEqual(
-        expect.objectContaining({
-          id: messageId,
-          text: 'Original message',
-          user: { id: ownerId, nickname: 'messagecontrollerowner' },
-          chatId: groupChatId,
-          fileNames: [],
-        }),
-      );
+      expect(body).toEqual({
+        id: messageId,
+        text: 'Original message',
+        user: {
+          id: ownerId,
+          nickname: 'messagecontrollerowner',
+          avatarName: null,
+        },
+        chatId: groupChatId,
+        files: [
+          {
+            name: 'message-controller-attachment',
+            originalName: 'message-attachment.pdf',
+          },
+        ],
+        replyId: null,
+        createdAt: expect.any(String),
+        isPinned: false,
+      });
     });
   });
 
@@ -272,15 +291,25 @@ describe('MessageController (e2e)', () => {
         .set('Cookie', [`access_token=${ownerAccessToken}`])
         .expect(200);
 
-      expect(body).toEqual(
-        expect.objectContaining({
-          id: messageId,
-          text: 'Updated message',
-          user: { id: ownerId, nickname: 'messagecontrollerowner' },
-          chatId: groupChatId,
-          fileNames: [],
-        }),
-      );
+      expect(body).toEqual({
+        id: messageId,
+        text: 'Updated message',
+        user: {
+          id: ownerId,
+          nickname: 'messagecontrollerowner',
+          avatarName: null,
+        },
+        chatId: groupChatId,
+        files: [
+          {
+            name: 'message-controller-attachment',
+            originalName: 'message-attachment.pdf',
+          },
+        ],
+        replyId: null,
+        createdAt: expect.any(String),
+        isPinned: false,
+      });
     });
   });
 
@@ -560,15 +589,25 @@ describe('MessageController (e2e)', () => {
         .set('Cookie', [`access_token=${ownerAccessToken}`])
         .expect(200);
 
-      expect(body).toEqual(
-        expect.objectContaining({
-          id: messageId,
-          text: 'Updated message',
-          user: { id: ownerId, nickname: 'messagecontrollerowner' },
-          chatId: groupChatId,
-          fileNames: [],
-        }),
-      );
+      expect(body).toEqual({
+        id: messageId,
+        text: 'Updated message',
+        user: {
+          id: ownerId,
+          nickname: 'messagecontrollerowner',
+          avatarName: null,
+        },
+        chatId: groupChatId,
+        files: [
+          {
+            name: 'message-controller-attachment',
+            originalName: 'message-attachment.pdf',
+          },
+        ],
+        replyId: null,
+        createdAt: expect.any(String),
+        isPinned: false,
+      });
     });
 
     it('DELETE /messages/:id - 404 NOT FOUND - Should return 404 if message was already deleted', async () => {
@@ -582,6 +621,7 @@ describe('MessageController (e2e)', () => {
   afterAll(async () => {
     await prisma.chat.deleteMany({});
     await prisma.chatToUser.deleteMany({});
+    await prisma.file.deleteMany({});
     await prisma.token.deleteMany({});
     await prisma.user.deleteMany({});
     await prisma.message.deleteMany({});

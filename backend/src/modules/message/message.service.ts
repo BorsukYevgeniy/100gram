@@ -158,7 +158,7 @@ export class MessageService {
 
       await this.cache.incrChatMessageVersion(chatId);
 
-      return this.mapper.toMessageFile(message);
+      return message;
     } catch (e) {
       if (e instanceof PrismaClientKnownRequestError) {
         switch (e.code) {
@@ -191,9 +191,7 @@ export class MessageService {
     if (!msg) throw new NotFoundException('Message not found');
 
     await this.chatValidator.validateChatParticipation(userId, msg.chatId);
-    return this.mapper.toMessageFile(
-      await this.messageRepository.findById(messageId),
-    );
+    return this.messageRepository.findById(messageId);
   }
 
   async update(
@@ -207,14 +205,12 @@ export class MessageService {
       FileType.ATTACHMENT,
     );
 
-    return this.mapper.toMessageFile(
-      await this.updateInternal(
-        user,
-        messageId,
-        dto,
-        createdFiles.map(({ name }) => name),
-        'http',
-      ),
+    return this.updateInternal(
+      user,
+      messageId,
+      dto,
+      createdFiles.map(({ name }) => name),
+      'http',
     );
   }
 
@@ -224,9 +220,7 @@ export class MessageService {
     dto: UpdateMessageDto,
     filenames: string[],
   ): Promise<MessageFiles> {
-    return this.mapper.toMessageFile(
-      await this.updateInternal(user, messageId, dto, filenames, 'ws'),
-    );
+    return this.updateInternal(user, messageId, dto, filenames, 'ws');
   }
 
   private async updateInternal(
@@ -235,7 +229,7 @@ export class MessageService {
     dto: UpdateMessageDto,
     filenames: string[],
     transport: 'http' | 'ws',
-  ) {
+  ): Promise<MessageFiles> {
     await this.messageValidator.canUpdate(user, messageId);
 
     try {
@@ -275,7 +269,7 @@ export class MessageService {
     this.logger.info({ messageId, deletedBy: user.userId }, 'Message deleted');
 
     await this.cache.incrChatMessageVersion(message.chatId);
-    return this.mapper.toMessageFile(message);
+    return message;
   }
 
   async pinMessage(userId: number, messageId: number) {
@@ -284,7 +278,9 @@ export class MessageService {
     if (!msg) throw new NotFoundException('Message not found');
 
     await this.chatValidator.validateChatParticipation(userId, msg.chatId);
+
     const pinnedMessage = await this.messageRepository.pinMessage(messageId);
+
     await this.cache.incrChatMessageVersion(msg.chatId);
     return pinnedMessage;
   }
@@ -295,8 +291,12 @@ export class MessageService {
     if (!msg) throw new NotFoundException('Message not found');
 
     await this.chatValidator.validateChatParticipation(userId, msg.chatId);
-    const unpinnedMessage = await this.messageRepository.unpinMessage(messageId);
+
+    const unpinnedMessage =
+      await this.messageRepository.unpinMessage(messageId);
+
     await this.cache.incrChatMessageVersion(msg.chatId);
+
     return unpinnedMessage;
   }
 
