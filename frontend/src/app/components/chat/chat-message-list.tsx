@@ -196,7 +196,7 @@ export default function ChatMessageList({
 					const isOwnMessage = message.user.id === currentUserId;
 					return (
 						<article
-							className={`messenger-message${isOwnMessage ? ' own' : ''}${message.fileNames.length > 0 ? ' has-attachments' : ''}${openDeleteMenuId === message.id ? ' menu-open' : ''}${openDeleteMenuId === message.id && menuOpensDown ? ' menu-open-down' : ''}`}
+							className={`messenger-message${isOwnMessage ? ' own' : ''}${message.files.length > 0 ? ' has-attachments' : ''}${openDeleteMenuId === message.id ? ' menu-open' : ''}${openDeleteMenuId === message.id && menuOpensDown ? ' menu-open-down' : ''}`}
 							key={message.id}
 							data-message-id={message.id}
 						>
@@ -318,12 +318,12 @@ export default function ChatMessageList({
 									</div>
 								</div>
 							)}
-							{message.fileNames.length > 0 && (
+							{message.files.length > 0 && (
 								<div className="messenger-message-attachments">
-									{message.fileNames.map((fileName) => (
+									{message.files.map((file) => (
 										<ChatMessageAttachment
-											key={fileName}
-											fileName={fileName}
+											key={file.name}
+											file={file}
 										/>
 									))}
 								</div>

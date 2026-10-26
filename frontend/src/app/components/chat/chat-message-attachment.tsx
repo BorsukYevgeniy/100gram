@@ -4,7 +4,7 @@ import Image from 'next/image';
 import { fileProxyUrl } from './chat-utils';
 
 type ChatMessageAttachmentProps = {
-	fileName: string;
+	file: { name: string; originalName: string };
 };
 
 const imageExtensions = new Set([
@@ -28,23 +28,24 @@ const videoExtensions = new Set([
 ]);
 
 export default function ChatMessageAttachment({
-	fileName,
+	file,
 }: ChatMessageAttachmentProps) {
-	const extension = fileName.split('.').pop()?.toLowerCase() ?? '';
-	const fileUrl = fileProxyUrl(fileName, 'attachments');
+	const extension = file.originalName.split('.').pop()?.toLowerCase() ?? '';
+	const fileUrl = fileProxyUrl(file.name, 'attachments');
 
 	if (imageExtensions.has(extension)) {
+		const label = `Переглянути фото ${file.originalName}`;
 		return (
 			<a
 				className='messenger-message-attachment'
 				href={fileUrl}
 				target='_blank'
 				rel='noreferrer'
-				aria-label={`Переглянути фото ${fileName}`}
+				aria-label={label}
 			>
 				<Image
 					src={fileUrl}
-					alt={fileName}
+					alt={file.originalName}
 					width={480}
 					height={360}
 					unoptimized
@@ -64,7 +65,7 @@ export default function ChatMessageAttachment({
 					const video = event.currentTarget;
 					if (video.duration > 0) video.currentTime = 0.1;
 				}}
-				aria-label={`Відео ${fileName}`}
+				aria-label={`Відео ${file.originalName}`}
 			/>
 		);
 	}
@@ -73,9 +74,9 @@ export default function ChatMessageAttachment({
 		<a
 			className='messenger-message-file'
 			href={fileUrl}
-			download={fileName}
+			download={file.originalName}
 		>
-			{fileName}
+			{file.originalName}
 		</a>
 	);
 }

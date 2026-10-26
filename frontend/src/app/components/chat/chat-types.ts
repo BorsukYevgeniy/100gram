@@ -51,7 +51,7 @@ export type ChatMessage = {
   user: { id: number; nickname: string; avatarName: string | null };
   isPinned: boolean;
   isDeletedForMe?: boolean;
-  fileNames: string[];
+  files: { name: string; originalName: string }[];
   reactions: MessageReactionSummary;
 };
 

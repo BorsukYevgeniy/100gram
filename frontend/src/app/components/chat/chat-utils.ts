@@ -259,8 +259,16 @@ export function isChatMessage(payload: unknown): payload is ChatMessage {
       typeof message.user.avatarName === "string") &&
     (message.isDeletedForMe === undefined ||
       typeof message.isDeletedForMe === "boolean") &&
-    Array.isArray(message.fileNames) &&
-    message.fileNames.every((fileName) => typeof fileName === "string") &&
+    Array.isArray(message.files) &&
+    message.files.every(
+      (file) =>
+        !!file &&
+        typeof file === "object" &&
+        "name" in file &&
+        typeof file.name === "string" &&
+        "originalName" in file &&
+        typeof file.originalName === "string",
+    ) &&
     (message.reactions === undefined ||
       isMessageReactionSummary(message.reactions))
   );
