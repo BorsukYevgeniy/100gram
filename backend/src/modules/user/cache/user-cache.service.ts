@@ -1,8 +1,10 @@
+import { Injectable } from '@nestjs/common';
 import { PaginationDto } from '../../../common/dto/pagination.dto';
 import { RedisService } from '../../../infra/redis/redis.service';
 import { SearchUserDto } from '../dto/search-user.dto';
 import { PaginatedUserNoCredOtpVCode } from '../types/user.types';
 
+@Injectable()
 export class UserCacheService {
   constructor(private readonly redisService: RedisService) {}
 
@@ -10,7 +12,7 @@ export class UserCacheService {
     dto: SearchUserDto,
     paginationDto: PaginationDto,
   ): Promise<PaginatedUserNoCredOtpVCode | null> {
-    return await this.redisService.get<PaginatedUserNoCredOtpVCode>(
+    return this.redisService.get<PaginatedUserNoCredOtpVCode>(
       this.buildSearchUsersKey(dto, paginationDto),
     );
   }
@@ -20,7 +22,7 @@ export class UserCacheService {
     dto: SearchUserDto,
     paginationDto: PaginationDto,
   ): Promise<string | null> {
-    return await this.redisService.set(
+    return this.redisService.set(
       this.buildSearchUsersKey(dto, paginationDto),
       users,
       60,

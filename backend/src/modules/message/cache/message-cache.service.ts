@@ -1,7 +1,9 @@
+import { Injectable } from '@nestjs/common';
 import { PaginationDto } from '../../../common/dto/pagination.dto';
 import { RedisService } from '../../../infra/redis/redis.service';
 import { PaginatedMessageFilesReactionCount } from '../types/message.types';
 
+@Injectable()
 export class MessageCacheService {
   constructor(private readonly redisService: RedisService) {}
 
@@ -11,7 +13,7 @@ export class MessageCacheService {
     chatMessageVersion: number,
     dto: PaginationDto,
   ): Promise<PaginatedMessageFilesReactionCount | null> {
-    return await this.redisService.get<PaginatedMessageFilesReactionCount>(
+    return this.redisService.get<PaginatedMessageFilesReactionCount>(
       this.buildChatMessageKey(chatId, currentUserId, chatMessageVersion, dto),
     );
   }
@@ -23,7 +25,7 @@ export class MessageCacheService {
     chatMessageVersion: number,
     dto: PaginationDto,
   ): Promise<string | null> {
-    return await this.redisService.set(
+    return this.redisService.set(
       this.buildChatMessageKey(chatId, currentUserId, chatMessageVersion, dto),
       messages,
       60,

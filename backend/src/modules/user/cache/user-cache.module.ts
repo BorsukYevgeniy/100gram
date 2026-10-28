@@ -1,5 +1,5 @@
-import { RedisModule } from '@nestjs-modules/ioredis';
 import { Module } from '@nestjs/common';
+import { RedisModule } from '../../../infra/redis/redis.module';
 import { UserCacheService } from './user-cache.service';
 
 @Module({

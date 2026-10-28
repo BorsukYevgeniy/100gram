@@ -1,7 +1,9 @@
+import { Injectable } from '@nestjs/common';
 import { PaginationDto } from '../../../common/dto/pagination.dto';
 import { RedisService } from '../../../infra/redis/redis.service';
 import { PaginatedMyChats } from '../types/chat.types';
 
+@Injectable()
 export class ChatCacheService {
   constructor(private readonly redisService: RedisService) {}
 

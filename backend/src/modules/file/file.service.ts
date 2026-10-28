@@ -37,7 +37,7 @@ export class FileService {
 
   async getFileContent(key: string) {
     try {
-      return await this.minio.get(key);
+      return this.minio.get(key);
     } catch (e) {
       if (e instanceof NoSuchKey) {
         this.logger.warn({ key }, 'File not found');
