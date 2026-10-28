@@ -1,7 +1,7 @@
 import { Module } from '@nestjs/common';
 import { PrismaModule } from '../../infra/prisma/prisma.module';
-import { CacheModule } from '../cache/cache.module';
 import { ChatValidationModule } from '../chat/validation/chat-validation.module';
+import { MessageCacheModule } from '../message/cache/message-cache.module';
 import { MessageRepositoryModule } from '../message/repository/message-repository.module';
 import { ReactionRepository } from './reaction.repository';
 import { ReactionService } from './reaction.service';
@@ -11,7 +11,7 @@ import { ReactionService } from './reaction.service';
     MessageRepositoryModule,
     ChatValidationModule,
     PrismaModule,
-    CacheModule,
+    MessageCacheModule,
   ],
   providers: [ReactionService, ReactionRepository],
   exports: [ReactionService],

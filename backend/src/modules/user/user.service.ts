@@ -8,9 +8,9 @@ import { PinoLogger } from 'nestjs-pino';
 import { Role, User } from '../../../generated/prisma/client';
 import { PaginationDto } from '../../common/dto/pagination.dto';
 import { AccessTokenPayload } from '../../common/types';
-import { CacheService } from '../cache/cache.service';
 import { ChatMemberRepository } from '../chat/chat-member/repository/chat-member.repository';
 import { ChatService } from '../chat/chat.service';
+import { UserCacheService } from './cache/user-cache.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { SearchUserDto } from './dto/search-user.dto';
 import { UpdateUserProfileDto } from './dto/update-user-profile.dto';
@@ -28,7 +28,7 @@ export class UserService {
     private readonly chatUserRepo: ChatMemberRepository,
     private readonly chatService: ChatService,
     private readonly logger: PinoLogger,
-    private readonly cache: CacheService,
+    private readonly cache: UserCacheService,
   ) {
     this.logger.setContext(UserService.name);
   }
@@ -204,9 +204,7 @@ export class UserService {
     dto: SearchUserDto,
     { cursor, limit }: PaginationDto,
   ): Promise<PaginatedUserNoCredOtpVCode> {
-    const cacheData = await this.cache.get<PaginatedUserNoCredOtpVCode>(
-      this.cache.buildSearchUsersKey(dto, { cursor, limit }),
-    );
+    const cacheData = await this.cache.getSearchedUsers(dto, { cursor, limit });
 
     if (cacheData) {
       this.logger.debug({ nickname: dto.nickname }, 'Users fetched from cache');
@@ -220,11 +218,7 @@ export class UserService {
 
     const result = { limit, hasMore, nextCursor, users };
 
-    await this.cache.set(
-      this.cache.buildSearchUsersKey(dto, { cursor, limit }),
-      result,
-      60,
-    );
+    await this.cache.setSearchedUsers(result, dto, { cursor, limit });
 
     return result;
   }

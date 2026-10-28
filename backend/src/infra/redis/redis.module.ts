@@ -1,15 +1,15 @@
 import { Module } from '@nestjs/common';
-import { CacheService } from './cache.service';
 
-import { RedisModule } from '@nestjs-modules/ioredis';
+import { RedisModule as NestRedisModule } from '@nestjs-modules/ioredis';
 import { ConfigModule, ConfigType } from '@nestjs/config';
 import Redis, { Cluster } from 'ioredis';
 import { PinoLogger } from 'nestjs-pino';
 import redisConfig from '../../config/redis.config';
+import { RedisService } from './redis.service';
 
 @Module({
   imports: [
-    RedisModule.forRootAsync({
+    NestRedisModule.forRootAsync({
       imports: [ConfigModule.forFeature(redisConfig)],
       inject: [redisConfig.KEY, PinoLogger],
       useFactory: (c: ConfigType<typeof redisConfig>, logger: PinoLogger) => {
@@ -35,7 +35,7 @@ import redisConfig from '../../config/redis.config';
       },
     }),
   ],
-  providers: [CacheService],
-  exports: [CacheService],
+  providers: [RedisService],
+  exports: [RedisService],
 })
-export class CacheModule {}
+export class RedisModule {}

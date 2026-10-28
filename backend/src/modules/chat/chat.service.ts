@@ -17,7 +17,7 @@ import { ChatValidationService } from './validation/chat-validation.service';
 import { randomBytes } from 'crypto';
 import { ChatToUser, Role } from '../../../generated/prisma/browser';
 import { PaginationDto } from '../../common/dto/pagination.dto';
-import { CacheService } from '../cache/cache.service';
+import { ChatCacheService } from './cache/chat-cache.service';
 import { ChatMemberRepository } from './chat-member/repository/chat-member.repository';
 import { AllowReactionDto } from './dto/allow-reaction.dto';
 import { ChannelGroupChatResponseDto } from './dto/channel-group-chat-response.dto';
@@ -32,7 +32,7 @@ export class ChatService {
     private readonly chatRepo: ChatRepository,
     private readonly chatUserRepo: ChatMemberRepository,
     private readonly chatValidator: ChatValidationService,
-    private readonly cache: CacheService,
+    private readonly cache: ChatCacheService,
     private readonly logger: PinoLogger,
   ) {
     this.logger.setContext(ChatService.name);
@@ -344,9 +344,7 @@ export class ChatService {
     userId: number,
     { limit, cursor }: PaginationDto,
   ): Promise<PaginatedMyChats> {
-    const cacheData = await this.cache.get<PaginatedMyChats>(
-      this.cache.buildMyChatsKey(userId, { limit, cursor }),
-    );
+    const cacheData = await this.cache.getMyChats(userId, { limit, cursor });
 
     if (cacheData) {
       this.logger.debug(
@@ -396,11 +394,7 @@ export class ChatService {
 
     const result = { limit, hasMore, nextCursor, chats: fc };
 
-    await this.cache.set(
-      this.cache.buildMyChatsKey(userId, { limit, cursor }),
-      result,
-      10,
-    );
+    await this.cache.setMyChats(result, userId, { limit, cursor });
 
     return result;
   }

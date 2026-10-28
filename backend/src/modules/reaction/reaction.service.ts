@@ -5,8 +5,8 @@ import {
 } from '@nestjs/common';
 import { PrismaClientKnownRequestError } from '@prisma/client/runtime/client';
 import { PinoLogger } from 'nestjs-pino';
-import { CacheService } from '../cache/cache.service';
 import { ChatValidationService } from '../chat/validation/chat-validation.service';
+import { MessageCacheService } from '../message/cache/message-cache.service';
 import { MessageRepository } from '../message/repository/message.repository';
 import { AddReactionDto } from './dto/add-reaction.dto';
 import { UpdateReactionDto } from './dto/update-reaction.dto';
@@ -19,7 +19,7 @@ export class ReactionService {
     private readonly messageRepo: MessageRepository,
     private readonly chatValidator: ChatValidationService,
     private readonly logger: PinoLogger,
-    private readonly cache: CacheService,
+    private readonly cache: MessageCacheService,
   ) {
     this.logger.setContext(ReactionService.name);
   }

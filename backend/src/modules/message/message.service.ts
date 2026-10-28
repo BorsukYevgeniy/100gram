@@ -4,10 +4,10 @@ import { PinoLogger } from 'nestjs-pino';
 import { ChatType, FileType } from '../../../generated/prisma/enums';
 import { PaginationDto } from '../../common/dto/pagination.dto';
 import { AccessTokenPayload } from '../../common/types';
-import { CacheService } from '../cache/cache.service';
 import { ChatRepository } from '../chat/repository/chat.repository';
 import { ChatValidationService } from '../chat/validation/chat-validation.service';
 import { FileService } from '../file/file.service';
+import { MessageCacheService } from './cache/message-cache.service';
 import { CreateMessageDto } from './dto/create-message.dto';
 import { UpdateMessageDto } from './dto/update-message.dto';
 import { MessageMapperService } from './mapper/message-mapper.service';
@@ -27,7 +27,7 @@ export class MessageService {
     private readonly messageValidator: MessageValidationService,
     private readonly chatValidator: ChatValidationService,
     private readonly logger: PinoLogger,
-    private readonly cache: CacheService,
+    private readonly cache: MessageCacheService,
     private readonly mapper: MessageMapperService,
   ) {
     this.logger.setContext(MessageService.name);
@@ -41,13 +41,11 @@ export class MessageService {
     const { cursor, limit } = paginationDto;
 
     const chatMessageVersion = await this.cache.getChatMessageVersion(chatId);
-    const cacheData = await this.cache.get<PaginatedMessageFilesReactionCount>(
-      this.cache.buildChatMessageKey(
-        chatId,
-        currentUserId,
-        chatMessageVersion,
-        paginationDto,
-      ),
+    const cacheData = await this.cache.getAllMessagesInChat(
+      chatId,
+      currentUserId,
+      chatMessageVersion,
+      paginationDto,
     );
 
     if (cacheData) {
@@ -91,15 +89,12 @@ export class MessageService {
       hasMore,
     };
 
-    await this.cache.set(
-      this.cache.buildChatMessageKey(
-        chatId,
-        currentUserId,
-        chatMessageVersion,
-        paginationDto,
-      ),
+    await this.cache.setAllMessagesInChat(
       result,
-      60,
+      chatId,
+      currentUserId,
+      chatMessageVersion,
+      paginationDto,
     );
 
     return result;
