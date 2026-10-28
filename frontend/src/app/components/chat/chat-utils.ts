@@ -251,6 +251,7 @@ export function isChatMessage(payload: unknown): payload is ChatMessage {
     typeof message.chatId === "number" &&
     typeof message.text === "string" &&
     typeof message.createdAt === "string" &&
+    (typeof message.replyId === "number" || message.replyId === null) &&
     !!message.user &&
     typeof message.user === "object" &&
     typeof message.user.id === "number" &&

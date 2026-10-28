@@ -1014,6 +1014,64 @@
   font-size: 11px;
 }
 
+.messenger-message-reply {
+  width: 100%;
+  display: block;
+  margin-bottom: 8px;
+  padding: 6px 9px;
+  border-top: 0;
+  border-right: 0;
+  border-bottom: 0;
+  border-left: 2px solid #a9d574;
+  border-radius: 0 5px 5px 0;
+  background: rgb(0 0 0 / 14%);
+  cursor: pointer;
+  text-align: left;
+}
+
+.messenger-message-reply:hover:not(:disabled) {
+  background: rgb(0 0 0 / 24%);
+}
+
+.messenger-message-reply:disabled {
+  cursor: default;
+}
+
+.messenger-message-reply strong {
+  display: block;
+  overflow: hidden;
+  color: #b9dc8b;
+  font-size: 10px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.messenger-message-reply p {
+  display: -webkit-box;
+  overflow: hidden;
+  margin: 3px 0 0;
+  color: #b3bdc3;
+  font-size: 11px;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.messenger-message-navigation-target .messenger-message-bubble {
+  animation: messenger-message-navigation-highlight 1.8s ease-out;
+}
+
+@keyframes messenger-message-navigation-highlight {
+  0%,
+  45% {
+    box-shadow: 0 0 0 3px rgb(169 213 116 / 65%);
+  }
+  100% {
+    box-shadow: 0 0 0 3px rgb(169 213 116 / 0%);
+  }
+}
+
 .messenger-message-text {
   min-width: 0;
   flex: 1;
@@ -1218,6 +1276,66 @@
   padding: 12px clamp(14px, 5vw, 66px);
   border-top: 1px solid #252b34;
   background: #11161e;
+}
+
+.messenger-reply-preview {
+  display: flex;
+  order: -2;
+  width: 100%;
+  min-width: 0;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 8px;
+  padding: 8px 11px;
+  border-left: 2px solid #a9d574;
+  border-radius: 0 7px 7px 0;
+  background: #1a212a;
+}
+
+.messenger-reply-preview > div {
+  min-width: 0;
+}
+
+.messenger-reply-preview strong,
+.messenger-reply-preview p {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.messenger-reply-preview strong {
+  color: #b9dc8b;
+  font-size: 11px;
+}
+
+.messenger-reply-preview p {
+  margin: 3px 0 0;
+  color: #aab4c0;
+  font-size: 11px;
+}
+
+.messenger-reply-cancel {
+  width: 28px;
+  height: 28px;
+  flex: 0 0 28px;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: #aab4c0;
+  cursor: pointer;
+  font-size: 20px;
+}
+
+.messenger-reply-cancel:hover:not(:disabled) {
+  background: #2a3541;
+  color: #fff;
+}
+
+.messenger-reply-cancel:disabled {
+  cursor: wait;
+  opacity: 0.55;
 }
 
 .messenger-compose-main {

@@ -43,7 +43,9 @@ type ChatConversationProps = {
 	inviteToken: string | null;
 	reactionOptions: ReactionOption[];
 	messages: ChatMessage[];
+	replyingToMessage: ChatMessage | null;
 	messageScrollTrigger: number;
+	messageNavigationRequest: { messageId: number; sequence: number } | null;
 	currentUserId: number | null;
 	editingMessageId: number | null;
 	editText: string;
@@ -88,7 +90,10 @@ type ChatConversationProps = {
 	onTogglePinMessage: (message: ChatMessage) => void;
 	onToggleReaction: (message: ChatMessage, reaction: Reaction) => void;
 	onOpenUserProfile: (userId: number) => void;
+	onNavigateToMessage: (messageId: number) => void;
 	onMessageTextChange: (value: string) => void;
+	onReplyToMessage: (message: ChatMessage) => void;
+	onCancelReply: () => void;
 	onSendMessage: (event: FormEvent<HTMLFormElement>) => void;
 };
 
@@ -118,7 +123,9 @@ export default function ChatConversation({
 	inviteToken,
 	reactionOptions,
 	messages,
+	replyingToMessage,
 	messageScrollTrigger,
+	messageNavigationRequest,
 	currentUserId,
 	editingMessageId,
 	editText,
@@ -159,7 +166,10 @@ export default function ChatConversation({
 	onTogglePinMessage,
 	onToggleReaction,
 	onOpenUserProfile,
+	onNavigateToMessage,
 	onMessageTextChange,
+	onReplyToMessage,
+	onCancelReply,
 	onSendMessage,
 }: ChatConversationProps) {
 	if (!chat) {
@@ -282,6 +292,7 @@ export default function ChatConversation({
 			<ChatMessageList
 				messages={messages}
 				messageScrollTrigger={messageScrollTrigger}
+				messageNavigationRequest={messageNavigationRequest}
 				currentUserId={currentUserId}
 				connection={connection}
 				editingMessageId={editingMessageId}
@@ -298,8 +309,28 @@ export default function ChatConversation({
 				onTogglePin={onTogglePinMessage}
 				onToggleReaction={onToggleReaction}
 				onOpenUserProfile={onOpenUserProfile}
+				onNavigateToMessage={onNavigateToMessage}
+				onReply={onReplyToMessage}
 			/>
 			<form className='messenger-compose' onSubmit={onSendMessage}>
+				{replyingToMessage && (
+					<div className='messenger-reply-preview'>
+						<div>
+							<strong>Відповідь для {replyingToMessage.user.nickname}</strong>
+							<p>{replyingToMessage.text || 'Вкладення'}</p>
+						</div>
+						<button
+							className='messenger-reply-cancel'
+							type='button'
+							aria-label='Скасувати відповідь'
+							title='Скасувати відповідь'
+							onClick={onCancelReply}
+							disabled={sendingMessage}
+						>
+							×
+						</button>
+					</div>
+				)}
 				{messageFiles.length > 0 && (
 					<div className='messenger-attachments'>
 						<div className='messenger-attachment-list'>

@@ -37,6 +37,10 @@ export default function ChatPanel() {
 	const [profileUserId, setProfileUserId] = useState<number | null>(null);
 	const [messages, setMessages] = useState<ChatMessage[]>([]);
 	const [messageScrollTrigger, setMessageScrollTrigger] = useState(0);
+	const [messageNavigationRequest, setMessageNavigationRequest] = useState<{
+		messageId: number;
+		sequence: number;
+	} | null>(null);
 	const [pendingReactionMessageIds, setPendingReactionMessageIds] = useState<
 		Set<number>
 	>(() => new Set());
@@ -48,6 +52,10 @@ export default function ChatPanel() {
 	const [error, setError] = useState<string | null>(null);
 	const [messageText, setMessageText] = useState('');
 	const [messageFiles, setMessageFiles] = useState<File[]>([]);
+	const [replyTarget, setReplyTarget] = useState<{
+		chatId: number;
+		message: ChatMessage;
+	} | null>(null);
 	const [sendingMessage, setSendingMessage] = useState(false);
 	const [editingMessageId, setEditingMessageId] = useState<number | null>(null);
 	const [editText, setEditText] = useState('');
@@ -59,7 +67,10 @@ export default function ChatPanel() {
 		useState<ReactionSettings | null>(null);
 	const [socket, setSocket] = useState<Socket | null>(null);
 	const activeChatId = useRef<number | null>(null);
+	const messageNavigationSequence = useRef(0);
 	const selectedChat = chats.find((chat) => chat.id === selectedChatId);
+	const replyingToMessage =
+		replyTarget?.chatId === selectedChatId ? replyTarget.message : null;
 	const chatCreation = useChatCreation({
 		currentUserId,
 		setChats,
@@ -453,10 +464,48 @@ export default function ChatPanel() {
 	function selectChat(chatId: number) {
 		setMessages([]);
 		setMessageFiles([]);
+		setReplyTarget(null);
+		setMessageNavigationRequest(null);
 		setEditingMessageId(null);
 		setShowChatSettings(false);
 		setError(null);
 		setSelectedChatId(chatId);
+	}
+
+	async function navigateToMessage(messageId: number) {
+		const chatId = selectedChatId;
+		if (chatId === null) return;
+
+		setError(null);
+		try {
+			let targetMessage = messages.find((message) => message.id === messageId);
+			if (!targetMessage) {
+				const payload = await fetchPayload(
+					`/api/controller-api/messages/${messageId}`,
+				);
+				if (!isChatMessage(payload) || payload.chatId !== chatId) {
+					throw new Error('Сервер повернув некоректне повідомлення.');
+				}
+				targetMessage = {
+					...payload,
+					reactions: payload.reactions ?? emptyMessageReactions,
+				};
+			}
+
+			if (selectedChatId !== chatId || activeChatId.current !== chatId) return;
+
+			setMessages((current) => upsertMessage(current, targetMessage));
+			setMessageNavigationRequest({
+				messageId,
+				sequence: ++messageNavigationSequence.current,
+			});
+		} catch (navigationError) {
+			setError(
+				navigationError instanceof Error
+					? navigationError.message
+					: 'Не вдалося перейти до повідомлення.',
+			);
+		}
 	}
 
 	async function startPrivateChat(userId: number) {
@@ -575,6 +624,7 @@ export default function ChatPanel() {
 		}
 
 		const chatId = selectedChatId;
+		const replyId = replyingToMessage?.id;
 		setError(null);
 		setSendingMessage(true);
 		try {
@@ -631,10 +681,16 @@ export default function ChatPanel() {
 			socket.emit('createMessage', {
 				chatId,
 				text,
+				...(replyId !== undefined ? { replyId } : {}),
 				...(filenames.length > 0 ? { filenames } : {}),
 			});
 			setMessageText('');
 			setMessageFiles([]);
+			setReplyTarget((current) =>
+				current?.chatId === chatId && current.message.id === replyId
+					? null
+					: current,
+			);
 		} catch (sendError) {
 			setError(
 				sendError instanceof Error
@@ -926,6 +982,7 @@ export default function ChatPanel() {
 					reactionOptions={reactionOptions}
 					messages={messages}
 					messageScrollTrigger={messageScrollTrigger}
+					messageNavigationRequest={messageNavigationRequest}
 					currentUserId={currentUserId}
 					editingMessageId={editingMessageId}
 					editText={editText}
@@ -934,6 +991,7 @@ export default function ChatPanel() {
 					availableReactionOptions={availableReactionOptions}
 					messageText={messageText}
 					messageFiles={messageFiles}
+					replyingToMessage={replyingToMessage}
 					sendingMessage={sendingMessage}
 					onMessageFilesChange={(files) => {
 						if (files.length > 5) {
@@ -944,6 +1002,7 @@ export default function ChatPanel() {
 						setMessageFiles(files);
 					}}
 					onClearMessageFiles={() => setMessageFiles([])}
+					onCancelReply={() => setReplyTarget(null)}
 					onBack={() => setSelectedChatId(null)}
 					onOpenSettings={() => void chatSettings.openChatSettings()}
 					onCloseSettings={() => setShowChatSettings(false)}
@@ -982,6 +1041,14 @@ export default function ChatPanel() {
 						void toggleReaction(message, reaction)
 					}
 					onOpenUserProfile={setProfileUserId}
+					onNavigateToMessage={(messageId) =>
+						void navigateToMessage(messageId)
+					}
+					onReplyToMessage={(message) => {
+						if (selectedChatId !== null) {
+							setReplyTarget({ chatId: selectedChatId, message });
+						}
+					}}
 					onMessageTextChange={setMessageText}
 					onSendMessage={handleSendMessage}
 				/>

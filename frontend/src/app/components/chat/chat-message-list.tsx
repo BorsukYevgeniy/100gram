@@ -14,6 +14,7 @@ import ChatMessageAttachment from './chat-message-attachment';
 type ChatMessageListProps = {
 	messages: ChatMessage[];
 	messageScrollTrigger: number;
+	messageNavigationRequest: { messageId: number; sequence: number } | null;
 	currentUserId: number | null;
 	connection: ConnectionState;
 	editingMessageId: number | null;
@@ -30,6 +31,8 @@ type ChatMessageListProps = {
 	pendingPinnedMessageIds: Set<number>;
 	onToggleReaction: (message: ChatMessage, reaction: Reaction) => void;
 	onOpenUserProfile: (userId: number) => void;
+	onNavigateToMessage: (messageId: number) => void;
+	onReply: (message: ChatMessage) => void;
 };
 
 function ChatMessageAvatar({
@@ -70,6 +73,7 @@ function ChatMessageAvatar({
 export default function ChatMessageList({
 	messages,
 	messageScrollTrigger,
+	messageNavigationRequest,
 	currentUserId,
 	connection,
 	editingMessageId,
@@ -86,9 +90,12 @@ export default function ChatMessageList({
 	onTogglePin,
 	onToggleReaction,
 	onOpenUserProfile,
+	onNavigateToMessage,
+	onReply,
 }: ChatMessageListProps) {
 	const messagesContainerRef = useRef<HTMLDivElement>(null);
 	const openMessageMenuRef = useRef<HTMLDivElement>(null);
+	const highlightTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 	const previousScrollTrigger = useRef(messageScrollTrigger);
 	const [openDeleteMenuId, setOpenDeleteMenuId] = useState<number | null>(null);
 	const [menuOpensDown, setMenuOpensDown] = useState(false);
@@ -131,6 +138,33 @@ export default function ChatMessageList({
 			behavior: 'smooth',
 		});
 	}, [messageScrollTrigger]);
+
+	useEffect(() => {
+		if (!messageNavigationRequest) return;
+		const element = messagesContainerRef.current?.querySelector<HTMLElement>(
+			`[data-message-id="${messageNavigationRequest.messageId}"]`,
+		);
+		if (!element) return;
+
+		element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+		element.classList.add('messenger-message-navigation-target');
+		if (highlightTimeoutRef.current !== null) {
+			clearTimeout(highlightTimeoutRef.current);
+		}
+		highlightTimeoutRef.current = setTimeout(() => {
+			element.classList.remove('messenger-message-navigation-target');
+			highlightTimeoutRef.current = null;
+		}, 1800);
+	}, [messageNavigationRequest]);
+
+	useEffect(
+		() => () => {
+			if (highlightTimeoutRef.current !== null) {
+				clearTimeout(highlightTimeoutRef.current);
+			}
+		},
+		[],
+	);
 
 	const visibleMessages = messages.filter((message) => !message.isDeletedForMe);
 	const pinnedMessages = visibleMessages.filter((message) => message.isPinned);
@@ -194,6 +228,9 @@ export default function ChatMessageList({
 			>
 				{visibleMessages.map((message) => {
 					const isOwnMessage = message.user.id === currentUserId;
+					const repliedToMessage = message.replyId
+						? messages.find((item) => item.id === message.replyId)
+						: undefined;
 					return (
 						<article
 							className={`messenger-message${isOwnMessage ? ' own' : ''}${message.files.length > 0 ? ' has-attachments' : ''}${openDeleteMenuId === message.id ? ' menu-open' : ''}${openDeleteMenuId === message.id && menuOpensDown ? ' menu-open-down' : ''}`}
@@ -210,6 +247,32 @@ export default function ChatMessageList({
 								<strong className="messenger-sender">
 									{message.user.nickname}
 								</strong>
+							)}
+							{message.replyId !== null && (
+								<button
+									className="messenger-message-reply"
+									type="button"
+									aria-label={`Перейти до повідомлення від ${repliedToMessage?.user.nickname ?? 'користувача'}`}
+									title="Перейти до повідомлення"
+									onClick={() => {
+										if (message.replyId !== null) {
+											onNavigateToMessage(message.replyId);
+										}
+									}}
+									disabled={repliedToMessage?.isDeletedForMe}
+								>
+									<strong>
+										{repliedToMessage?.user.nickname ??
+											'Відповідь на повідомлення'}
+									</strong>
+									<p>
+										{repliedToMessage
+											? repliedToMessage.isDeletedForMe
+												? 'Повідомлення приховане'
+												: repliedToMessage.text || 'Вкладення'
+											: 'Повідомлення не завантажено'}
+									</p>
+								</button>
 							)}
 							{editingMessageId === message.id ? (
 								<form className="chat-edit-form" onSubmit={onUpdateMessage}>
@@ -268,6 +331,16 @@ export default function ChatMessageList({
 												role="menu"
 												aria-label="Дії з повідомленням"
 											>
+												<button
+													type="button"
+													role="menuitem"
+													onClick={() => {
+														setOpenDeleteMenuId(null);
+														onReply(message);
+													}}
+												>
+													Відповісти
+												</button>
 												<button
 													type="button"
 													role="menuitem"
