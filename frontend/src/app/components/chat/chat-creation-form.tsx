@@ -52,6 +52,62 @@ export default function ChatCreationForm({
 	onRemoveGroupUser,
 	onVisibilityChange,
 }: ChatCreationFormProps) {
+	const userSearch = (
+		<div className='group-user-picker'>
+			<div className='group-user-search'>
+				<label htmlFor='group-user-nickname'>
+					{mode === 'private'
+						? 'Знайти користувача за нікнеймом'
+						: 'Знайти учасників за нікнеймом'}
+				</label>
+				<div className='group-user-search-controls'>
+					<input
+						id='group-user-nickname'
+						type='search'
+						minLength={3}
+						maxLength={25}
+						value={groupUserSearch}
+						onChange={(event) => onGroupUserSearchChange(event.target.value)}
+						onKeyDown={(event) => {
+							if (event.key === 'Enter') {
+								event.preventDefault();
+								onSearchGroupUsers();
+							}
+						}}
+						placeholder='Введіть мінімум 3 символи'
+					/>
+					<button
+						className='button button-soft'
+						type='button'
+						disabled={searchingGroupUsers}
+						onClick={onSearchGroupUsers}
+					>
+						{searchingGroupUsers ? 'Пошук…' : 'Знайти'}
+					</button>
+				</div>
+			</div>
+			{groupUserResults.length > 0 && (
+				<ul className='group-user-results'>
+					{groupUserResults.map((user) => (
+						<li key={user.id}>
+							<span>
+								<strong>{user.nickname}</strong>
+								<small>ID {user.id}</small>
+							</span>
+							<button
+								className='button button-soft'
+								type='button'
+								onClick={() => onSelectGroupUser(user)}
+							>
+								{mode === 'private' ? 'Вибрати' : 'Додати'}
+							</button>
+						</li>
+					))}
+				</ul>
+			)}
+		</div>
+	);
+
 	return (
 		<form className='chat-create-form' onSubmit={onSubmit}>
 			<div className='chat-create-heading'>
@@ -120,71 +176,24 @@ export default function ChatCreationForm({
 				</>
 			)}
 			{mode === 'private' && (
-				<label>
-					ID користувача
-					<input
-						type='text'
-						inputMode='numeric'
-						value={userId}
-						onChange={(event) => onUserIdChange(event.target.value)}
-						placeholder='Наприклад, 12'
-						required
-					/>
-				</label>
+				<>
+					{userSearch}
+					<label>
+						ID користувача
+						<input
+							type='text'
+							inputMode='numeric'
+							value={userId}
+							onChange={(event) => onUserIdChange(event.target.value)}
+							placeholder='Наприклад, 12'
+							required
+						/>
+					</label>
+				</>
 			)}
 			{mode === 'group' && (
-				<div className='group-user-picker'>
-					<div className='group-user-search'>
-						<label htmlFor='group-user-nickname'>
-							Знайти учасників за нікнеймом
-						</label>
-						<div className='group-user-search-controls'>
-							<input
-								id='group-user-nickname'
-								type='search'
-								minLength={3}
-								maxLength={25}
-								value={groupUserSearch}
-								onChange={(event) =>
-									onGroupUserSearchChange(event.target.value)
-								}
-								onKeyDown={(event) => {
-									if (event.key === 'Enter') {
-										event.preventDefault();
-										onSearchGroupUsers();
-									}
-								}}
-								placeholder='Введіть мінімум 3 символи'
-							/>
-							<button
-								className='button button-soft'
-								type='button'
-								disabled={searchingGroupUsers}
-								onClick={onSearchGroupUsers}
-							>
-								{searchingGroupUsers ? 'Пошук…' : 'Знайти'}
-							</button>
-						</div>
-					</div>
-					{groupUserResults.length > 0 && (
-						<ul className='group-user-results'>
-							{groupUserResults.map((user) => (
-								<li key={user.id}>
-									<span>
-										<strong>{user.nickname}</strong>
-										<small>ID {user.id}</small>
-									</span>
-									<button
-										className='button button-soft'
-										type='button'
-										onClick={() => onSelectGroupUser(user)}
-									>
-										Додати
-									</button>
-								</li>
-							))}
-						</ul>
-					)}
+				<>
+					{userSearch}
 					<div className='group-user-selected'>
 						<span className='group-user-selected-heading'>
 							Учасники: {selectedGroupUsers.length}
@@ -208,7 +217,7 @@ export default function ChatCreationForm({
 							</ul>
 						)}
 					</div>
-				</div>
+				</>
 			)}
 			<button
 				className='button button-primary'

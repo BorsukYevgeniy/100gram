@@ -1058,6 +1058,11 @@ export default function ChatPanel() {
 					key={profileUserId}
 					userId={profileUserId}
 					currentUserId={currentUserId}
+					hasExistingPrivateChat={chats.some(
+						(chat) =>
+							chat.chatType === 'PRIVATE' &&
+							chat.participant.id === profileUserId,
+					)}
 					onClose={() => setProfileUserId(null)}
 					onStartPrivateChat={startPrivateChat}
 				/>

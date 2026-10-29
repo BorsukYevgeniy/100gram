@@ -8,6 +8,7 @@ import { fetchPayload, fileProxyUrl, isPublicUserProfile } from './chat-utils';
 type UserProfileDialogProps = {
 	userId: number;
 	currentUserId: number | null;
+	hasExistingPrivateChat: boolean;
 	onClose: () => void;
 	onStartPrivateChat: (userId: number) => Promise<void>;
 };
@@ -15,6 +16,7 @@ type UserProfileDialogProps = {
 export default function UserProfileDialog({
 	userId,
 	currentUserId,
+	hasExistingPrivateChat,
 	onClose,
 	onStartPrivateChat,
 }: UserProfileDialogProps) {
@@ -140,7 +142,11 @@ export default function UserProfileDialog({
 								disabled={startingChat}
 								onClick={() => void startPrivateChat()}
 							>
-								{startingChat ? 'Відкриваємо чат…' : 'Почати приватний чат'}
+								{startingChat
+									? 'Відкриваємо чат…'
+									: hasExistingPrivateChat
+										? 'Написати'
+										: 'Почати приватний чат'}
 							</button>
 						)}
 					</div>

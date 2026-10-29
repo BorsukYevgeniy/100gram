@@ -165,14 +165,19 @@ export function useChatCreation({
 				}
 				if (
 					user.id !== currentUserId &&
-					!selectedGroupUsers.some((selected) => selected.id === user.id)
+					(creationMode !== 'group' ||
+						!selectedGroupUsers.some((selected) => selected.id === user.id))
 				) {
 					users.push({ id: user.id, nickname: user.nickname });
 				}
 			}
 			setGroupUserResults(users);
 			if (users.length === 0) {
-				setError('Користувачів не знайдено або їх уже додано до групи.');
+				setError(
+					creationMode === 'group'
+						? 'Користувачів не знайдено або їх уже додано до групи.'
+						: 'Користувачів не знайдено.',
+				);
 			}
 		} catch (searchError) {
 			setError(
@@ -186,6 +191,12 @@ export function useChatCreation({
 	}
 
 	function selectGroupUser(user: GroupUserOption) {
+		if (creationMode === 'private') {
+			setCreationUserIds(String(user.id));
+			setGroupUserResults([]);
+			return;
+		}
+
 		setSelectedGroupUsers((current) =>
 			current.some((selected) => selected.id === user.id)
 				? current
