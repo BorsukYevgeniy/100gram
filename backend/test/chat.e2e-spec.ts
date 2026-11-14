@@ -6,7 +6,12 @@ import { hashSync } from 'bcryptjs';
 import cookieParser from 'cookie-parser';
 import { LoggerModule } from 'nestjs-pino';
 import request from 'supertest';
-import { ChatType, Reaction, Visibility } from '../generated/prisma/enums';
+import {
+  ChatRole,
+  ChatType,
+  Reaction,
+  Visibility,
+} from '../generated/prisma/enums';
 import authConfig from '../src/config/auth.config';
 import databaseConfig from '../src/config/database.config';
 import pinoConfig from '../src/config/pino.config';
@@ -239,6 +244,7 @@ describe('ChatController (e2e)', () => {
         chatType: ChatType.PRIVATE,
         visibility: Visibility.PRIVATE,
         participant: {
+          id: expect.any(Number),
           nickname: 'chatmember',
           avatarName: null,
         },
@@ -291,6 +297,7 @@ describe('ChatController (e2e)', () => {
         chatType: ChatType.PRIVATE,
         visibility: Visibility.PRIVATE,
         participant: {
+          id: expect.any(Number),
           nickname: 'chatmember',
           avatarName: null,
         },
@@ -455,7 +462,9 @@ describe('ChatController (e2e)', () => {
             lastMessage: null,
             isPinned: false,
             chatType: ChatType.PRIVATE,
+            currentUserRole: ChatRole.OWNER,
             participant: {
+              id: expect.any(Number),
               nickname: 'chatmember',
               avatarName: null,
             },
@@ -467,6 +476,7 @@ describe('ChatController (e2e)', () => {
             chatType: ChatType.GROUP,
             title: 'Group chat',
             avatarName: null,
+            currentUserRole: ChatRole.OWNER,
           },
           {
             id: publicGroupId,
@@ -475,6 +485,7 @@ describe('ChatController (e2e)', () => {
             chatType: ChatType.GROUP,
             title: 'Public group',
             avatarName: null,
+            currentUserRole: ChatRole.OWNER,
           },
           {
             id: channelId,
@@ -483,6 +494,7 @@ describe('ChatController (e2e)', () => {
             chatType: ChatType.CHANNEL,
             title: 'Public channel',
             avatarName: null,
+            currentUserRole: ChatRole.OWNER,
           },
         ]),
       });

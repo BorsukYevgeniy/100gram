@@ -231,24 +231,31 @@ export class AuthService {
   }
 
   async sendOtp(userId: number) {
-    const user = await this.userService.findFullUserById(userId);
+    try {
+      const user = await this.userService.findFullUserById(userId);
 
-    if (!user) {
-      this.logger.warn({ userId }, 'Attempt to send OTP to non-existent user');
-      return;
+      if (!user) {
+        this.logger.warn(
+          { userId },
+          'Attempt to send OTP to non-existent user',
+        );
+        return;
+      }
+
+      if (user.provider !== Provider.LOCAL) {
+        this.logger.warn({ userId }, 'Attempt to send OTP to non-local user');
+        return;
+      }
+
+      const otp = randomInt(100_000, 1_000_000);
+      const otpExpiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
+      const otpHash = await hash(otp.toString(), 10);
+
+      await this.userService.addOtpToUser(user.id, otpHash, otpExpiresAt);
+      return this.mailService.sendOtpMail(user.email, otp);
+    } catch (e) {
+      console.log(e);
     }
-
-    if (user.provider !== Provider.LOCAL) {
-      this.logger.warn({ userId }, 'Attempt to send OTP to non-local user');
-      return;
-    }
-
-    const otp = randomInt(100_000, 1_000_000);
-    const otpExpiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
-    const otpHash = await hash(otp.toString(), 10);
-
-    await this.userService.addOtpToUser(user.id, otpHash, otpExpiresAt);
-    return this.mailService.sendOtpMail(user.email, otp);
   }
 
   async resetPassword(userId: number, dto: ResetPasswordDto) {

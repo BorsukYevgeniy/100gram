@@ -231,18 +231,23 @@ describe('ChatMessageController (e2e)', () => {
         .set('Cookie', [`access_token=${ownerAccessToken}`])
         .expect(201);
 
-      expect(body).toEqual(
-        expect.objectContaining({
+      expect(body).toEqual({
+        id: expect.any(Number),
+        text: 'First message',
+        createdAt: expect.any(String),
+        replyId: null,
+        isPinned: false,
+        user: {
           id: expect.any(Number),
-          text: 'First message',
-          createdAt: expect.any(String),
-          replyId: null,
-          user: { id: expect.any(Number), nickname: 'chatmessageowner' },
-          chatId: groupChatId,
-          files: [],
-        }),
-      );
+          nickname: 'chatmessageowner',
+          avatarName: null,
+        },
+        chatId: groupChatId,
+        files: [],
+      });
+
       firstMessageId = body.id;
+
       await prisma.file.create({
         data: {
           name: 'chat-message-attachment',
@@ -268,16 +273,20 @@ describe('ChatMessageController (e2e)', () => {
         .set('Cookie', [`access_token=${memberAccessToken}`])
         .expect(201);
 
-      expect(body).toEqual(
-        expect.objectContaining({
+      expect(body).toEqual({
+        id: expect.any(Number),
+        text: 'A reply',
+        replyId: firstMessageId,
+        isPinned: false,
+        createdAt: expect.any(String),
+        user: {
           id: expect.any(Number),
-          text: 'A reply',
-          replyId: firstMessageId,
-          user: { id: expect.any(Number), nickname: 'chatmessagemember' },
-          chatId: groupChatId,
-          files: [],
-        }),
-      );
+          nickname: 'chatmessagemember',
+          avatarName: null,
+        },
+        chatId: groupChatId,
+        files: [],
+      });
       replyMessageId = body.id;
     });
 
@@ -359,12 +368,20 @@ describe('ChatMessageController (e2e)', () => {
 
       expect(body).toEqual({
         messages: [
-          expect.objectContaining({
+          {
             id: replyMessageId,
             text: 'A reply',
             replyId: firstMessageId,
-            user: { id: expect.any(Number), nickname: 'chatmessagemember' },
+            user: {
+              id: expect.any(Number),
+              nickname: 'chatmessagemember',
+              avatarName: null,
+            },
             files: [],
+            chatId: groupChatId,
+            createdAt: expect.any(String),
+            isPinned: false,
+            isDeletedForMe: false,
             reactions: {
               like: { count: 1, isReactedByMe: false },
               dislike: { count: 0, isReactedByMe: false },
@@ -372,7 +389,7 @@ describe('ChatMessageController (e2e)', () => {
               heartWithFire: { count: 0, isReactedByMe: false },
               fire: { count: 0, isReactedByMe: false },
             },
-          }),
+          },
         ],
         limit: 1,
         nextCursor: replyMessageId,
@@ -394,26 +411,33 @@ describe('ChatMessageController (e2e)', () => {
         .set('Cookie', [`access_token=${ownerAccessToken}`])
         .expect(200);
 
-      expect(nextPage.body.messages[0]).toEqual(
-        expect.objectContaining({
-          id: firstMessageId,
-          text: 'First message',
-          user: { id: expect.any(Number), nickname: 'chatmessageowner' },
-          files: [
-            {
-              name: 'chat-message-attachment',
-              originalName: 'chat-message-attachment.png',
-            },
-          ],
-          reactions: {
-            like: { count: 0, isReactedByMe: false },
-            dislike: { count: 0, isReactedByMe: false },
-            heart: { count: 0, isReactedByMe: false },
-            heartWithFire: { count: 0, isReactedByMe: false },
-            fire: { count: 0, isReactedByMe: false },
+      expect(nextPage.body.messages[0]).toEqual({
+        id: firstMessageId,
+        text: 'First message',
+        user: {
+          id: expect.any(Number),
+          nickname: 'chatmessageowner',
+          avatarName: null,
+        },
+        isPinned: false,
+        isDeletedForMe: false,
+        chatId: groupChatId,
+        replyId: null,
+        createdAt: expect.any(String),
+        files: [
+          {
+            name: 'chat-message-attachment',
+            originalName: 'chat-message-attachment.png',
           },
-        }),
-      );
+        ],
+        reactions: {
+          like: { count: 0, isReactedByMe: false },
+          dislike: { count: 0, isReactedByMe: false },
+          heart: { count: 0, isReactedByMe: false },
+          heartWithFire: { count: 0, isReactedByMe: false },
+          fire: { count: 0, isReactedByMe: false },
+        },
+      });
     });
   });
 

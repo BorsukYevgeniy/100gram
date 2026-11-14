@@ -39,7 +39,7 @@ export class BlockedUserService {
     }
 
     try {
-      return this.blockedUserRepo.unblockUser(userId, blockedId);
+      return await this.blockedUserRepo.unblockUser(userId, blockedId);
     } catch (e) {
       if (e instanceof PrismaClientKnownRequestError && e.code === 'P2025') {
         this.logger.warn({ blockedId }, "User doesn't exist");
