@@ -1,0 +1,10 @@
+model Folder {
+  id     Int    @id @default(autoincrement())
+  name   String
+  userId Int
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  chatsToFolder FolderToChat[]
+
+  createdAt DateTime @default(now()) @db.Timestamptz()
+}

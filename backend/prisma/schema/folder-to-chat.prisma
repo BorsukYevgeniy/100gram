@@ -1,0 +1,11 @@
+model FolderToChat {
+  folderId Int
+  chatId   Int
+
+  isPinned Boolean @default(false)
+
+  folder Folder @relation(fields: [folderId], references: [id], onDelete: Cascade)
+  chat   Chat   @relation(fields: [chatId], references: [id], onDelete: Cascade)
+
+  @@id([folderId, chatId])
+}

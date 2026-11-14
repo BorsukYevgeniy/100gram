@@ -22,6 +22,8 @@ model Chat {
 
   allowedReactions Reaction[] @default([])
 
+  foldersToChat FolderToChat[]
+
   /**
    * Private chats dont have avatar, inviteToken, title and description.
    * He's visibility is private by default and cant be changed.
