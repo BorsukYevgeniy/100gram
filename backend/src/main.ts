@@ -7,7 +7,7 @@ import { Logger } from 'nestjs-pino';
 import { AppModule } from './app.module';
 import appConfig from './config/app.config';
 
-import { AsyncApiDocumentBuilder, AsyncApiModule } from 'nestjs-asyncapi';
+import { AsyncApiModule, getAsyncApiDocument } from '@nest-native/asyncapi';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -33,24 +33,22 @@ async function bootstrap() {
     SwaggerModule.createDocument(app, config),
   );
 
-  const asyncApiConfig = new AsyncApiDocumentBuilder()
-    .setTitle('100Gram docs')
-    .setDescription(
-      `
-The 100Gram WebSocket API.
+  const asyncApiDoc = getAsyncApiDocument(app, {
+    title: '100Gram WebSocket API',
+    version: '1.0',
+    description: 'The 100Gram WebSocket API',
+  });
+  //       `
+  // The 100Gram WebSocket API.
 
-Authentication:
-A valid access_token cookie must be sent during the WebSocket handshake.
-`,
-    )
-    .setVersion('1.0')
-    .build();
+  // Authentication:
+  // A valid access_token cookie must be sent during the WebSocket handshake.
+  // `,
+  //     )
+  //     .setVersion('1.0')
+  //     .build();
 
-  await AsyncApiModule.setup(
-    '/ws-docs',
-    app,
-    AsyncApiModule.createDocument(app, asyncApiConfig),
-  );
+  AsyncApiModule.setup('ws-docs', app, asyncApiDoc);
 
   await app.listen(appConf.appPort);
 }

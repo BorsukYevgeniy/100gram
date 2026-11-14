@@ -42,6 +42,7 @@ import { ChatGatewayDocs } from './docs/chat-gateway-docs';
   },
   cookie: true,
 })
+@ChatGatewayDocs.Channel()
 @UseGuards(WsVerifiedAuthGuard)
 @UsePipes(WsValidationPipe)
 @UseFilters(HttpToWsExceptionsFilter)
@@ -287,4 +288,38 @@ export class ChatGateway
     this.server.to(`chat-${chatId}`).emit('chatJoinedUser', response);
     return response;
   }
+
+  // Each published event needs its own AsyncAPI operation.
+  @ChatGatewayDocs.ChatCreatedMessage()
+  private documentChatCreatedMessage(): void {}
+
+  @ChatGatewayDocs.ChatUpdatedMessage()
+  private documentChatUpdatedMessage(): void {}
+
+  @ChatGatewayDocs.ChatDeletedMessage()
+  private documentChatDeletedMessage(): void {}
+
+  @ChatGatewayDocs.ChatAddedReaction()
+  private documentChatAddedReaction(): void {}
+
+  @ChatGatewayDocs.ChatUpdatedReaction()
+  private documentChatUpdatedReaction(): void {}
+
+  @ChatGatewayDocs.ChatDeletedReaction()
+  private documentChatDeletedReaction(): void {}
+
+  @ChatGatewayDocs.ChatAddedUser()
+  private documentChatAddedUser(): void {}
+
+  @ChatGatewayDocs.ChatRemovedUser()
+  private documentChatRemovedUser(): void {}
+
+  @ChatGatewayDocs.ChatUpdatedChatRole()
+  private documentChatUpdatedChatRole(): void {}
+
+  @ChatGatewayDocs.ChatLeavedUser()
+  private documentChatLeavedUser(): void {}
+
+  @ChatGatewayDocs.ChatJoinedUser()
+  private documentChatJoinedUser(): void {}
 }
