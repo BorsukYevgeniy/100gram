@@ -130,6 +130,126 @@
   outline: 0;
 }
 
+.messenger-folder-tabs {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  overflow-x: auto;
+  padding: 0 14px 12px;
+  scrollbar-width: thin;
+}
+
+.messenger-folder-tab,
+.messenger-folder-add {
+  min-height: 32px;
+  flex: 0 0 auto;
+  padding: 0 12px;
+  border: 1px solid #29313d;
+  border-radius: 999px;
+  background: #171d26;
+  color: #aab4c0;
+  cursor: pointer;
+  font-size: 11px;
+  white-space: nowrap;
+}
+
+.messenger-folder-tab:hover,
+.messenger-folder-tab.active {
+  border-color: #9dc95f;
+  background: #263322;
+  color: #d5f4a5;
+}
+
+.messenger-folder-add {
+  width: 32px;
+  padding: 0;
+  font-size: 18px;
+}
+
+.messenger-folder-form {
+  display: grid;
+  gap: 7px;
+  margin: 0 14px 12px;
+  color: #c5cbd3;
+  font-size: 11px;
+}
+
+.messenger-folder-form > div {
+  display: flex;
+  gap: 6px;
+}
+
+.messenger-folder-form input {
+  width: 100%;
+  min-width: 0;
+  padding: 8px 10px;
+  border: 1px solid #303a47;
+  border-radius: 7px;
+  background: #1b222c;
+  color: var(--text);
+  font-size: 12px;
+}
+
+.messenger-folder-form button {
+  flex: 0 0 auto;
+  padding: 0 10px;
+  border: 0;
+  border-radius: 7px;
+  background: #c5f277;
+  color: #18200d;
+  cursor: pointer;
+  font-size: 11px;
+  font-weight: 650;
+}
+
+.messenger-folder-form button:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.messenger-folder-management {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin: 0 14px 12px;
+  color: #aab4c0;
+  font-size: 11px;
+}
+
+.messenger-folder-management > span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.messenger-folder-management > div {
+  display: flex;
+  flex: 0 0 auto;
+  gap: 5px;
+}
+
+.messenger-folder-management button,
+.messenger-folder-form button.messenger-folder-cancel {
+  padding: 6px 8px;
+  border: 1px solid #303a47;
+  border-radius: 6px;
+  background: #1b222c;
+  color: #c5cbd3;
+  cursor: pointer;
+  font-size: 10px;
+}
+
+.messenger-folder-management button:hover,
+.messenger-folder-form button.messenger-folder-cancel:hover {
+  background: #2a3541;
+}
+
+.messenger-folder-management button.messenger-folder-delete {
+  color: #ff9a9a;
+}
+
 .messenger-chat-list {
   min-height: 0;
   flex: 1;
@@ -190,7 +310,6 @@
 .chat-item-menu {
   position: absolute;
   z-index: 20;
-  top: 50%;
   right: 6px;
   min-width: 172px;
   display: grid;
@@ -200,7 +319,14 @@
   border-radius: 9px;
   background: #18212b;
   box-shadow: 0 10px 28px #0008;
-  transform: translateY(-50%);
+}
+
+.chat-item-menu.opens-down {
+  top: calc(100% - 6px);
+}
+
+.chat-item-menu.opens-up {
+  bottom: calc(100% - 6px);
 }
 
 .chat-item-menu button {
@@ -218,6 +344,21 @@
 
 .chat-item-menu button:hover {
   background: #2a3541;
+}
+
+.chat-folder-choices {
+  display: grid;
+  gap: 2px;
+  margin: 0 0 2px 9px;
+  padding-left: 7px;
+  border-left: 1px solid #35414e;
+}
+
+.chat-folder-choices p {
+  margin: 0;
+  padding: 8px 10px;
+  color: #929baa;
+  font-size: 11px;
 }
 
 .chat-item-menu button.chat-menu-danger {

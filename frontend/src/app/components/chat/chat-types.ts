@@ -31,6 +31,12 @@ export type GroupChannelChatSummary = BaseChatSummary & {
 
 export type ChatSummary = PrivateChatSummary | GroupChannelChatSummary;
 
+export type ChatFolder = {
+  id: number;
+  name: string;
+  chatIds: number[];
+};
+
 export type GroupUserOption = {
   id: number;
   nickname: string;

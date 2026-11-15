@@ -2,27 +2,38 @@
 
 import { useEffect, useRef, useState } from 'react';
 import Image from 'next/image';
-import { ChatSummary } from './chat-types';
+import { ChatFolder, ChatSummary } from './chat-types';
 import { fileProxyUrl, getChatAvatarName, getChatTitle } from './chat-utils';
 
 type ChatListProps = {
 	chats: ChatSummary[];
+	folders: ChatFolder[];
+	selectedFolderId: number | null;
 	selectedChatId: number | null;
 	emptyMessage: string;
 	onSelectChat: (chatId: number) => void;
 	onTogglePin: (chatId: number) => void;
 	onLeaveChat: (chatId: number) => void;
+	onAddChatToFolder: (folderId: number, chatId: number) => void;
+	onRemoveChatFromFolder: (folderId: number, chatId: number) => void;
 };
 
 export default function ChatList({
 	chats,
+	folders,
+	selectedFolderId,
 	selectedChatId,
 	emptyMessage,
 	onSelectChat,
 	onTogglePin,
 	onLeaveChat,
+	onAddChatToFolder,
+	onRemoveChatFromFolder,
 }: ChatListProps) {
 	const [openChatMenuId, setOpenChatMenuId] = useState<number | null>(null);
+	const [folderChooserChatId, setFolderChooserChatId] = useState<number | null>(
+		null,
+	);
 	const openChatMenuRef = useRef<HTMLDivElement>(null);
 
 	useEffect(() => {
@@ -36,6 +47,7 @@ export default function ChatList({
 				return;
 			}
 			setOpenChatMenuId(null);
+			setFolderChooserChatId(null);
 		};
 
 		document.addEventListener('pointerdown', closeMenuOnOutsidePointerDown);
@@ -53,9 +65,14 @@ export default function ChatList({
 
 	return (
 		<div className='messenger-chat-list'>
-			{chats.map((chat) => {
+			{chats.map((chat, index) => {
 				const title = getChatTitle(chat) || `Чат #${chat.id}`;
 				const avatarName = getChatAvatarName(chat);
+				const availableFolders = folders.filter(
+					(folder) =>
+						folder.id !== selectedFolderId &&
+						!folder.chatIds.includes(chat.id),
+				);
 				return (
 					<div className='messenger-chat-row' key={chat.id}>
 						<button
@@ -110,21 +127,26 @@ export default function ChatList({
 								aria-label={`Меню чату ${title}`}
 								title='Меню чату'
 								aria-expanded={openChatMenuId === chat.id}
-								onClick={() =>
-									setOpenChatMenuId((current) =>
-										current === chat.id ? null : chat.id,
-									)
-								}
+								onClick={() => {
+									setOpenChatMenuId((current) => {
+										const next = current === chat.id ? null : chat.id;
+										if (next === null) setFolderChooserChatId(null);
+										return next;
+									});
+								}}
 							>
 								⋯
 							</button>
 							{openChatMenuId === chat.id && (
-								<div className='chat-item-menu'>
+								<div
+									className={`chat-item-menu ${index < 2 ? 'opens-down' : 'opens-up'}`}
+								>
 									<button
 										type='button'
 										onClick={() => {
 											onTogglePin(chat.id);
 											setOpenChatMenuId(null);
+											setFolderChooserChatId(null);
 										}}
 									>
 										{chat.isPinned ? 'Відкріпити чат' : 'Закріпити чат'}
@@ -136,11 +158,60 @@ export default function ChatList({
 												onClick={() => {
 													onLeaveChat(chat.id);
 													setOpenChatMenuId(null);
+													setFolderChooserChatId(null);
 												}}
 											>
 												Вийти з чату
 											</button>
 										)}
+									{selectedFolderId !== null && (
+										<button
+											type='button'
+											onClick={() => {
+												onRemoveChatFromFolder(selectedFolderId, chat.id);
+												setOpenChatMenuId(null);
+												setFolderChooserChatId(null);
+											}}
+										>
+											Прибрати з папки
+										</button>
+									)}
+									<button
+										type='button'
+										aria-expanded={folderChooserChatId === chat.id}
+										onClick={() =>
+											setFolderChooserChatId((current) =>
+												current === chat.id ? null : chat.id,
+											)
+										}
+									>
+										Додати до папки <span aria-hidden='true'>›</span>
+									</button>
+									{folderChooserChatId === chat.id && (
+										<div
+											className='chat-folder-choices'
+											role='group'
+											aria-label='Виберіть папку'
+										>
+											{availableFolders.length > 0 ? (
+												availableFolders.map((folder) => (
+													<button
+														type='button'
+														key={folder.id}
+														onClick={() => {
+															onAddChatToFolder(folder.id, chat.id);
+															setOpenChatMenuId(null);
+															setFolderChooserChatId(null);
+														}}
+													>
+														{folder.name}
+													</button>
+												))
+											) : (
+												<p>Немає папок для додавання</p>
+											)}
+										</div>
+									)}
 								</div>
 							)}
 						</div>

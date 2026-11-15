@@ -3,6 +3,7 @@ import { LoggerModule } from 'nestjs-pino';
 import { AuthModule } from './modules/auth/auth.module';
 import { ChatModule } from './modules/chat/chat.module';
 import { FileModule } from './modules/file/file.module';
+import { FolderModule } from './modules/folder/folder.module';
 import { MessageModule } from './modules/message/message.module';
 import { UserModule } from './modules/user/user.module';
 
@@ -29,6 +30,7 @@ import { validationSchema } from './config/schemas/validation.schema';
       useFactory: (c: ConfigType<typeof pinoConfig>) => c,
     }),
     FileModule,
+    FolderModule,
   ],
 })
 export class AppModule {}

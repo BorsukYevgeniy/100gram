@@ -8,6 +8,7 @@ import ChatSidebar from './chat/chat-sidebar';
 import UserProfileDialog from './chat/user-profile-dialog';
 import {
 	ChatMessage,
+	ChatFolder,
 	ChatSummary,
 	ConnectionState,
 	MessageReaction,
@@ -30,8 +31,40 @@ import {
 import { useChatCreation } from './chat/use-chat-creation';
 import { ReactionSettings, useChatSettings } from './chat/use-chat-settings';
 
+function isFolderSummary(
+	payload: unknown,
+): payload is { id: number; name: string } {
+	return (
+		!!payload &&
+		typeof payload === 'object' &&
+		'id' in payload &&
+		typeof payload.id === 'number' &&
+		'name' in payload &&
+		typeof payload.name === 'string'
+	);
+}
+
+function isFolderDetails(
+	payload: unknown,
+): payload is { id: number; name: string; chats: { id: number }[] } {
+	return (
+		isFolderSummary(payload) &&
+		'chats' in payload &&
+		Array.isArray(payload.chats) &&
+		payload.chats.every(
+			(chat) =>
+				!!chat &&
+				typeof chat === 'object' &&
+				'id' in chat &&
+				typeof chat.id === 'number',
+		)
+	);
+}
+
 export default function ChatPanel() {
 	const [chats, setChats] = useState<ChatSummary[]>([]);
+	const [chatFolders, setChatFolders] = useState<ChatFolder[]>([]);
+	const [selectedFolderId, setSelectedFolderId] = useState<number | null>(null);
 	const [currentUserId, setCurrentUserId] = useState<number | null>(null);
 	const [selectedChatId, setSelectedChatId] = useState<number | null>(null);
 	const [profileUserId, setProfileUserId] = useState<number | null>(null);
@@ -137,9 +170,10 @@ export default function ChatPanel() {
 			setConnection('loading');
 			setError(null);
 			try {
-				const [profile, chatPayload] = await Promise.all([
+				const [profile, chatPayload, folderPayload] = await Promise.all([
 					fetchPayload('/api/users/me'),
 					fetchPayload('/api/chats/me?limit=50'),
+					fetchPayload('/api/controller-api/folders'),
 				]);
 				if (
 					!profile ||
@@ -152,9 +186,31 @@ export default function ChatPanel() {
 				if (!isChatListPayload(chatPayload)) {
 					throw new Error('Сервер повернув некоректний список чатів.');
 				}
+				if (
+					!Array.isArray(folderPayload) ||
+					!folderPayload.every(isFolderSummary)
+				) {
+					throw new Error('Сервер повернув некоректний список папок.');
+				}
+				const loadedFolders = await Promise.all(
+					folderPayload.map(async (folder) => {
+						const payload = await fetchPayload(
+							`/api/controller-api/folders/${folder.id}`,
+						);
+						if (!isFolderDetails(payload) || payload.id !== folder.id) {
+							throw new Error('Сервер повернув некоректні дані папки.');
+						}
+						return {
+							id: payload.id,
+							name: payload.name,
+							chatIds: payload.chats.map((chat) => chat.id),
+						};
+					}),
+				);
 				if (!active) return;
 				setCurrentUserId(profile.id);
 				setChats(chatPayload.chats);
+				setChatFolders(loadedFolders);
 				setSelectedChatId((selected) =>
 					chatPayload.chats.some((chat) => chat.id === selected)
 						? selected
@@ -177,6 +233,136 @@ export default function ChatPanel() {
 			active = false;
 		};
 	}, []);
+
+	async function createChatFolder(name: string) {
+		setError(null);
+		try {
+			const response = await fetch('/api/controller-api/folders', {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({ name }),
+			});
+			const payload: unknown = await response.json().catch(() => null);
+			if (
+				!response.ok ||
+				!payload ||
+				typeof payload !== 'object' ||
+				!('id' in payload) ||
+				typeof payload.id !== 'number' ||
+				!('name' in payload) ||
+				typeof payload.name !== 'string'
+			) {
+				throw new Error(
+					getErrorMessage(payload, 'Не вдалося створити папку.'),
+				);
+			}
+			const folder: ChatFolder = {
+				id: payload.id,
+				name: payload.name,
+				chatIds: [],
+			};
+			setChatFolders((current) => [...current, folder]);
+			setSelectedFolderId(folder.id);
+		} catch (folderError) {
+			setError(
+				folderError instanceof Error
+					? folderError.message
+					: 'Не вдалося створити папку.',
+			);
+		}
+	}
+
+	async function renameChatFolder(folderId: number, name: string) {
+		setError(null);
+		try {
+			const response = await fetch(`/api/controller-api/folders/${folderId}`, {
+				method: 'PATCH',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({ name }),
+			});
+			const payload: unknown = await response.json().catch(() => null);
+			if (!response.ok) {
+				throw new Error(
+					getErrorMessage(payload, 'Не вдалося перейменувати папку.'),
+				);
+			}
+			setChatFolders((current) =>
+				current.map((folder) =>
+					folder.id === folderId ? { ...folder, name } : folder,
+				),
+			);
+		} catch (folderError) {
+			setError(
+				folderError instanceof Error
+					? folderError.message
+					: 'Не вдалося перейменувати папку.',
+			);
+		}
+	}
+
+	async function deleteChatFolder(folderId: number) {
+		setError(null);
+		try {
+			const response = await fetch(`/api/controller-api/folders/${folderId}`, {
+				method: 'DELETE',
+			});
+			const payload: unknown = await response.json().catch(() => null);
+			if (!response.ok) {
+				throw new Error(
+					getErrorMessage(payload, 'Не вдалося видалити папку.'),
+				);
+			}
+			setChatFolders((current) =>
+				current.filter((folder) => folder.id !== folderId),
+			);
+			setSelectedFolderId((current) =>
+				current === folderId ? null : current,
+			);
+		} catch (folderError) {
+			setError(
+				folderError instanceof Error
+					? folderError.message
+					: 'Не вдалося видалити папку.',
+			);
+		}
+	}
+
+	async function updateChatFolder(folderId: number, chatId: number, add: boolean) {
+		setError(null);
+		try {
+			const response = await fetch(
+				`/api/controller-api/folders/${folderId}/chats/${chatId}`,
+				{ method: add ? 'POST' : 'DELETE' },
+			);
+			const payload: unknown = await response.json().catch(() => null);
+			if (!response.ok) {
+				throw new Error(
+					getErrorMessage(
+						payload,
+						`Не вдалося ${add ? 'додати чат до' : 'прибрати чат з'} папки.`,
+					),
+				);
+			}
+			setChatFolders((current) =>
+				current.map((folder) =>
+					folder.id !== folderId
+						? folder
+						: {
+								...folder,
+								chatIds: add
+									? [...new Set([...folder.chatIds, chatId])]
+									: folder.chatIds.filter((id) => id !== chatId),
+							},
+				),
+			);
+		} catch (folderError) {
+			setError(
+				folderError instanceof Error
+					? folderError.message
+					: 'Не вдалося змінити склад папки.',
+			);
+		}
+	}
 
 	useEffect(() => {
 		if (currentUserId === null) return;
@@ -914,6 +1100,8 @@ export default function ChatPanel() {
 			<div className="messenger-layout">
 				<ChatSidebar
 					chats={chats}
+					folders={chatFolders}
+					selectedFolderId={selectedFolderId}
 					selectedChatId={selectedChatId}
 					showCreateForm={showCreateForm}
 					chatSearch={chatSearch}
@@ -942,6 +1130,18 @@ export default function ChatPanel() {
 					onSelectChat={selectChat}
 					onToggleChatPin={(chatId) => void toggleChatPin(chatId)}
 					onLeaveChat={(chatId) => void chatSettings.leaveChat(chatId)}
+					onSelectFolder={setSelectedFolderId}
+					onCreateFolder={(name) => void createChatFolder(name)}
+					onRenameFolder={(folderId, name) =>
+						void renameChatFolder(folderId, name)
+					}
+					onDeleteFolder={(folderId) => void deleteChatFolder(folderId)}
+					onAddChatToFolder={(folderId, chatId) =>
+						void updateChatFolder(folderId, chatId, true)
+					}
+					onRemoveChatFromFolder={(folderId, chatId) =>
+						void updateChatFolder(folderId, chatId, false)
+					}
 				/>
 				<ChatConversation
 					chat={selectedChat}

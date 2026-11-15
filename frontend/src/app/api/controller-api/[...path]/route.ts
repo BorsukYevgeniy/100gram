@@ -15,6 +15,25 @@ function isPositiveInteger(value: string | undefined) {
 }
 
 function getAllowedMethods(path: string[]) {
+  if (path.length === 1 && path[0] === "folders") {
+    return ["GET", "POST"];
+  }
+  if (
+    path.length === 2 &&
+    path[0] === "folders" &&
+    isPositiveInteger(path[1])
+  ) {
+    return ["GET", "PATCH", "DELETE"];
+  }
+  if (
+    path.length === 4 &&
+    path[0] === "folders" &&
+    isPositiveInteger(path[1]) &&
+    path[2] === "chats" &&
+    isPositiveInteger(path[3])
+  ) {
+    return ["POST", "DELETE"];
+  }
   if (path.length === 2 && path[0] === "files" && path[1] === "upload") {
     return ["POST"];
   }
