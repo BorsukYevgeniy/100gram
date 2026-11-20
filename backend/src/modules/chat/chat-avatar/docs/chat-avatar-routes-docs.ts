@@ -1,5 +1,6 @@
 import { applyDecorators } from '@nestjs/common';
 import {
+  ApiConflictResponse,
   ApiNoContentResponse,
   ApiOkResponse,
   ApiOperation,
@@ -25,6 +26,7 @@ export class ChatAvatarRoutes {
         description: 'Removes avatar of the authenticated user',
       }),
       ApiNoContentResponse({ description: 'Avatar deleted successfully' }),
+      ApiConflictResponse({ description: 'Cannot delete default chat avatar' }),
     );
   }
 }

@@ -1,7 +1,9 @@
 import { applyDecorators } from '@nestjs/common';
 import {
   ApiBadRequestResponse,
+  ApiConflictResponse,
   ApiNoContentResponse,
+  ApiNotFoundResponse,
   ApiOkResponse,
   ApiOperation,
 } from '@nestjs/swagger';
@@ -30,8 +32,9 @@ export class ApiUserAvatarRoutesDocs {
           'Removes the custom avatar of the authenticated user. The default avatar cannot be deleted.',
       }),
       ApiNoContentResponse({ description: 'Avatar deleted successfully' }),
-      ApiBadRequestResponse({
-        description: 'User not found or does not have a custom avatar',
+      ApiNotFoundResponse({ description: 'User not found' }),
+      ApiConflictResponse({
+        description: 'Cannot delete default user avatar',
       }),
     );
   }

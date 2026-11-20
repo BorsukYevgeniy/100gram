@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import { ConflictException, Injectable } from '@nestjs/common';
 import { PinoLogger } from 'nestjs-pino';
 import { ChatType, FileType } from '../../../../generated/prisma/enums';
 import { AccessTokenPayload } from '../../../common/types';
@@ -57,8 +57,8 @@ export class ChatAvatarService {
     const chat = await this.chatRepo.getById(chatId);
 
     if (!chat.avatarName) {
-      this.logger.warn({ chatId }, 'Cannot delete default chat avatar ');
-      throw new BadRequestException('Cannot delete default chat avatar');
+      this.logger.warn({ chatId }, 'Cannot delete default chat avatar');
+      throw new ConflictException('Cannot delete default chat avatar');
     }
 
     await this.fileService.deleteFiles([chat.avatarName], FileType.CHAT_AVATAR);

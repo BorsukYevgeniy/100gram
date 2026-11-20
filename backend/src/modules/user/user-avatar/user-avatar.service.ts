@@ -1,4 +1,8 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import {
+  ConflictException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { PinoLogger } from 'nestjs-pino';
 import { UserRepository } from '../user.repository';
 
@@ -49,12 +53,12 @@ export class UserAvatarService {
 
     if (!user) {
       this.logger.warn({ userId }, 'User not found');
-      throw new BadRequestException('User not found');
+      throw new NotFoundException('User not found');
     }
 
     if (!user.avatarName) {
       this.logger.warn({ userId }, 'Cannot delete default user avatar');
-      throw new BadRequestException('Cannot delete default user avatar');
+      throw new ConflictException('Cannot delete default user avatar');
     }
 
     await this.fileService.deleteFiles([user.avatarName], FileType.USER_AVATAR);
