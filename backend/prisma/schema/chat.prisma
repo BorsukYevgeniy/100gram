@@ -4,6 +4,9 @@ model Chat {
   title       String?
   description String?
 
+  wallpaperName String? @unique
+  wallpaper     File?   @relation("ChatWallpaper", fields: [wallpaperName], references: [name], onDelete: SetNull)
+
   messages Message[] @relation("ChatMessages")
 
   lastMessageId Int?     @unique

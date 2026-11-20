@@ -10,12 +10,14 @@ model File {
   messageId Int?
   message   Message? @relation(fields: [messageId], references: [id], onDelete: SetNull)
 
-  userAvatar User? @relation("UserAvatar")
-  chatAvatar Chat? @relation("ChatAvatar")
+  userAvatar    User? @relation("UserAvatar")
+  chatAvatar    Chat? @relation("ChatAvatar")
+  chatWallpaper Chat? @relation("ChatWallpaper")
 }
 
 enum FileType {
   ATTACHMENT
   USER_AVATAR
   CHAT_AVATAR
+  CHAT_WALLPAPER
 }

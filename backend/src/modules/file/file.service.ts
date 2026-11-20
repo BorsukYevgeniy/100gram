@@ -26,6 +26,8 @@ export class FileService {
         return 'attachments/';
       case FileType.CHAT_AVATAR:
         return 'avatars/chats/';
+      case FileType.CHAT_WALLPAPER:
+        return 'wallpapers/chats/';
       case FileType.USER_AVATAR:
         return 'avatars/users/';
     }

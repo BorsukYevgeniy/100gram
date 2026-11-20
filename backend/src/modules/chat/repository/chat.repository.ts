@@ -214,4 +214,26 @@ export class ChatRepository {
       data: dto,
     });
   }
+
+  async setWallpaper(chatId: number, wallpaperName: string) {
+    return this.prisma.chat.update({
+      where: { id: chatId },
+      data: {
+        wallpaper: {
+          connect: { name: wallpaperName },
+        },
+      },
+    });
+  }
+
+  async removeWallpaper(chatId: number, wallpaperName: string) {
+    return this.prisma.chat.update({
+      where: { id: chatId },
+      data: {
+        wallpaper: {
+          disconnect: { name: wallpaperName },
+        },
+      },
+    });
+  }
 }

@@ -13,6 +13,8 @@ import { ChatMemberService } from './chat-member/chat-member.service';
 import { ChatMemberRepositoryModule } from './chat-member/repository/chat-member-repository.module';
 import { ChatMessageController } from './chat-message/chat-message.controller';
 import { ChatMessageService } from './chat-message/chat-message.service';
+import { ChatWallpaperController } from './chat-wallpaper/chat-wallpaper.controller';
+import { ChatWallpaperService } from './chat-wallpaper/chat-wallpaper.service';
 import { ChatController } from './chat.controller';
 import { ChatService } from './chat.service';
 import { ChatRepositoryModule } from './repository/chat-repository.module';
@@ -35,6 +37,7 @@ import { ChatGateway } from './ws/chat.gateway';
     ChatMemberController,
     ChatMessageController,
     ChatAvatarController,
+    ChatWallpaperController,
     ChatController,
   ],
   providers: [
@@ -43,6 +46,7 @@ import { ChatGateway } from './ws/chat.gateway';
     ChatAvatarService,
     ChatMemberService,
     ChatMessageService,
+    ChatWallpaperService,
   ],
   exports: [ChatService],
 })
